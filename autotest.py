@@ -2,6 +2,7 @@
 import cv2
 import zbar
 import numpy as np
+import sys
 
 import math
 import re
@@ -394,7 +395,10 @@ def get_contours(image, total, question):
 
     contours, hierarchy = cv2.findContours(image.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     contours.reverse()
-    contours = [get_contour_data(c.astype('int'), image) for c in contours]
+    if cv2.__version__=="2.4.3": #a bug in opencv 2.4.3, the fix is to add .astype("int") in the contour element
+      contours = [get_contour_data(c.astype('int'), image) for c in contours]
+    else: 
+      contours = [get_contour_data(c, image) for c in contours]
     contours = [c for c in contours if not c["empty"]]
     for i in range(0,len(contours)): contours[i]["index"]=i
 
@@ -403,7 +407,7 @@ def get_contours(image, total, question):
             merged = try_merge_nearby_contours(contours,image)
             if merged == 1: 
                 for i in range(0,len(contours)): contours[i]["index"]=i
-            if merged==0 or len(contours)<=total: break
+            if merged == 0 or len(contours)<=total: break
 
     if len(contours)!= total:
         report.errors.append(QuestionError(question,"The number of boxes do not match"))        
@@ -439,8 +443,8 @@ def merge_contours(big,small):
     result = []
     for c in [big,small]:
         for p in c["points"]:
-            result.append( [[ p[0][0],p[0][1] ]] )    
-    return np.array(result)
+            result.append(p)    
+    return np.array([[p] for p in result],dtype=np.int32)
     
 def are_sorted(contours):
     for i in range(0,len(contours)-1): 
@@ -448,22 +452,20 @@ def are_sorted(contours):
     return True
 
 def get_contour_data(contour, image):
-    data = {}
+    data = {}           
     data["empty"] = cv2.contourArea(contour)==0
     data["convex"] = cv2.isContourConvex(contour)
     data["rect"] = cv2.boundingRect(contour)    
     x,y,w,h = data["rect"]
-    contour =  np.array([[[x,y]],[[x,y+h]],[[x+w,y+h]],[[x+w,y]]])        
-    data["points"] = contour    
     data["size"] = max(w,h)#float(w+h)/2
-    M = cv2.moments(contour)
+    data["points"] = [(x,y),(x,y+h),(x+w,y+h),(x+w,y)] 
+    M = cv2.moments(np.array([[p] for p in data["points"]],dtype=np.int32))    
     data["center"] = (M['m10']/(M['m00']+0.00001), M['m01']/(M['m00']+0.00001))     
-    b = doc_parameters["selection_box_padding"]/2.0
-    fillarea = np.array([[[int(x+b*w),int(y+b*h)]],[[int(x+b*w),int(y+h-b*h)]],[[int(x+w-b*w),int(y+h-b*h)]],[[int(x+w-b*w),int(y+b*h)]]])
+    b = doc_parameters["selection_box_padding"]/2.0 
+    fillarea = np.array([ [[x+b*w,y+b*h]] , [[x+b*w,y+h-b*h]] , [[x+w-b*w,y+h-b*h]] , [[x+w-b*w,y+b*h]] ], dtype=np.int32 )
     mask = np.zeros(image.shape,np.uint8)
-    cv2.drawContours(mask,[fillarea],0,255,-1)   
+    cv2.drawContours(mask,[fillarea],0,255,-1)       
     data["mean_intensity"] = cv2.mean(image,mask = mask)[0]    
-
     return data
 
 def are_squared(contours):
@@ -503,6 +505,8 @@ class ImageSource(object):
         self.is_camera = type(source)==int
         if self.is_camera:
             self.source = cv2.VideoCapture(source)
+            self.source.set(3,640)
+            self.source.set(4,480)
         else:
             self.source = cv2.imread(source,1)
 

@@ -8,8 +8,9 @@ import json
 import os
 
 #Get system camera in index 0
-source = ImageSource(0)
+source = ImageSource(1)
 w,h = source.get_size()
+print w,h
 #Set document processing parameters and initialize scanner
 scanner = TestScanner(w, h, show_image=True, single_selection=True, answers_id = [0,1,2,3,4,5,6,7,8,9])
 
@@ -34,7 +35,6 @@ while cv2.waitKey(1) & 0xFF != ord('q'):
 
 scanner.finalize()
 source.release()
-
 
 for (k,v) in tests.items():
     print unicode(v[0]).encode("utf8")
