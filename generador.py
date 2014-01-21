@@ -66,7 +66,7 @@ def parse_question(lines):
 
     #parsear el header    
     header = ""
-    while lines and lines[0][0] != u'_':
+    while lines and (lines[0][0] != u'_' or lines[0][0:2] != u"x_"):
         header += " " + lines.pop(0)
     print("=============")    
     print(header)
@@ -75,8 +75,10 @@ def parse_question(lines):
     #parsear las opciones
     ops = []
     for l in lines:
-        if l and l[0] == u'_':
+        if l and (l[0] == u'_'):
             ops.append(l[1:].strip())
+        elif l[0:2] == u"x_":
+            ops.append(l[2:].strip())
         else:
             ops[-1] += " " +l
     
