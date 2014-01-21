@@ -55,8 +55,13 @@ def parse_question(lines):
     que se evalúan en la misma"""    
     
     print(lines)    
+
+    #la pregunta empieza con un número entre paréntesis
+    n = lines.pop(0).split()[1:-1]
+    if int(n):
+        Exception("hay una pregunta sin número")
     
-    #la pregunta empieza con un listado de tags
+    #luego tiene un listado de tags
     ts = lines.pop(0).split()
 
     #parsear el header    
@@ -76,7 +81,7 @@ def parse_question(lines):
             ops[-1] += " " +l
     
     #construir el objeto question
-    question = Question(header,ops)
+    question = Question(header,ops, n)
   
     #agregar las preguntas en el contenido correspondiente
     for t in ts:
@@ -88,7 +93,7 @@ class Question:
     """las preguntas tienen un header que es el enunciado,
     y 4 opciones donde la primera es la correcta"""     
     
-    def __init__(self, header, options):
+    def __init__(self, header, options, number):
         if (not header or len(options) != 4):
             print(header)
             print(len(options))
@@ -97,6 +102,7 @@ class Question:
         self.header = header
         self.correct_option = self.options[0]
         self.correct = 0
+        self.number = number
         
     def shuffle(self):
         random.shuffle(self.options)
