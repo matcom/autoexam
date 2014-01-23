@@ -30,9 +30,16 @@ data_base = collections.defaultdict(lambda: [])
 now = 1
 
 def parser():
-    f = open(os.path.join(os.path.abspath(os.path.dirname(__file__)), u"SI.txt"))
+    """
+    Lee el archivo master y se parsea cada una de las preguntas.
+    """
+    f = open(os.path.join(os.path.abspath(os.path.dirname(__file__)), u"master.txt"))
     lines = f.readlines()
+
+    #parsear las etiquetas del header
     
+
+    #parsear el listado de preguntas    
     lquestion = []
     i = 0
     while i < len(lines):
@@ -93,7 +100,8 @@ def parse_question(lines):
     
 class Question:
     """las preguntas tienen un header que es el enunciado,
-    y 4 opciones donde la primera es la correcta"""     
+    y opciones. Algunas de estas oppciones pueden considerarse
+    respuestas correctas"""     
     
     def __init__(self, header, options, number):
         if (not header or len(options) != 4):
@@ -107,6 +115,9 @@ class Question:
         self.number = number
         
     def shuffle(self):
+        """
+        Devuelve las opciones desordenadas.
+        """
         random.shuffle(self.options)
         
         # Poner la opción final (ninguna o todas las anteriores)
@@ -139,6 +150,8 @@ def generate_qrcode(data, filename='qrcode.png'):
 
 
 def generateTest():
+    """Genera la hoja de marcar del examen.
+    """
     tmp_file = open('latex/pruebas.tex')
     names = open('names.txt').readlines()
     template = jinja2.Template(tmp_file.read().decode('utf8'))  
@@ -184,6 +197,9 @@ def generateQuiz(n, exclude=()):
 EXCLUDE = '#s1 #s2 #s3 #s4 #s5 #s6 #s7 #s8 #web #booleano #web #crawler #meta #booleano #vectorial #probab #boolextendido #evaluacion'.split()       
         
 def generateTextTest():
+    """Genera el texto del examen y 
+    genera la solución dell mismo.
+    """
     tmp_file = open('latex/pruebasTexto.tex')
     template = jinja2.Template(tmp_file.read().decode('utf8'))
     
