@@ -15,4 +15,4 @@
 /log/*.log
 /tmp
 /vendor/cache
-.bundle/
+/vendor/bundle
