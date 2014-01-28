@@ -75,6 +75,6 @@ class PreguntaController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def preguntum_params
-      params.require(:preguntum).permit(:titulo, :asignatura_id, :etiquetas)
+      params.require(:preguntum).permit(:titulo, :asignatura_id, :etiquetas, :multiple)
     end
 end

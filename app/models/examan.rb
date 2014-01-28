@@ -9,4 +9,15 @@ class Examan < ActiveRecord::Base
   def clave(pregunta)
     ClavePregunta.where(:preguntum_id => pregunta.id).where(:examan_id => self.id).first_or_create
   end
+
+  def cantidad(etiqueta)
+    cantidades = preguntas_por_tema.split('|')
+    for c in cantidades
+      etiq, cant = c.split(':')
+      if etiq == etiqueta
+        return cant.to_i
+      end
+    end
+    return 0
+  end
 end

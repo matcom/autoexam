@@ -36,6 +36,14 @@ class ExamenController < ApplicationController
     list
   end
 
+  def get_cantidades
+    list = []
+    for etiqueta in @examan.listado_de_etiquetas
+      list << "#{etiqueta}:#{params["cantidad_#{etiqueta}"]}" if params["cantidad_#{etiqueta}"]
+    end
+    list.join('|')
+  end
+
   def create
     @examan = Examan.new(examan_params)
     @examan.etiquetas = get_etiquetas
@@ -54,6 +62,7 @@ class ExamenController < ApplicationController
   def update
     @examan.etiquetas = get_etiquetas
     @examan.pregunta = get_preguntas
+    @examan.preguntas_por_tema = get_cantidades
 
     respond_to do |format|
       if @examan.update(examan_params)
