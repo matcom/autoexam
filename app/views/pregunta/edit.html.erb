@@ -1,6 +1,9 @@
-<h1>Editing preguntum</h1>
+<% content_for :menu do %>
+  <%= link_to 'Detalles de Pregunta', @preguntum, :class => 'btn btn-primary' %>
+  <%= link_to 'Detalles de Asignatura', @preguntum.asignatura, :class => 'btn btn-primary' %>
+<% end %>
+
+<h1>Editando Pregunta</h1>
 
 <%= render 'form' %>
 
-<%= link_to 'Show', @preguntum %> |
-<%= link_to 'Back', pregunta_path %>

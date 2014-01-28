@@ -1,3 +1,8 @@
+<% content_for :menu do %>
+  <%= link_to 'Editar Pregunta', edit_preguntum_path(@preguntum), :class => 'btn btn-primary' %>
+  <%= link_to 'Detalles de Asignatura', @preguntum.asignatura, :class => 'btn btn-primary' %>
+<% end %>
+
 <p id="notice"><%= notice %></p>
 
 <p>
@@ -15,5 +20,3 @@
   <%= @preguntum.etiquetas %>
 </p>
 
-<%= link_to 'Edit', edit_preguntum_path(@preguntum) %> |
-<%= link_to 'Back', pregunta_path %>
