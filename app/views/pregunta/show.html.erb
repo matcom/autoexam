@@ -1,6 +1,5 @@
 <% content_for :menu do %>
   <%= link_to 'Detalles de Asignatura', @preguntum.asignatura, :class => 'btn btn-primary' %>
-  <%= link_to 'Nueva Opcion', nueva_opcion_path(@preguntum), :class => 'btn btn-primary'%>
 <% end %>
 
 <p id="notice"><%= notice %></p>
@@ -35,8 +34,16 @@
   </div>
 
   <div class="field control-group">
+    <%= f.label :multiple, :class => 'control-label' %>
+    <div class="controls">
+      <%= f.check_box :multiple %> (marque esto si la pregunta es de seleccion multiple)
+    </div>
+  </div>
+
+  <div class="field control-group">
     <label class="control-label">Opciones</label>
     <div class="controls">
+      <%# TODO: mostrar un warning si no es multiple y hay mas de uno seleccionado%>
     <% @preguntum.opcions.each do |opcion| %>
       <label class="checkbox">
         <%= check_box_tag "option_#{opcion.id}_check", 1, opcion.right %>
