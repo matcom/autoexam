@@ -9,6 +9,7 @@
     <tr>
       <th>Nombre corto</th>
       <th>Nombre largo</th>
+      <th>Preguntas</th>
       <th>Etiquetas</th>
       <th>Acciones</th>
     </tr>
@@ -19,6 +20,7 @@
       <tr>
         <td><%= asignatura.nombre_corto %></td>
         <td><%= asignatura.nombre_largo %></td>
+        <td><%= asignatura.pregunta.count %></td>
         <td><%= asignatura.listado_de_etiquetas.count %></td>
         <td>
           <%= link_to 'Show', asignatura %>

@@ -1,10 +1,6 @@
 class PreguntaController < ApplicationController
   before_action :set_preguntum, only: [:show, :edit, :update, :destroy]
 
-  def index
-    @pregunta = Preguntum.all
-  end
-
   def show
   end
 
@@ -17,16 +13,24 @@ class PreguntaController < ApplicationController
 
 
   def edit
+    @asignatura = @preguntum.asignatura
   end
 
-  # POST /pregunta
-  # POST /pregunta.json
+  def get_etiquetas
+    list = []
+    for etiq in @preguntum.asignatura.listado_de_etiquetas
+      list << etiq if params["etiqueta_#{etiq}"]
+    end
+    list.join(',')
+  end
+
   def create
     @preguntum = Preguntum.new(preguntum_params)
+    @preguntum.etiquetas = get_etiquetas
 
     respond_to do |format|
       if @preguntum.save
-        format.html { redirect_to @preguntum, notice: 'Preguntum was successfully created.' }
+        format.html { redirect_to @preguntum.asignatura, notice: 'Preguntum was successfully created.' }
         format.json { render action: 'show', status: :created, location: @preguntum }
       else
         format.html { render action: 'new' }
@@ -35,12 +39,11 @@ class PreguntaController < ApplicationController
     end
   end
 
-  # PATCH/PUT /pregunta/1
-  # PATCH/PUT /pregunta/1.json
   def update
+    @preguntum.etiquetas = get_etiquetas
     respond_to do |format|
       if @preguntum.update(preguntum_params)
-        format.html { redirect_to @preguntum, notice: 'Preguntum was successfully updated.' }
+        format.html { redirect_to @preguntum.asignatura, notice: 'Preguntum was successfully updated.' }
         format.json { head :no_content }
       else
         format.html { render action: 'edit' }

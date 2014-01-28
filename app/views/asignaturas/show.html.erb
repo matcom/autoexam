@@ -23,3 +23,31 @@
   <%= @asignatura.descripcion %>
 </p>
 
+<h4>Listing pregunta</h4>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Titulo</th>
+      <th>Asignatura</th>
+      <th>Etiquetas</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @asignatura.pregunta.each do |preguntum| %>
+      <tr>
+        <td><%= preguntum.titulo %></td>
+        <td><%= preguntum.asignatura_id %></td>
+        <td><%= preguntum.listado_de_etiquetas.count %></td>
+        <td>
+          <%= link_to 'Show', preguntum %>
+          <%= link_to 'Edit', edit_preguntum_path(preguntum) %>
+          <%= link_to 'Destroy', preguntum, method: :delete, data: { confirm: 'Are you sure?' } %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+

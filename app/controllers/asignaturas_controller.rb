@@ -13,12 +13,9 @@ class AsignaturasController < ApplicationController
     @asignatura = Asignatura.new
   end
 
-  # GET /asignaturas/1/edit
   def edit
   end
 
-  # POST /asignaturas
-  # POST /asignaturas.json
   def create
     @asignatura = Asignatura.new(asignatura_params)
 
@@ -33,8 +30,6 @@ class AsignaturasController < ApplicationController
     end
   end
 
-  # PATCH/PUT /asignaturas/1
-  # PATCH/PUT /asignaturas/1.json
   def update
     respond_to do |format|
       if @asignatura.update(asignatura_params)
