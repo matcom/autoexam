@@ -1,5 +1,6 @@
 #coding: utf-8
-from autotest import TestScanner, ImageSource, QuestionError
+from autotest import TestScanner, ImageSource
+from scanresults import *
 import cv2
 import pprint
 import pickle
@@ -8,9 +9,8 @@ import json
 import os
 
 #Get system camera in index 0
-source = ImageSource(1)
+source = ImageSource(0)
 w,h = source.get_size()
-print w,h
 #Set document processing parameters and initialize scanner
 scanner = TestScanner(w, h, show_image=True, single_selection=True, answers_id = [0,1,2,3,4,5,6,7,8,9])
 
@@ -21,12 +21,12 @@ while cv2.waitKey(1) & 0xFF != ord('q'):
     report = scanner.scan(source)   
     #if test recognized OK
     if report.success:
-        if not report.test.test_id in tests:
+        if not report.test.id in tests:
             beep.beep()
-            tests[report.test.test_id] = (report.test, report.warnings)
+            tests[report.test.id] = report.test
             print "Student:",unicode(report.test.student_id).encode("utf8")
             print "Warnings:"
-            for w in report.warnings: print "\t",w    	
+            for w in report.test.warnings: print "\t",w    	
     #if recognition went wrong print the reasons
     else:
         for e in [x for x in report.errors if isinstance(x,QuestionError)]: # in this case only the question errors
@@ -36,30 +36,14 @@ while cv2.waitKey(1) & 0xFF != ord('q'):
 scanner.finalize()
 source.release()
 
+#dummy test
+tests[1] = Test(1,1,{22:Question(22,4,True,[2,1,6]), 23:Question(23,4,False,[2])},[Warning(23,2,WarningTypes.UNCERTANTY), Warning(22,[1,0],WarningTypes.MULT_SELECTION)])
+#dump_single(tests[34])
 for (k,v) in tests.items():
-    print unicode(v[0]).encode("utf8")
+    print unicode(v).encode("utf8")
 
-to_serialize = {}
+dump(tests,"tests_results.json")
 
-if os.path.exists('tests_results.txt'):
-    f = open('tests_results.txt', 'r')
-    current = json.loads(f.read())
-    f.close()
-
-    for k,v in current.items():
-        k = int(k)
-        print('Restoring previous test: {0}'.format(k))
-        to_serialize[k] = v
-
-for (k,v) in tests.items():
-    test, warnings = v
-    print('Saving test: {0}'.format(k))
-    to_serialize[k]={'test': test.to_dict(), 'warnings': [w.to_dict() for w in warnings]}
-
-f = file("tests_results.txt",'w') 
-json.dump(to_serialize, f) 
-f.close()
-
-print "%d exams stored..." % len(to_serialize)
+print "%d exams stored..." % len(tests)
 
 cv2.waitKey()

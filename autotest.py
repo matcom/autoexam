@@ -3,13 +3,14 @@ import cv2
 import zbar
 import numpy as np
 import sys
+from scanresults import *
 
 import math
 import re
 
 report = None
 doc_parameters = {
-    "show_image": True, #if it is a camera it shows a windows with the images, and if it is an image it shows the image
+    "show_image": True, #if it is a camera it shows a window with the images, and if it is an image it shows the image
     "double_check": True, #Makes a double confirmation before to return a success report
     "marker_image": "marker.png", #Image of the marker to use in the borders
     "answer_rows": 4, #answers rows     
@@ -36,8 +37,8 @@ doc_parameters = {
     "distance_threshold": 0.5, #threshold of the allowed distance between the selection boxes over the mean distance    
     "aligned_threshold": 0.5, #threshold of the alignment allowed between the selection boxes over the mean displacement    
     "selection_box_padding":0.5, #padding used to select the inner area of the selection boxes       
-    "selection_threshold": 130, #threshold that is used to decide if the answer is selected based on the mean intensity
-    "selection_error": 30, #threshold around the selection_threshold that marks the uncertainty
+    "selection_threshold": 130, #threshold that is used to decide if the answer is selected based on the mean intensity range:[0,255]
+    "selection_error": 30, #threshold around the selection_threshold that marks the uncertainty range:[0,255]
     "single_selection": False #if it's true it will return the answer with the highest mean value (it still uses the selection_threshold and selection_error to display warnings)    
 }
 
@@ -110,7 +111,8 @@ def get_image_report(frame):
     # Check qrcode validity
     if len(qrcode)==1 and qrcode_ok(qrcode[0]):
         qrcode = qrcode.pop()
-        test = Test(qrcode)
+        info = get_qrcode_info(qrcode)
+        test = Test(info["student_id"], info["id"], info["questions"])
         report.test = test
         #paint the qrcode in white to lower the chances of getting wrong matches
         cv2.fillConvexPoly(image,np.int32([list(x) for x in qrcode.location]) ,(255))
@@ -150,6 +152,21 @@ def get_image_report(frame):
 
     return report  
 
+def get_qrcode_info(qrcode):
+    info = qrcode.data.split('|')      
+    info = {}
+    info["exam_id"]  = info[0]
+    info["id"] = int(info[1])
+    info["questions"] = {}
+    total_q = int(info[vars_in_qrcode-1])
+    for q in range(total_q):
+        if len(info)-vars_in_qrcode==1:
+            info["questions"][q+1]= Question(q+1, int(info[len(info)-1]),not doc_parameters["single_selection"])
+        else:
+            info["questions"][q+1]= Question(q+1, int(info[q+vars_in_qrcode]), not doc_parameters["single_selection"])
+
+    return info
+
 class QRCode(object):
     """QRCode class"""
     def __init__(self, data, location):
@@ -182,7 +199,7 @@ class QRScanner(object):
         return zbar.Image(self.width, self.height, 'Y800',cv2_image.tostring())
 
 #TODO think about the need of this variable and the possibility of using only std_id and test_id
-vars_in_code = 4
+vars_in_qrcode = 4
 #   student id | test id | marker size | # of questions | answers per question
 DATA_RE = re.compile(r'''[\w|\s|\.]+\|[0-9]+\|[0-9]+\.[0-9]+\|[0-9]+[\|[0-9]+]*''',re.UNICODE)
 
@@ -190,45 +207,10 @@ def qrcode_ok(qrcode):
     data = qrcode.data
     if DATA_RE.match(data):
         s = data.split("|")
-        return ( len(s)-vars_in_code==1 and int(s[vars_in_code-1])!=0 ) or int(s[vars_in_code-1])==len(s)-vars_in_code 
+        return ( len(s)-vars_in_qrcode==1 and int(s[vars_in_qrcode-1])!=0 ) or int(s[vars_in_qrcode-1])==len(s)-vars_in_qrcode 
     return False
 
-class Test(object):
-    """Test class"""
-    def __init__(self, qrcode):
-        info = qrcode.data.split('|')        
-        self.student_id = info[0]
-        self.test_id = int(info[1])
-        self.questions = {}
-        self.grade = -1
-        total_q = int(info[vars_in_code-1])
-        for q in range(total_q):
-            if len(info)-vars_in_code==1:
-                self.questions[q+1]={ "total_answers": int(info[len(info)-1]) }
-            else:
-                self.questions[q+1]={ "total_answers": int(info[q+vars_in_code]) }
 
-    def __str__(self):
-        result = "Student ID: %s\nTest ID: %s\nTotal Questions: %d\n"%(self.student_id,self.test_id,len(self.questions))
-        for (k,v) in self.questions.items():            
-            result+="%d -> %s\n"%(k,v.get("answers"))
-        result+="Grade: %d"%self.grade 
-
-        return result
-
-    def __eq__(self,other):
-        return self.student_id == other.student_id and self.test_id==other.test_id and self.questions == other.questions
-
-    def __ne__(self,other):
-        return not self.__eq__(other)
-
-    def to_dict(self):
-        result = {}
-        result["student_id"] = self.student_id
-        result["test_id"] = self.test_id
-        result["questions"] = self.questions
-        result["grade"] = self.grade
-        return result
 
 def fix_rotation_with_perspective(qr_rect, image):
     """Fixes the rotation of the image using the qrcode rectangle. -> cv2.image"""
@@ -365,7 +347,8 @@ def get_selections(image, total, question):
             if mean>thresh:
                 answers.append(doc_parameters["answers_id"][a])
             if abs(thresh-mean)<=error:
-                report.warnings.append(UctyWarning(question,doc_parameters["answers_id"][a]))
+                w = Warning(question,doc_parameters["answers_id"][a],WarningTypes.UNCERTANTY)
+                report.test.warnings.append(w)
             a+=1
     else:
         contours.sort(key = lambda cont: cont["mean_intensity"], reverse = True)#sort contours using mean intensity values from high to low
@@ -376,13 +359,15 @@ def get_selections(image, total, question):
         sec_max_mean =  contours[1]["mean_intensity"]
 
         if max_mean<thresh or abs(max_mean-sec_max_mean)<=error:
-            report.warnings.append(UctyWarning(question,doc_parameters["answers_id"][best_contour["index"]]))
+            w = Warning(question,doc_parameters["answers_id"][best_contour["index"]],WarningTypes.UNCERTANTY);
+            report.test.warnings.append(w)
 
         posible_selected = [doc_parameters["answers_id"][c["index"]] for c in contours if c["mean_intensity"]>thresh and c["index"]!=contours[0]["index"]]
-
+        
         if len(posible_selected)>0:
-            report.warnings.append(UctyWarning(question,posible_selected))
-     
+            w = Warning(question,posible_selected,WarningTypes.MULT_SELECTION)
+            report.test.warnings.append(w)     
+
     return True, answers
 
 def get_contours(image, total, question):    
@@ -525,54 +510,3 @@ class ImageSource(object):
     def release(self):
         if self.is_camera:
             self.source.release()
-
-class Report(object):
-    """Class to represent the reports"""
-    def __init__(self):
-        self.errors = []
-        self.warnings = []
-        self.success = False
-        self.test = None
-
-class UctyWarning(object):
-    """Uncertainty warning"""
-    def __init__(self, q, s):
-        self.question = q
-        self.selection = s
-
-    def __str__(self):
-        return "The selection of the answer %s in question %d is uncertain"%(self.selection,self.question) 
-
-    def to_dict(self):
-        return {'type': 'ucty', 'question': self.question, 'selection': self.selection}
-
-class MultSelWarning(object):
-    """Multiple selection warning"""
-    def __init__(self, q, s):
-        self.question = q
-        self.aditional_selections = s
-
-    def __str__(self):
-        return "Is possible that the question %d has additional selections. Possible values %s"%(self.question,self.aditional_selections) 
-        
-    def to_dict(self):
-        return {'type': 'ucty', 'question': self.question, 'selection': self.selection}
-
-class QrcodeError(object):
-    """QRCode error class"""
-    def __str__(self):
-        return "There was an error with the detection of the QRCode"   
-
-class MarkersError(object):
-    """Marker error class"""
-    def __str__(self):
-        return "There was an error with the detection of the markers"   
-          
-class QuestionError(object):
-    """docstring for QuestionError"""
-    def __init__(self, q, msg):
-        self.question = q
-        self.message = msg
-
-    def __str__(self):
-        return self.message + " in question %d"%self.question
