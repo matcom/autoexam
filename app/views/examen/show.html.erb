@@ -1,0 +1,24 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Nombre:</strong>
+  <%= @examan.nombre %>
+</p>
+
+<p>
+  <strong>Etiquetas:</strong>
+  <%= @examan.etiquetas %>
+</p>
+
+<p>
+  <strong>Directorio:</strong>
+  <%= @examan.directorio %>
+</p>
+
+<p>
+  <strong>Cantidad:</strong>
+  <%= @examan.cantidad %>
+</p>
+
+<%= link_to 'Edit', edit_examan_path(@examan) %> |
+<%= link_to 'Back', examen_path %>

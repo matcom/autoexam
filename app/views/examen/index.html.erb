@@ -1,0 +1,33 @@
+<h1>Listing examen</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Etiquetas</th>
+      <th>Directorio</th>
+      <th>Cantidad</th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @examen.each do |examan| %>
+      <tr>
+        <td><%= examan.nombre %></td>
+        <td><%= examan.etiquetas %></td>
+        <td><%= examan.directorio %></td>
+        <td><%= examan.cantidad %></td>
+        <td><%= link_to 'Show', examan %></td>
+        <td><%= link_to 'Edit', edit_examan_path(examan) %></td>
+        <td><%= link_to 'Destroy', examan, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Examan', new_examan_path %>

@@ -1,0 +1,33 @@
+<%= form_for(@examan) do |f| %>
+  <% if @examan.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@examan.errors.count, "error") %> prohibited this examan from being saved:</h2>
+
+      <ul>
+      <% @examan.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :nombre %><br>
+    <%= f.text_field :nombre %>
+  </div>
+  <div class="field">
+    <%= f.label :etiquetas %><br>
+    <%= f.text_field :etiquetas %>
+  </div>
+  <div class="field">
+    <%= f.label :directorio %><br>
+    <%= f.text_field :directorio %>
+  </div>
+  <div class="field">
+    <%= f.label :cantidad %><br>
+    <%= f.number_field :cantidad %>
+  </div>
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>
