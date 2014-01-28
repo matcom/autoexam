@@ -1,4 +1,6 @@
 Examui::Application.routes.draw do
+  resources :opcions
+
   resources :pregunta
   resources :asignaturas
 

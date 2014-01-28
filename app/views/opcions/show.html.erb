@@ -1,0 +1,19 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Preguntum:</strong>
+  <%= @opcion.preguntum_id %>
+</p>
+
+<p>
+  <strong>Titulo:</strong>
+  <%= @opcion.titulo %>
+</p>
+
+<p>
+  <strong>Right:</strong>
+  <%= @opcion.right %>
+</p>
+
+<%= link_to 'Edit', edit_opcion_path(@opcion) %> |
+<%= link_to 'Back', opcions_path %>

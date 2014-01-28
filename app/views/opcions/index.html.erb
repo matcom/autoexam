@@ -1,0 +1,31 @@
+<h1>Listing opcions</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Preguntum</th>
+      <th>Titulo</th>
+      <th>Right</th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @opcions.each do |opcion| %>
+      <tr>
+        <td><%= opcion.preguntum_id %></td>
+        <td><%= opcion.titulo %></td>
+        <td><%= opcion.right %></td>
+        <td><%= link_to 'Show', opcion %></td>
+        <td><%= link_to 'Edit', edit_opcion_path(opcion) %></td>
+        <td><%= link_to 'Destroy', opcion, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Opcion', new_opcion_path %>
