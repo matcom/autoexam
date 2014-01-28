@@ -74,7 +74,7 @@ def parse_grader_sheet(grader_sheet_file):
 		if options_line:
 			options_line = False
 			blank_line = True
-			options = [(int(i.split("-")[0]),int(i.split("-")[1])) for i in line.strip().split(" ")]
+			options = [(int(i.split(":")[0]),int(i.split(":")[1])) for i in line.strip().split(" ")]
 			grader.addQuestionGrader(QuestionGrader(id_question,multiple,total,options))
 		if total_line:
 			total_line = False
