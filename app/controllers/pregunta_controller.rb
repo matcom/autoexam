@@ -1,23 +1,21 @@
 class PreguntaController < ApplicationController
   before_action :set_preguntum, only: [:show, :edit, :update, :destroy]
 
-  # GET /pregunta
-  # GET /pregunta.json
   def index
     @pregunta = Preguntum.all
   end
 
-  # GET /pregunta/1
-  # GET /pregunta/1.json
   def show
   end
 
-  # GET /pregunta/new
-  def new
+  def nueva_pregunta
+    @asignatura = Asignatura.find(params[:id])
     @preguntum = Preguntum.new
+    @preguntum.asignatura_id = @asignatura.id
+    render :new
   end
 
-  # GET /pregunta/1/edit
+
   def edit
   end
 

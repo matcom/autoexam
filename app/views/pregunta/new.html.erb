@@ -1,5 +1,9 @@
-<h1>New preguntum</h1>
+<% content_for :menu do %>
+  <%= link_to 'Detalles de Asignatura', @asignatura, :class => 'btn btn-primary' %>
+<% end %>
+<%= render :partial => 'common/common_menu'%>
+
+<h1>Nueva Pregunta</h1>
 
 <%= render 'form' %>
 
-<%= link_to 'Back', pregunta_path %>

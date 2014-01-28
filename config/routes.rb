@@ -4,7 +4,7 @@ Examui::Application.routes.draw do
 
   devise_for :users
 
-  get 'nueva_pregunta/:id' => 'asignaturas#nueva_pregunta', :as => :nueva_pregunta
+  get 'nueva_pregunta/:id' => 'pregunta#nueva_pregunta', :as => :nueva_pregunta
 
   root 'asignaturas#index'
 end

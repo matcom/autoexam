@@ -1,5 +1,5 @@
 class AsignaturasController < ApplicationController
-  before_action :set_asignatura, only: [:show, :edit, :update, :destroy, :nueva_pregunta]
+  before_action :set_asignatura, only: [:show, :edit, :update, :destroy]
 
   def index
     @asignaturas = Asignatura.all
@@ -11,10 +11,6 @@ class AsignaturasController < ApplicationController
 
   def new
     @asignatura = Asignatura.new
-  end
-
-  def nueva_pregunta
-    @preguntum = Preguntum.new
   end
 
   # GET /asignaturas/1/edit
