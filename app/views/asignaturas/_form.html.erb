@@ -1,4 +1,4 @@
-<%= form_for(@asignatura) do |f| %>
+<%= form_for(@asignatura, :html => {:class => 'form-horizontal'}) do |f| %>
   <% if @asignatura.errors.any? %>
     <div id="error_explanation">
       <h2><%= pluralize(@asignatura.errors.count, "error") %> prohibited this asignatura from being saved:</h2>
@@ -11,23 +11,35 @@
     </div>
   <% end %>
 
-  <div class="field">
-    <%= f.label :nombre_corto %><br>
-    <%= f.text_field :nombre_corto %>
+  <div class="field control-group">
+    <%= f.label :nombre_corto, :class => 'control-label' %>
+    <div class="controls">
+      <%= f.text_field :nombre_corto %>
+    </div>
   </div>
-  <div class="field">
-    <%= f.label :nombre_largo %><br>
-    <%= f.text_field :nombre_largo %>
+
+  <div class="field control-group">
+    <%= f.label :nombre_largo, :class => 'control-label' %>
+    <div class="controls">
+      <%= f.text_field :nombre_largo %>
+    </div>
   </div>
-  <div class="field">
-    <%= f.label :etiquetas %><br>
-    <%= f.text_field :etiquetas %> (separadas por coma)
+
+  <div class="field control-group">
+    <%= f.label :etiquetas, :class => 'control-label' %>
+    <div class="controls">
+      <%= f.text_field :etiquetas %> (separadas por coma)
+    </div>
   </div>
-  <div class="field">
-    <%= f.label :descripcion %><br>
-    <%= f.text_area :descripcion %>
+
+  <div class="field control-group">
+    <%= f.label :descripcion, :class => 'control-label' %>
+    <div class="controls">
+      <%= f.text_area :descripcion %>
+    </div>
   </div>
-  <div class="actions">
+
+  <div class="form-actions">
     <%= f.submit %>
   </div>
 <% end %>
