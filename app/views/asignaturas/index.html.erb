@@ -9,7 +9,7 @@
     <tr>
       <th>Nombre corto</th>
       <th>Nombre largo</th>
-      <th>Descripcion</th>
+      <th>Etiquetas</th>
       <th>Acciones</th>
     </tr>
   </thead>
@@ -19,7 +19,7 @@
       <tr>
         <td><%= asignatura.nombre_corto %></td>
         <td><%= asignatura.nombre_largo %></td>
-        <td><%= asignatura.descripcion %></td>
+        <td><%= asignatura.listado_de_etiquetas.count %></td>
         <td>
           <%= link_to 'Show', asignatura %>
           <%= link_to 'Edit', edit_asignatura_path(asignatura) %>
