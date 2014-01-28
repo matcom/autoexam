@@ -6,6 +6,12 @@
   <%= link_to 'Listado de Estudiantes', edit_listado_path(@asignatura.listado), :class => 'btn btn-primary' %>
 <% end %>
 
+<% content_for :sidebar do %>
+  <div class="well sidebar">
+    <%= @asignatura.listado.estudiantes.html_safe %>
+  </div>
+<% end %>
+
 <p id="notice"><%= notice %></p>
 
 <p>
