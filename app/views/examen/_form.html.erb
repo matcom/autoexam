@@ -19,15 +19,6 @@
   </div>
 
   <div class="field control-group">
-    <%= f.label :etiquetas, :class => 'control-label' %>
-    <div class="controls">
-      <% for etiq in @asignatura.listado_de_etiquetas %>
-        <%= check_box_tag "etiqueta_#{etiq}", 1, @examan.listado_de_etiquetas.include?(etiq) %> <%= etiq %> &nbsp; &nbsp;
-      <% end %>
-    </div>
-  </div>
-
-  <div class="field control-group">
     <%= f.label :directorio, :class => 'control-label' %>
     <div class="controls">
       <%= f.text_field :directorio %>
@@ -41,8 +32,61 @@
     </div>
   </div>
 
+  <div class="field control-group">
+    <%= f.label :etiquetas, :class => 'control-label' %>
+    <div class="controls">
+      <% for etiq in @asignatura.listado_de_etiquetas %>
+        <%= check_box_tag "etiqueta_#{etiq}", 1, @examan.listado_de_etiquetas.include?(etiq) %> <%= etiq %> &nbsp; &nbsp;
+      <% end %>
+    </div>
+  </div>
+
+  <% unless @examan.new_record? %>
+    <% if @examan.listado_de_etiquetas.count > 0 %>
+      <div class="field control-group">
+        <label class="control-label">Preguntas</label>
+        <div class="controls">
+          <div class="tabbable">
+            <ul class="nav nav-tabs">
+              <% first = true %>
+              <% for etiqueta in @examan.listado_de_etiquetas %>
+                <li class="<%= 'active' if first %>"><a href="#<%= buena_etiqueta(etiqueta) %>" data-toggle="tab"><%= etiqueta%></a></li>
+                <% first = false%>
+              <% end %>
+            </ul>
+            <div class="tab-content">
+              <%
+                first = true
+                hash = {}
+              %>
+              <% for etiqueta in @examan.listado_de_etiquetas %>
+                <div class="tab-pane <%= 'active'  if first %>" id="<%= buena_etiqueta(etiqueta) %>">
+                  <% first = false %>
+                  <% count = 0 %>
+                  <% for pregunta in Preguntum.where('etiquetas like ?', '%' + etiqueta + '%')%>
+                    <% unless hash.include?(pregunta.id) %>
+                      <% count += 1%>
+                      <label class="checkbox">
+                        <%= check_box_tag "pregunta_#{pregunta.id}", 1, @examan.pregunta.include?(pregunta) %> <%= pregunta.titulo %>
+                      </label>
+                    <% end %>
+                    <% hash[pregunta.id] = true %>
+                  <% end %>
+                  <% if count == 0 %>
+                    <i>NO HAY PREGUNTAS DE ESTA ETIQUETA</i>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+
   <div class="form-actions">
     <%= f.hidden_field :asignatura_id %>
     <%= f.submit %>
   </div>
+
 <% end %>

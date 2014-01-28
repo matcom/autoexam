@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140128150014) do
+ActiveRecord::Schema.define(version: 20140128192817) do
 
   create_table "asignaturas", force: true do |t|
     t.string   "nombre_corto"
@@ -32,9 +32,9 @@ ActiveRecord::Schema.define(version: 20140128150014) do
     t.integer  "asignatura_id"
   end
 
-  create_table "examens_preguntas", force: true do |t|
-    t.integer "examen_id"
-    t.integer "prueba_id"
+  create_table "examen_pregunta", force: true do |t|
+    t.integer "examan_id"
+    t.integer "preguntum_id"
   end
 
   create_table "listados", force: true do |t|
