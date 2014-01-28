@@ -1,0 +1,24 @@
+<% content_for :menu do %>
+  <%= link_to "Detalles de Examen", edit_examan_path(@examan), :class => 'btn btn-primary' %>
+<% end %>
+
+<h1> Definir clave </h1>
+
+<%= form_tag update_clave_path do  %>
+<div class="accordion" id="accordion">
+  <% for pregunta in @examan.pregunta %>
+    <% clave_pregunta = @examan.clave(pregunta)%>
+    <div class="accordion-group">
+      <div class="accordion-heading">
+        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse_<%= pregunta.id %>"><%= pregunta.titulo %></a>
+      </div>
+      <div id="collapse_<%= pregunta.id%>" class="accordion-body collapse out">
+        <div class="accordion-inner">
+          aqui van las opciones
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+<%= submit_tag 'Guardar Cambios', :class => 'btn btn-primary' %>
+<% end %>

@@ -1,6 +1,10 @@
 class ExamenController < ApplicationController
   before_action :set_examan, only: [:show, :edit, :update, :destroy]
 
+  def clave
+    @examan = Examan.find(params[:id])
+  end
+
   def show
   end
 
