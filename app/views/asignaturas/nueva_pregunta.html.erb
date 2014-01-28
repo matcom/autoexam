@@ -1,0 +1,10 @@
+
+<% content_for :menu do %>
+  <%= link_to 'Detalles de Asignatura', @asignatura, :class => 'btn btn-primary' %>
+<% end %>
+<% render :partial => 'common/common_menu' %>
+
+<h1>New preguntum</h1>
+
+<%= render 'form_pregunta' %>
+

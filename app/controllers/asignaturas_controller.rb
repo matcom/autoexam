@@ -1,20 +1,20 @@
 class AsignaturasController < ApplicationController
-  before_action :set_asignatura, only: [:show, :edit, :update, :destroy]
+  before_action :set_asignatura, only: [:show, :edit, :update, :destroy, :nueva_pregunta]
 
-  # GET /asignaturas
-  # GET /asignaturas.json
   def index
     @asignaturas = Asignatura.all
   end
 
-  # GET /asignaturas/1
-  # GET /asignaturas/1.json
   def show
   end
 
-  # GET /asignaturas/new
+
   def new
     @asignatura = Asignatura.new
+  end
+
+  def nueva_pregunta
+    @preguntum = Preguntum.new
   end
 
   # GET /asignaturas/1/edit
