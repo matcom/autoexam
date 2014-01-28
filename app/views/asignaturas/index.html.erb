@@ -1,14 +1,16 @@
+<% content_for :menu do %>
+  <%= link_to 'Nueva Asignatura', new_asignatura_path, :class => 'btn btn-primary' %>
+<% end %>
+
 <h1>Listing asignaturas</h1>
 
-<table>
+<table class="table table-striped">
   <thead>
     <tr>
       <th>Nombre corto</th>
       <th>Nombre largo</th>
       <th>Descripcion</th>
-      <th></th>
-      <th></th>
-      <th></th>
+      <th>Acciones</th>
     </tr>
   </thead>
 
@@ -18,9 +20,11 @@
         <td><%= asignatura.nombre_corto %></td>
         <td><%= asignatura.nombre_largo %></td>
         <td><%= asignatura.descripcion %></td>
-        <td><%= link_to 'Show', asignatura %></td>
-        <td><%= link_to 'Edit', edit_asignatura_path(asignatura) %></td>
-        <td><%= link_to 'Destroy', asignatura, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+        <td>
+          <%= link_to 'Show', asignatura %>
+          <%= link_to 'Edit', edit_asignatura_path(asignatura) %>
+          <%= link_to 'Destroy', asignatura, method: :delete, data: { confirm: 'Are you sure?' } %>
+        </td>
       </tr>
     <% end %>
   </tbody>
@@ -28,4 +32,3 @@
 
 <br>
 
-<%= link_to 'New Asignatura', new_asignatura_path %>

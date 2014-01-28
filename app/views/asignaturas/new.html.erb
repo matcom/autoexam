@@ -1,5 +1,8 @@
+<% content_for :menu do %>
+  <%= link_to 'Listado de Asignaturas', asignaturas_path, :class => 'btn btn-primary' %>
+<% end %>
+
 <h1>New asignatura</h1>
 
 <%= render 'form' %>
 
-<%= link_to 'Back', asignaturas_path %>

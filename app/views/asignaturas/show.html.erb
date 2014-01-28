@@ -1,3 +1,9 @@
+<% content_for :menu do %>
+  <%= link_to 'Editar Asignatura', edit_asignatura_path(@asignatura), :class => 'btn btn-primary' %>
+  <%= link_to 'Listado de Asignaturas', asignaturas_path, :class => 'btn btn-primary' %>
+<% end %>
+<%= render :partial => 'common/common_menu' %>
+
 <p id="notice"><%= notice %></p>
 
 <p>
@@ -15,5 +21,3 @@
   <%= @asignatura.descripcion %>
 </p>
 
-<%= link_to 'Edit', edit_asignatura_path(@asignatura) %> |
-<%= link_to 'Back', asignaturas_path %>
