@@ -1,4 +1,4 @@
-<%= form_for(@listado) do |f| %>
+<%= form_for(@listado, :html => {:class => 'form-horizontal'}) do |f| %>
   <% if @listado.errors.any? %>
     <div id="error_explanation">
       <h2><%= pluralize(@listado.errors.count, "error") %> prohibited this listado from being saved:</h2>
@@ -11,15 +11,14 @@
     </div>
   <% end %>
 
-  <div class="field">
-    <%= f.label :asignatura_id %><br>
-    <%= f.number_field :asignatura_id %>
+  <div class="field control-group">
+    <%= f.label :estudiantes, :class => 'control-label' %>
+    <div class="controls">
+      <%= f.text_area :estudiantes, :rows => 20, :class => :span4 %>
+    </div>
   </div>
-  <div class="field">
-    <%= f.label :estudiantes %><br>
-    <%= f.text_area :estudiantes %>
-  </div>
-  <div class="actions">
+  <div class="form-actions">
+    <%= f.hidden_field :asignatura_id %>
     <%= f.submit %>
   </div>
 <% end %>

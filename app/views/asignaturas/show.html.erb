@@ -3,7 +3,7 @@
   <%= link_to 'Listado de Asignaturas', asignaturas_path, :class => 'btn btn-primary' %>
   <%= link_to 'Agregar Pregunta', nueva_pregunta_path(@asignatura), :class => 'btn btn-primary' %>
   <%= link_to 'Crear Examen', '#', :class => 'btn btn-primary' %>
-  <%= link_to 'Entrar Listado de Estudiantes', '#', :class => 'btn btn-primary' %>
+  <%= link_to 'Listado de Estudiantes', edit_listado_path(@asignatura.listado), :class => 'btn btn-primary' %>
 <% end %>
 
 <p id="notice"><%= notice %></p>
