@@ -11,4 +11,12 @@ class Preguntum < ActiveRecord::Base
     where('etiquetas like ?', '%' + etiqueta + '%')
   end
 
+  def self.ordenadas
+    order(:id)
+  end
+
+  def titulo_con_numero(number)
+    "##{number} - #{titulo}"
+  end
+
 end
