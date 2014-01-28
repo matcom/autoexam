@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140128041513) do
+ActiveRecord::Schema.define(version: 20140128150014) do
 
   create_table "asignaturas", force: true do |t|
     t.string   "nombre_corto"
@@ -20,6 +20,21 @@ ActiveRecord::Schema.define(version: 20140128041513) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "etiquetas"
+  end
+
+  create_table "examen", force: true do |t|
+    t.string   "nombre"
+    t.string   "etiquetas"
+    t.string   "directorio"
+    t.integer  "cantidad"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.integer  "asignatura_id"
+  end
+
+  create_table "examens_preguntas", force: true do |t|
+    t.integer "examen_id"
+    t.integer "prueba_id"
   end
 
   create_table "listados", force: true do |t|
