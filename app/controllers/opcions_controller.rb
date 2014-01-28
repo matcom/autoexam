@@ -1,23 +1,17 @@
 class OpcionsController < ApplicationController
   before_action :set_opcion, only: [:show, :edit, :update, :destroy]
 
-  # GET /opcions
-  # GET /opcions.json
   def index
     @opcions = Opcion.all
   end
 
-  # GET /opcions/1
-  # GET /opcions/1.json
-  def show
-  end
-
-  # GET /opcions/new
-  def new
+  def nueva_opcion
+    @preguntum = Preguntum.find(params[:id])
     @opcion = Opcion.new
+    @opcion.preguntum_id = @preguntum.id
+    render :new
   end
 
-  # GET /opcions/1/edit
   def edit
   end
 
@@ -28,7 +22,7 @@ class OpcionsController < ApplicationController
 
     respond_to do |format|
       if @opcion.save
-        format.html { redirect_to @opcion, notice: 'Opcion was successfully created.' }
+        format.html { redirect_to @opcion.preguntum, notice: 'Opcion was successfully created.' }
         format.json { render action: 'show', status: :created, location: @opcion }
       else
         format.html { render action: 'new' }
@@ -42,7 +36,7 @@ class OpcionsController < ApplicationController
   def update
     respond_to do |format|
       if @opcion.update(opcion_params)
-        format.html { redirect_to @opcion, notice: 'Opcion was successfully updated.' }
+        format.html { redirect_to @opcion.preguntum, notice: 'Opcion was successfully updated.' }
         format.json { head :no_content }
       else
         format.html { render action: 'edit' }

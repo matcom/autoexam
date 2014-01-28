@@ -1,5 +1,8 @@
-<h1>New opcion</h1>
+<% content_for :menu do %>
+  <%= link_to 'Detalles de Pregunta', @preguntum, :class => 'btn btn-primary' %>
+<% end %>
+
+<h1>Nueva opcion</h1>
 
 <%= render 'form' %>
 
-<%= link_to 'Back', opcions_path %>

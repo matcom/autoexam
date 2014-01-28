@@ -30,6 +30,7 @@
     <tr>
       <th>Titulo</th>
       <th>Etiquetas</th>
+      <th>Opciones</th>
       <th>Acciones</th>
     </tr>
   </thead>
@@ -39,6 +40,7 @@
       <tr>
         <td><%= preguntum.titulo %></td>
         <td><%= preguntum.listado_de_etiquetas.count %></td>
+        <td><%= preguntum.opcions.count %></td>
         <td>
           <%= link_to 'Show', preguntum, :class => 'btn btn-mini' %>
           <%= link_to 'Edit', edit_preguntum_path(preguntum), :class => 'btn btn-mini' %>

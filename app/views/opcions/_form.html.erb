@@ -1,4 +1,4 @@
-<%= form_for(@opcion) do |f| %>
+<%= form_for(@opcion, :html => {:class => 'form-horizontal'}) do |f| %>
   <% if @opcion.errors.any? %>
     <div id="error_explanation">
       <h2><%= pluralize(@opcion.errors.count, "error") %> prohibited this opcion from being saved:</h2>
@@ -11,19 +11,22 @@
     </div>
   <% end %>
 
-  <div class="field">
-    <%= f.label :preguntum_id %><br>
-    <%= f.number_field :preguntum_id %>
+  <div class="field control-group">
+    <%= f.label :titulo, :class => 'control-label' %>
+    <div class="controls">
+      <%= f.text_area :titulo %>
+    </div>
   </div>
-  <div class="field">
-    <%= f.label :titulo %><br>
-    <%= f.text_area :titulo %>
+
+  <div class="field control-group">
+    <%= f.label :correcta?, :class => 'control-label' %>
+    <div class="controls">
+      <%= f.check_box :right %>
+    </div>
   </div>
-  <div class="field">
-    <%= f.label :right %><br>
-    <%= f.check_box :right %>
-  </div>
-  <div class="actions">
+
+  <div class="form-actions">
+    <%= f.hidden_field :preguntum_id %>
     <%= f.submit %>
   </div>
 <% end %>
