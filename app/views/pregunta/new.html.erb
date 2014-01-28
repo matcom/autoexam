@@ -1,7 +1,9 @@
 <% content_for :menu do %>
-  <%= link_to 'Detalles de Asignatura', @asignatura, :class => 'btn btn-primary' %>
+  <%= link_to 'Detalles', @asignatura, :class => 'btn btn-primary' %>
+  <%= link_to 'Crear Examen', '#', :class => 'btn btn-primary' %>
+  <%= link_to 'Crear Clave', '#', :class => 'btn btn-primary' %>
+  <%= link_to 'Estudiantes', '#', :class => 'btn btn-primary' %>
 <% end %>
-<%= render :partial => 'common/common_menu'%>
 
 <h1>Nueva Pregunta</h1>
 

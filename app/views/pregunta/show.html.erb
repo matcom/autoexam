@@ -1,51 +1,56 @@
 <% content_for :menu do %>
-  <%= link_to 'Editar Pregunta', edit_preguntum_path(@preguntum), :class => 'btn btn-primary' %>
   <%= link_to 'Detalles de Asignatura', @preguntum.asignatura, :class => 'btn btn-primary' %>
   <%= link_to 'Nueva Opcion', nueva_opcion_path(@preguntum), :class => 'btn btn-primary'%>
 <% end %>
 
 <p id="notice"><%= notice %></p>
 
-<p>
-  <strong>Titulo:</strong>
-  <%= @preguntum.titulo %>
-</p>
+<%= form_for(@preguntum, :html => {:class => 'form-horizontal'}) do |f| %>
+  <% if @preguntum.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@preguntum.errors.count, "error") %> prohibited this preguntum from being saved:</h2>
 
-<p>
-  <strong>Asignatura:</strong>
-  <%= @preguntum.asignatura.nombre_largo %>
-</p>
+      <ul>
+      <% @preguntum.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
 
-<p>
-  <strong>Etiquetas:</strong>
-  <%= @preguntum.etiquetas %>
-</p>
+  <div class="field control-group">
+    <%= f.label :texto, :class => 'control-label' %>
+    <div class="controls">
+      <%= f.text_area :titulo, :class => :span6, :rows => 5 %>
+    </div>
+  </div>
 
-<h4>Listando Opciones</h4>
+  <div class="field control-group">
+    <%= f.label :etiquetas, :class => 'control-label' %>
+    <div class="controls">
+      <% for etiq in @preguntum.asignatura.listado_de_etiquetas %>
+        <%= check_box_tag "etiqueta_#{etiq}", 1, @preguntum.listado_de_etiquetas.include?(etiq) %> <%= etiq %> &nbsp; &nbsp;
+      <% end %>
+    </div>
+  </div>
 
-<table class='table table-striped'>
-  <thead>
-    <tr>
-      <th>Titulo</th>
-      <th>Correcta</th>
-      <th>Acciones</th>
-    </tr>
-  </thead>
-
-  <tbody>
+  <div class="field control-group">
+    <label class="control-label">Opciones</label>
+    <div class="controls">
     <% @preguntum.opcions.each do |opcion| %>
-      <tr>
-        <td><%= opcion.titulo %></td>
-        <td><%= opcion.right %></td>
-        <td>
-          <%= link_to 'Show', opcion, :class => 'btn btn-mini' %>
-          <%= link_to 'Edit', edit_opcion_path(opcion), :class => 'btn btn-mini' %>
-          <%= link_to 'Destroy', opcion, method: :delete, data: { confirm: 'Are you sure?' }, :class => 'btn btn-mini' %>
-        </td>
-      </tr>
+      <label class="checkbox">
+        <%= check_box_tag "option_#{opcion.id}_check", 1, opcion.right %>
+        <%= text_field_tag "option_#{opcion.id}_text", opcion.titulo, :class => :span5 %>
+        <%= link_to 'Destroy', opcion, method: :delete, data: { confirm: 'Are you sure?' }, :class => 'btn btn-mini' %>
+      </label>
     <% end %>
-  </tbody>
-</table>
 
-<br>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <%= f.hidden_field :asignatura_id %>
+    <%= f.submit "Guardar Cambios" %>
+  </div>
+<% end %>
 

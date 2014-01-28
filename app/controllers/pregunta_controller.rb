@@ -11,11 +11,6 @@ class PreguntaController < ApplicationController
     render :new
   end
 
-
-  def edit
-    @asignatura = @preguntum.asignatura
-  end
-
   def get_etiquetas
     list = []
     for etiq in @preguntum.asignatura.listado_de_etiquetas

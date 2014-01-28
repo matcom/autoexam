@@ -1,9 +1,8 @@
 <% content_for :menu do %>
-  <%= link_to 'Editar Asignatura', edit_asignatura_path(@asignatura), :class => 'btn btn-primary' %>
-  <%= link_to 'Listado de Asignaturas', asignaturas_path, :class => 'btn btn-primary' %>
+  <%= link_to 'Editar', edit_asignatura_path(@asignatura), :class => 'btn btn-primary' %>
   <%= link_to 'Agregar Pregunta', nueva_pregunta_path(@asignatura), :class => 'btn btn-primary' %>
   <%= link_to 'Crear Examen', '#', :class => 'btn btn-primary' %>
-  <%= link_to 'Listado de Estudiantes', edit_listado_path(@asignatura.listado), :class => 'btn btn-primary' %>
+  <%= link_to 'Estudiantes', edit_listado_path(@asignatura.listado), :class => 'btn btn-primary' %>
 <% end %>
 
 <% content_for :sidebar do %>
@@ -49,7 +48,6 @@
         <td><%= preguntum.opcions.count %></td>
         <td>
           <%= link_to 'Show', preguntum, :class => 'btn btn-mini' %>
-          <%= link_to 'Edit', edit_preguntum_path(preguntum), :class => 'btn btn-mini' %>
           <%= link_to 'Destroy', preguntum, method: :delete, data: { confirm: 'Are you sure?' }, :class => 'btn btn-mini' %>
         </td>
       </tr>
