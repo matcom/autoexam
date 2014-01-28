@@ -1,4 +1,4 @@
-<%= form_for(@examan) do |f| %>
+<%= form_for(@examan, :html => {:class => 'form-horizontal'}) do |f| %>
   <% if @examan.errors.any? %>
     <div id="error_explanation">
       <h2><%= pluralize(@examan.errors.count, "error") %> prohibited this examan from being saved:</h2>
@@ -11,23 +11,38 @@
     </div>
   <% end %>
 
-  <div class="field">
-    <%= f.label :nombre %><br>
-    <%= f.text_field :nombre %>
+  <div class="field control-group">
+    <%= f.label :nombre, :class => "control-label" %>
+    <div class="controls">
+      <%= f.text_field :nombre %>
+    </div>
   </div>
-  <div class="field">
-    <%= f.label :etiquetas %><br>
-    <%= f.text_field :etiquetas %>
+
+  <div class="field control-group">
+    <%= f.label :etiquetas, :class => 'control-label' %>
+    <div class="controls">
+      <% for etiq in @asignatura.listado_de_etiquetas %>
+        <%= check_box_tag "etiqueta_#{etiq}", 1, @examan.listado_de_etiquetas.include?(etiq) %> <%= etiq %> &nbsp; &nbsp;
+      <% end %>
+    </div>
   </div>
-  <div class="field">
-    <%= f.label :directorio %><br>
-    <%= f.text_field :directorio %>
+
+  <div class="field control-group">
+    <%= f.label :directorio, :class => 'control-label' %>
+    <div class="controls">
+      <%= f.text_field :directorio %>
+    </div>
   </div>
-  <div class="field">
-    <%= f.label :cantidad %><br>
-    <%= f.number_field :cantidad %>
+
+  <div class="field control-group">
+    <%= f.label :cantidad, :class => 'control-label' %>
+    <div class="controls">
+      <%= f.number_field :cantidad %>
+    </div>
   </div>
-  <div class="actions">
+
+  <div class="form-actions">
+    <%= f.hidden_field :asignatura_id %>
     <%= f.submit %>
   </div>
 <% end %>

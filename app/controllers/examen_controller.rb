@@ -7,18 +7,28 @@ class ExamenController < ApplicationController
   def new
     @asignatura = Asignatura.find(params[:id])
     @examan = Examan.new
-    @examan.asignatura_id = @asignatura
+    @examan.asignatura_id = @asignatura.id
   end
 
   def edit
+    @asignatura = @examan.asignatura
+  end
+
+  def get_etiquetas
+    list = []
+    for etiq in @examan.asignatura.listado_de_etiquetas
+      list << etiq if params["etiqueta_#{etiq}"]
+    end
+    list.join(',')
   end
 
   def create
     @examan = Examan.new(examan_params)
+    @examan.etiquetas = get_etiquetas
 
     respond_to do |format|
       if @examan.save
-        format.html { redirect_to @examan, notice: 'Examan was successfully created.' }
+        format.html { redirect_to edit_examan_path(@examan), notice: 'Examan was successfully created.' }
         format.json { render action: 'show', status: :created, location: @examan }
       else
         format.html { render action: 'new' }
@@ -28,9 +38,11 @@ class ExamenController < ApplicationController
   end
 
   def update
+    @examan.etiquetas = get_etiquetas
+
     respond_to do |format|
       if @examan.update(examan_params)
-        format.html { redirect_to @examan, notice: 'Examan was successfully updated.' }
+        format.html { redirect_to edit_examan_path(@examan), notice: 'Examan was successfully updated.' }
         format.json { head :no_content }
       else
         format.html { render action: 'edit' }
@@ -57,6 +69,6 @@ class ExamenController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def examan_params
-      params.require(:examan).permit(:nombre, :etiquetas, :directorio, :cantidad)
+      params.require(:examan).permit(:nombre, :etiquetas, :directorio, :cantidad, :asignatura_id)
     end
 end
