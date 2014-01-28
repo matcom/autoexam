@@ -14,7 +14,23 @@
       </div>
       <div id="collapse_<%= pregunta.id%>" class="accordion-body collapse out">
         <div class="accordion-inner">
-          aqui van las opciones
+          Minimo: <%= number_field_tag "minimo_#{pregunta.id}", clave_pregunta.minimo || 0, :class => :span1 %> &nbsp; &nbsp; &nbsp;
+          Maximo: <%= number_field_tag "maximo_#{pregunta.id}", clave_pregunta.maximo || 10, :class => :span1 %> <br>
+          <% for opcion in pregunta.opcions %>
+            <% clave_opcion = clave_pregunta.clave(opcion) %>
+            <label class="checkbox">
+              <div class="row">
+                <div class="span7">
+                  <%= check_box_tag "opcion_#{clave_opcion.id}_correcta", 1, clave_opcion.is_correct? %>
+                  <%= opcion.titulo %>
+                </div>
+                <div class="span2">
+                  <%= number_field_tag "opcion_#{clave_opcion.id}_bien", clave_opcion.puntos_bien, :class => :span1 %>
+                  <%= number_field_tag "opcion_#{clave_opcion.id}_mal", clave_opcion.puntos_mal, :class => :span1 %>
+                </div>
+              </div>
+            </label>
+          <% end %>
         </div>
       </div>
     </div>

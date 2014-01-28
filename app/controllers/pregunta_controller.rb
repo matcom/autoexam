@@ -45,6 +45,12 @@ class PreguntaController < ApplicationController
       return
     end
 
+    for opcion in @preguntum.opcions
+      opcion.right = params["option_#{opcion.id}_check"]
+      opcion.titulo = params["option_#{opcion.id}_text"]
+      opcion.save
+    end
+
     @preguntum.etiquetas = get_etiquetas
 
     respond_to do |format|

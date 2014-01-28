@@ -58,18 +58,13 @@
 
     <div class="container">
       <div class="row">
-        <div class="span9">
+        <div class="span10">
           <%= bootstrap_flash %>
           <div class="well well-small">
             <%= content_for :menu %>
           </div>
           <%= yield %>
         </div>
-
-        <div class="span3">
-          <%= content_for :sidebar %>
-        </div>
-
       </div>
 
       <footer>

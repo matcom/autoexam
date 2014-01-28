@@ -10,4 +10,5 @@ class Preguntum < ActiveRecord::Base
   def self.from_etiqueta(etiqueta)
     where('etiquetas like ?', '%' + etiqueta + '%')
   end
+
 end

@@ -75,7 +75,7 @@
                   <% if count == 0 %>
                     <i>NO HAY PREGUNTAS DE ESTA ETIQUETA</i> <br>
                   <% end %>
-                  <%= number_field_tag "cantidad_#{etiqueta}", @examan.cantidad(etiqueta), :class => :span1 %> Cantidad Maxima de preguntas a generar de esta etiqueta
+                  <%= number_field_tag "cantidad_#{etiqueta}", @examan.maximo(etiqueta), :class => :span1 %> Cantidad Maxima de preguntas a generar de esta etiqueta
                 </div>
               <% end %>
             </div>

@@ -10,7 +10,7 @@ class Examan < ActiveRecord::Base
     ClavePregunta.where(:preguntum_id => pregunta.id).where(:examan_id => self.id).first_or_create
   end
 
-  def cantidad(etiqueta)
+  def maximo(etiqueta)
     cantidades = preguntas_por_tema.split('|')
     for c in cantidades
       etiq, cant = c.split(':')
