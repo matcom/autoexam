@@ -1,0 +1,19 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Titulo:</strong>
+  <%= @preguntum.titulo %>
+</p>
+
+<p>
+  <strong>Asignatura:</strong>
+  <%= @preguntum.asignatura_id %>
+</p>
+
+<p>
+  <strong>Etiquetas:</strong>
+  <%= @preguntum.etiquetas %>
+</p>
+
+<%= link_to 'Edit', edit_preguntum_path(@preguntum) %> |
+<%= link_to 'Back', pregunta_path %>
