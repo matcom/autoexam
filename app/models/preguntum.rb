@@ -6,4 +6,8 @@ class Preguntum < ActiveRecord::Base
   def listado_de_etiquetas
     self.etiquetas.to_s.split(',').map {|e| e.strip }
   end
+
+  def self.from_etiqueta(etiqueta)
+    where('etiquetas like ?', '%' + etiqueta + '%')
+  end
 end

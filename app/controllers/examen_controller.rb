@@ -22,6 +22,16 @@ class ExamenController < ApplicationController
     list.join(',')
   end
 
+  def get_preguntas
+    list = []
+    for etiqueta in @examan.listado_de_etiquetas
+      for pregunta in Preguntum.from_etiqueta(etiqueta)
+        list << pregunta if params["pregunta_#{pregunta.id}"] && !list.include?(pregunta)
+      end
+    end
+    list
+  end
+
   def create
     @examan = Examan.new(examan_params)
     @examan.etiquetas = get_etiquetas
@@ -39,6 +49,7 @@ class ExamenController < ApplicationController
 
   def update
     @examan.etiquetas = get_etiquetas
+    @examan.pregunta = get_preguntas
 
     respond_to do |format|
       if @examan.update(examan_params)

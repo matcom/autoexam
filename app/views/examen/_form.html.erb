@@ -63,8 +63,8 @@
                 <div class="tab-pane <%= 'active'  if first %>" id="<%= buena_etiqueta(etiqueta) %>">
                   <% first = false %>
                   <% count = 0 %>
-                  <% for pregunta in Preguntum.where('etiquetas like ?', '%' + etiqueta + '%')%>
-                    <% unless hash.include?(pregunta.id) %>
+                  <% for pregunta in Preguntum.from_etiqueta(etiqueta)%>
+                    <% unless hash[pregunta.id] %>
                       <% count += 1%>
                       <label class="checkbox">
                         <%= check_box_tag "pregunta_#{pregunta.id}", 1, @examan.pregunta.include?(pregunta) %> <%= pregunta.titulo %>
