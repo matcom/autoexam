@@ -1,0 +1,25 @@
+<%= form_for(@listado) do |f| %>
+  <% if @listado.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@listado.errors.count, "error") %> prohibited this listado from being saved:</h2>
+
+      <ul>
+      <% @listado.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :asignatura_id %><br>
+    <%= f.number_field :asignatura_id %>
+  </div>
+  <div class="field">
+    <%= f.label :estudiantes %><br>
+    <%= f.text_area :estudiantes %>
+  </div>
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>

@@ -1,0 +1,29 @@
+<h1>Listing listados</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Asignatura</th>
+      <th>Estudiantes</th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @listados.each do |listado| %>
+      <tr>
+        <td><%= listado.asignatura_id %></td>
+        <td><%= listado.estudiantes %></td>
+        <td><%= link_to 'Show', listado %></td>
+        <td><%= link_to 'Edit', edit_listado_path(listado) %></td>
+        <td><%= link_to 'Destroy', listado, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Listado', new_listado_path %>

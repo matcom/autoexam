@@ -1,0 +1,9 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  asignatura_id: 1
+  estudiantes: MyText
+
+two:
+  asignatura_id: 1
+  estudiantes: MyText
