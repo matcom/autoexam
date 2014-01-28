@@ -8,6 +8,92 @@ import sys
 version = sys.argv[1]
 
 
+class QuestionGrader(object):
+	
+	def __init__(self,id_question,multiple,total_value,options_values):
+		self.id_question = id_question
+		self.multiple = multiple
+		self.total_value = total_value
+		self.options_values = options_values
+		
+	def getId(self):
+		return self.id_question
+		
+	def isMultiple(self):
+		return False
+		
+	def getTotalValue(self):
+		return self.total_value
+		
+	def getNumberOfOptions(self):
+		return len(options_values)
+
+	def getOptionValue(self,option):
+		return self.options_values[option]
+		
+	def evaluate(self,answers):
+		value = 0
+		count = 0
+		for a in answers:
+			if a[1]:
+				count += 1
+				if (not self.isMultiple) and (count>1):
+					return 0
+				value += self.getOptionValue(a[0])[0]
+			else:
+				value += self.getOptionValue(a[0])[1]
+		return value
+		
+		
+class Grader(object):
+	
+	def __init__(self,id_exam):
+		self.id_exam = id_exam
+		self.questions = {}
+		
+	def addQuestionGrader(self,question):
+		self.questions[question.getId()] = question
+		
+	def getQuestionGrader(self,id_question):
+		return self.questions[id_question]
+		
+
+def parse_grader_sheet(grader_sheet_file):
+	gs_file = open(grader_sheet_file,"rb")
+	id_exam = (gs_file.readline()).strip()
+	grader = Grader(id_exam)
+	blank_line = True
+	id_question_line = False
+	id_question = None
+	multiple = None
+	total_line = False
+	total = None
+	options_line = False
+	options = None
+	for line in gs_file:
+		if options_line:
+			options_line = False
+			blank_line = True
+			options = [(int(i.split("-")[0]),int(i.split("-")[1])) for i in line.strip().split(" ")]
+			grader.addQuestionGrader(QuestionGrader(id_question,multiple,total,options))
+		if total_line:
+			total_line = False
+			options_line = True
+			total = int(line.strip()[6:])
+		if id_question_line:
+			id_question_line = False
+			total_line = True
+			temp = line.strip()
+			multiple = temp.endswith("*")
+			id_question = temp[:-1] if multiple else temp
+		if blank_line and line.strip()=='':
+			blank_line = False
+			id_question_line = True
+	return grader
+
+
+
+
 def evaluator():
     tmp_file = open('tests_results.txt')
     if os.path.exists('grades.txt'):
