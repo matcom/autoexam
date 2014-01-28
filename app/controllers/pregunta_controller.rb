@@ -52,12 +52,11 @@ class PreguntaController < ApplicationController
     end
   end
 
-  # DELETE /pregunta/1
-  # DELETE /pregunta/1.json
   def destroy
+    @asignatura = @preguntum.asignatura
     @preguntum.destroy
     respond_to do |format|
-      format.html { redirect_to pregunta_url }
+      format.html { redirect_to @asignatura }
       format.json { head :no_content }
     end
   end

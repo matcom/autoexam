@@ -42,8 +42,6 @@ class AsignaturasController < ApplicationController
     end
   end
 
-  # DELETE /asignaturas/1
-  # DELETE /asignaturas/1.json
   def destroy
     @asignatura.destroy
     respond_to do |format|

@@ -15,8 +15,6 @@ class OpcionsController < ApplicationController
   def edit
   end
 
-  # POST /opcions
-  # POST /opcions.json
   def create
     @opcion = Opcion.new(opcion_params)
 
@@ -31,8 +29,6 @@ class OpcionsController < ApplicationController
     end
   end
 
-  # PATCH/PUT /opcions/1
-  # PATCH/PUT /opcions/1.json
   def update
     respond_to do |format|
       if @opcion.update(opcion_params)
@@ -45,12 +41,12 @@ class OpcionsController < ApplicationController
     end
   end
 
-  # DELETE /opcions/1
-  # DELETE /opcions/1.json
   def destroy
+    pregunta = @opcion.preguntum
     @opcion.destroy
+
     respond_to do |format|
-      format.html { redirect_to opcions_url }
+      format.html { redirect_to pregunta }
       format.json { head :no_content }
     end
   end
