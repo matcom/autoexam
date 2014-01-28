@@ -23,9 +23,9 @@
         <td><%= asignatura.pregunta.count %></td>
         <td><%= asignatura.listado_de_etiquetas.count %></td>
         <td>
-          <%= link_to 'Show', asignatura %>
-          <%= link_to 'Edit', edit_asignatura_path(asignatura) %>
-          <%= link_to 'Destroy', asignatura, method: :delete, data: { confirm: 'Are you sure?' } %>
+          <%= link_to 'Show', asignatura, :class => 'btn btn-mini' %>
+          <%= link_to 'Edit', edit_asignatura_path(asignatura), :class => 'btn btn-mini' %>
+          <%= link_to 'Destroy', asignatura, method: :delete, data: { confirm: 'Are you sure?' }, :class => 'btn btn-mini'%>
         </td>
       </tr>
     <% end %>

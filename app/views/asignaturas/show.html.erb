@@ -29,7 +29,6 @@
   <thead>
     <tr>
       <th>Titulo</th>
-      <th>Asignatura</th>
       <th>Etiquetas</th>
       <th>Acciones</th>
     </tr>
@@ -39,12 +38,11 @@
     <% @asignatura.pregunta.each do |preguntum| %>
       <tr>
         <td><%= preguntum.titulo %></td>
-        <td><%= preguntum.asignatura_id %></td>
         <td><%= preguntum.listado_de_etiquetas.count %></td>
         <td>
-          <%= link_to 'Show', preguntum %>
-          <%= link_to 'Edit', edit_preguntum_path(preguntum) %>
-          <%= link_to 'Destroy', preguntum, method: :delete, data: { confirm: 'Are you sure?' } %>
+          <%= link_to 'Show', preguntum, :class => 'btn btn-mini' %>
+          <%= link_to 'Edit', edit_preguntum_path(preguntum), :class => 'btn btn-mini' %>
+          <%= link_to 'Destroy', preguntum, method: :delete, data: { confirm: 'Are you sure?' }, :class => 'btn btn-mini' %>
         </td>
       </tr>
     <% end %>
