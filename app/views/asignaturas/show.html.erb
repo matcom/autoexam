@@ -1,0 +1,19 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Nombre corto:</strong>
+  <%= @asignatura.nombre_corto %>
+</p>
+
+<p>
+  <strong>Nombre largo:</strong>
+  <%= @asignatura.nombre_largo %>
+</p>
+
+<p>
+  <strong>Descripcion:</strong>
+  <%= @asignatura.descripcion %>
+</p>
+
+<%= link_to 'Edit', edit_asignatura_path(@asignatura) %> |
+<%= link_to 'Back', asignaturas_path %>

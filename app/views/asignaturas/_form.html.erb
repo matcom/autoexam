@@ -1,0 +1,29 @@
+<%= form_for(@asignatura) do |f| %>
+  <% if @asignatura.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@asignatura.errors.count, "error") %> prohibited this asignatura from being saved:</h2>
+
+      <ul>
+      <% @asignatura.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :nombre_corto %><br>
+    <%= f.text_field :nombre_corto %>
+  </div>
+  <div class="field">
+    <%= f.label :nombre_largo %><br>
+    <%= f.text_field :nombre_largo %>
+  </div>
+  <div class="field">
+    <%= f.label :descripcion %><br>
+    <%= f.text_area :descripcion %>
+  </div>
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>
