@@ -25,7 +25,7 @@ class PreguntaController < ApplicationController
 
     respond_to do |format|
       if @preguntum.save
-        format.html { redirect_to @preguntum.asignatura, notice: 'Preguntum was successfully created.' }
+        format.html { redirect_to @preguntum, notice: 'Preguntum was successfully created.' }
         format.json { render action: 'show', status: :created, location: @preguntum }
       else
         format.html { render action: 'new' }
@@ -35,10 +35,21 @@ class PreguntaController < ApplicationController
   end
 
   def update
+    if params[:add]
+      opcion = Opcion.new
+      opcion.preguntum_id = @preguntum.id
+      opcion.right = params[:option_new_check]
+      opcion.titulo = params[:option_new_text]
+      opcion.save
+      redirect_to @preguntum
+      return
+    end
+
     @preguntum.etiquetas = get_etiquetas
+
     respond_to do |format|
       if @preguntum.update(preguntum_params)
-        format.html { redirect_to @preguntum.asignatura, notice: 'Preguntum was successfully updated.' }
+        format.html { redirect_to @preguntum, notice: 'Preguntum was successfully updated.' }
         format.json { head :no_content }
       else
         format.html { render action: 'edit' }

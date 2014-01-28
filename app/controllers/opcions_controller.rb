@@ -1,20 +1,6 @@
 class OpcionsController < ApplicationController
   before_action :set_opcion, only: [:show, :edit, :update, :destroy]
 
-  def index
-    @opcions = Opcion.all
-  end
-
-  def nueva_opcion
-    @preguntum = Preguntum.find(params[:id])
-    @opcion = Opcion.new
-    @opcion.preguntum_id = @preguntum.id
-    render :new
-  end
-
-  def edit
-  end
-
   def create
     @opcion = Opcion.new(opcion_params)
 
@@ -24,18 +10,6 @@ class OpcionsController < ApplicationController
         format.json { render action: 'show', status: :created, location: @opcion }
       else
         format.html { render action: 'new' }
-        format.json { render json: @opcion.errors, status: :unprocessable_entity }
-      end
-    end
-  end
-
-  def update
-    respond_to do |format|
-      if @opcion.update(opcion_params)
-        format.html { redirect_to @opcion.preguntum, notice: 'Opcion was successfully updated.' }
-        format.json { head :no_content }
-      else
-        format.html { render action: 'edit' }
         format.json { render json: @opcion.errors, status: :unprocessable_entity }
       end
     end

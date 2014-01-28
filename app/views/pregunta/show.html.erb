@@ -41,16 +41,18 @@
       <label class="checkbox">
         <%= check_box_tag "option_#{opcion.id}_check", 1, opcion.right %>
         <%= text_field_tag "option_#{opcion.id}_text", opcion.titulo, :class => :span5 %>
-        <%= link_to 'Destroy', opcion, method: :delete, data: { confirm: 'Are you sure?' }, :class => 'btn btn-mini' %>
+        <%= link_to 'Destroy', opcion, method: :delete, data: { confirm: 'Are you sure?' }, :class => 'btn btn-mini btn-danger' %>
       </label>
     <% end %>
-
+      <%= check_box_tag :option_new_check, 1, false  %>
+      <%= text_field_tag :option_new_text, '', :class => :span5, :placeholder => 'Texto de la opcion' %>
+      <%= f.submit 'Adicionar', :class => 'btn btn-mini btn-success', :name => 'add' %>
     </div>
   </div>
 
   <div class="form-actions">
     <%= f.hidden_field :asignatura_id %>
-    <%= f.submit "Guardar Cambios" %>
+    <%= f.submit "Guardar Cambios", :name => 'submit' %>
   </div>
 <% end %>
 
