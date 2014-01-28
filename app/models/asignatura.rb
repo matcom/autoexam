@@ -1,6 +1,7 @@
 class Asignatura < ActiveRecord::Base
   has_many :pregunta
   has_one :listado
+  has_many :examen
   after_save :ensure_listado
 
   def ensure_listado

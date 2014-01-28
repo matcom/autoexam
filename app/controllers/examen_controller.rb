@@ -1,28 +1,18 @@
 class ExamenController < ApplicationController
   before_action :set_examan, only: [:show, :edit, :update, :destroy]
 
-  # GET /examen
-  # GET /examen.json
-  def index
-    @examen = Examan.all
-  end
-
-  # GET /examen/1
-  # GET /examen/1.json
   def show
   end
 
-  # GET /examen/new
   def new
+    @asignatura = Asignatura.find(params[:id])
     @examan = Examan.new
+    @examan.asignatura_id = @asignatura
   end
 
-  # GET /examen/1/edit
   def edit
   end
 
-  # POST /examen
-  # POST /examen.json
   def create
     @examan = Examan.new(examan_params)
 
@@ -37,8 +27,6 @@ class ExamenController < ApplicationController
     end
   end
 
-  # PATCH/PUT /examen/1
-  # PATCH/PUT /examen/1.json
   def update
     respond_to do |format|
       if @examan.update(examan_params)
