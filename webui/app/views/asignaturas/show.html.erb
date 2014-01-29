@@ -1,0 +1,62 @@
+<% content_for :menu do %>
+  <%= link_to 'Editar', edit_asignatura_path(@asignatura), :class => 'btn btn-primary' %>
+  <%= link_to 'Agregar Pregunta', nueva_pregunta_path(@asignatura), :class => 'btn btn-primary' %>
+  <%= link_to 'Crear Examen', nuevo_examen_path(@asignatura), :class => 'btn btn-primary' %>
+  <%= link_to 'Estudiantes', edit_listado_path(@asignatura.listado), :class => 'btn btn-primary' %>
+<% end %>
+
+<% content_for :sidebar do %>
+  <div class="well sidebar">
+    <%= @asignatura.listado.estudiantes.html_safe rescue 0 %>
+  </div>
+<% end %>
+
+<p id="notice"><%= notice %></p>
+
+<h4>Detalles</h4>
+
+<p>
+  <strong>Nombre corto:</strong> <%= @asignatura.nombre_corto %> <br>
+  <strong>Nombre largo:</strong> <%= @asignatura.nombre_largo %> <br>
+  <strong>Descripcion:</strong> <%= @asignatura.descripcion %> <br>
+</p>
+
+<hr>
+
+<div class="row">
+  <div class="span6">
+    <h4>Preguntas</h4>
+    <table class="table table-striped">
+      <% @asignatura.pregunta.each do |preguntum| %>
+        <tr>
+          <td>
+            <b> <%= link_to preguntum.titulo, preguntum, :class => 'link' %> </b> <br>
+            <%= etiquetas_de(preguntum) %>
+          </td>
+          <td>
+            <%= link_to 'Eliminar', preguntum, method: :delete, data: { confirm: 'Are you sure?' }, :class => 'btn btn-mini btn-danger' %>
+          </td>
+        </tr>
+      <% end %>
+    </table>
+  </div>
+  <div class="span6">
+    <h4>Examenes</h4>
+    <table class="table table-striped">
+      <% @asignatura.examen.each do |examan| %>
+        <tr>
+          <td>
+            <b> <%= link_to examan.nombre, edit_examan_path(examan) %> </b> <br>
+            Preguntas: <span><%= examan.pregunta.count %></span>, &nbsp;
+            A Generar: <span><%= examan.cantidad %></span> <br>
+            <%= etiquetas_de(examan) %>
+          </td>
+          <td>
+            <%= link_to 'Eliminar', examan, method: :delete, data: { confirm: 'Are you sure?' }, :class => 'btn btn-mini btn-danger' %>
+          </td>
+        </tr>
+      <% end %>
+    </table>
+  </div>
+</div>
+

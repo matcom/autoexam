@@ -1,0 +1,12 @@
+<% content_for :menu do %>
+  <%= link_to 'Detalles Asignatura', @asignatura, :class => 'btn btn-primary' %>
+  <%= link_to 'Listado de Asignaturas', asignaturas_path, :class => 'btn btn-primary' %>
+  <%= link_to 'Agregar Pregunta', nueva_pregunta_path(@asignatura), :class => 'btn btn-primary' %>
+  <%= link_to 'Crear Examen', '#', :class => 'btn btn-primary' %>
+  <%= link_to 'Entrar Listado de Estudiantes', '#', :class => 'btn btn-primary' %>
+<% end %>
+
+<h1>Editar asignatura</h1>
+
+<%= render 'form' %>
+

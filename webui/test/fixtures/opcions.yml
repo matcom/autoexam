@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  preguntum_id: 1
+  titulo: MyText
+  right: false
+
+two:
+  preguntum_id: 1
+  titulo: MyText
+  right: false
