@@ -58,3 +58,6 @@ nosetests.xml
 # SublimeText project files
 *.sublime-workspace
 *.sublime-project
+
+
+generated/*
