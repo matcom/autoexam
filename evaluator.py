@@ -3,7 +3,7 @@
 import json
 import os
 import sys
-
+import scanresults as sr
 
 version = sys.argv[1]
 
@@ -56,7 +56,6 @@ class Grader(object):
 		
 	def getQuestionGrader(self,id_question):
 		return self.questions[id_question]
-		
 
 def parse_grader_sheet(grader_sheet_file):
 	gs_file = open(grader_sheet_file,"rb")
@@ -91,7 +90,23 @@ def parse_grader_sheet(grader_sheet_file):
 			id_question_line = True
 	return grader
 
-
+def evaluate(grader_sheet_file,results_json_file):
+	grader = parse_grader_sheet(grader_sheet_file)
+	tests_scans = sr.parse(results_json_file)
+	grades = {}
+	for test_id, exam in tests_scans.items():
+		if grader.id_exam == exam.exam_id:
+			total_grade = 0
+			q_grades = {}
+			for question_id, question in exam.questions.items():
+				answers = [(i, i+1 in question.answers) for i in range(0,question.total_answers)]
+				q_grade = grader.getQuestionGrader(question_id).evaluate(answers)
+				total_grade += q_grade
+				q_grades[question_id]=q_grade
+			grades[test_id]={"total_grade":total_grade,"questions_grades":q_grades}
+		else:
+			pass
+	return grades
 
 
 def evaluator():
