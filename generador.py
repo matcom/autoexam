@@ -15,6 +15,7 @@ database = collections.defaultdict(lambda: [])
 restrictions = {}
 now = 1
 debug = sys.argv.count('-d')
+count = 0
 
 
 def preprocess_line(line, remove_comments=True):
@@ -75,13 +76,16 @@ def parse_question(i, lines):
     """Crea el objeto pregunta y la agrega en los contenidos
     que se evalúan en la misma."""
 
+    global count
+
     # Find the id line
     i, identifier = parse_id(i, lines)
     i, tags = parse_tag(i, lines)
     i, header = parse_header(i, lines)
     i, answers = parse_answers(i, lines)
 
-    question = Question(header, answers, identifier)
+    question = Question(header, answers, count)
+    count += 1
 
     # Add answers to given tags
     for t in tags:
@@ -227,7 +231,7 @@ class Question:
 
     def __init__(self, header, options, number):
         if (not header or not options):
-            raise ValueError(u'Invalid question %s' % self.number)
+            raise ValueError(u'Invalid question %s' % number)
 
         self.options = options
         self.header = header
@@ -355,9 +359,10 @@ def generate(n, header):
         for q in qs:
             questions.add(q)
 
-    questions = sorted(questions, key=lambda q: q.header)
+    questions = sorted(questions, key=lambda q: q.number)
 
-    master_file.write(master_template.render(questions=database).encode('utf8'))
+    master_file.write(master_template.render(test=questions,
+                      header=header).encode('utf8'))
     master_file.close()
 
     for i in range(n):
@@ -379,7 +384,7 @@ def generate(n, header):
                           encode('utf8'))
         answer_file.close()
 
-        sol_file = open('generated/v{0}/Solution-{1}.tex'.format(now, i), 'w')
+        sol_file = open('generated/v{0}/Solution-{1}.txt'.format(now, i), 'w')
         sol_file.write(sol_template.render(test=test, number=i).encode('utf8'))
 
         sol_file.close()
