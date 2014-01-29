@@ -237,8 +237,10 @@ class Question:
         self.header = header
         self.number = number
         self.fixed = {}
+        self.options_id = {}
 
         for i, o in enumerate(self.options):
+            self.options_id[o] = i
             if o[1]:
                 self.fixed[o] = i
 
@@ -277,18 +279,35 @@ class Question:
     def __str__(self):
         return str(self.number)
 
+    def qrcode(self):
+        opts = "(%s)" % ",".join(str(self.options_id[o])
+                                 for o in self.options)
+        # return str(self.number) + '**'
 
-def qrcode_data(i, test):
-    return ""
+        if self.multiple:
+            return"%i*%s" % (self.number, opts)
+        else:
+            return "%i%s" % (self.number, opts)
+
+
+def qrcode_data(test_id, i, test):
+    return "%i|%i|%i|%s" % (test_id, i, len(test),
+                            "|".join(q.qrcode() for q in test))
 
 
 def generate_qrcode(i, test):
     filename = 'generated/v{0}/qrcode-{1}.png'.format(now, i)
 
     f = open(filename, 'w')
-    qr = qrcode.QRCode(version=2, box_size=10, border=0)
-    data = qrcode_data(i, test)
+    qr = qrcode.QRCode(box_size=10, border=0)
+    data = qrcode_data(now, i, test)
     qr.add_data(data)
+
+    if debug > 1:
+        print('QR Code data: %s' % data)
+    if debug > 2:
+        qr.print_tty()
+
     qr.make()
     img = qr.make_image()
     img.save(f)
@@ -371,7 +390,7 @@ def generate(n, header):
 
     sol_file = open('generated/v{0}/Solution.txt'.format(now), 'w')
     sol_file.write(sol_template.render(test=questions,
-                   test_id=1).encode('utf8'))
+                   test_id=now).encode('utf8'))
     sol_file.close()
 
     for i in range(n):
