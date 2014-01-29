@@ -84,8 +84,8 @@ def parse_question(i, lines):
     i, header = parse_header(i, lines)
     i, answers = parse_answers(i, lines)
 
-    question = Question(header, answers, count)
     count += 1
+    question = Question(header, answers, count)
 
     # Add answers to given tags
     for t in tags:
@@ -256,6 +256,10 @@ class Question:
                 self.options[pos] = o
                 self.options[idx] = tmp
 
+    @property
+    def multiple(self):
+        return len([o for o in self.options if o[0]]) > 1
+
     def options_text(self, i, max):
         alphabet = list("abcdefghijklmnopqrstuvwxyz")
         first = True
@@ -365,6 +369,11 @@ def generate(n, header):
                       header=header).encode('utf8'))
     master_file.close()
 
+    sol_file = open('generated/v{0}/Solution.txt'.format(now), 'w')
+    sol_file.write(sol_template.render(test=questions,
+                   test_id=1).encode('utf8'))
+    sol_file.close()
+
     for i in range(n):
         if debug:
             print('Generating quiz number %i' % i)
@@ -383,11 +392,6 @@ def generate(n, header):
                           max=max(len(q.options) for q in test)).
                           encode('utf8'))
         answer_file.close()
-
-        sol_file = open('generated/v{0}/Solution-{1}.txt'.format(now, i), 'w')
-        sol_file.write(sol_template.render(test=test, number=i).encode('utf8'))
-
-        sol_file.close()
 
 
 if __name__ == '__main__':
