@@ -2,35 +2,23 @@
   <%= link_to 'Nueva Asignatura', new_asignatura_path, :class => 'btn btn-primary' %>
 <% end %>
 
-<h1>Listado de asignaturas</h1>
+<h1>Asignaturas</h1>
 
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th>Nombre corto</th>
-      <th>Nombre largo</th>
-      <th>Preguntas</th>
-      <th>Etiquetas</th>
-      <th>Acciones</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    <% @asignaturas.each do |asignatura| %>
-      <tr>
-        <td><%= asignatura.nombre_corto %></td>
-        <td><%= asignatura.nombre_largo %></td>
-        <td><%= asignatura.pregunta.count %></td>
-        <td><%= asignatura.listado_de_etiquetas.count %></td>
-        <td>
-          <%= link_to 'Show', asignatura, :class => 'btn btn-mini' %>
-          <%= link_to 'Edit', edit_asignatura_path(asignatura), :class => 'btn btn-mini' %>
-          <%= link_to 'Destroy', asignatura, method: :delete, data: { confirm: 'Are you sure?' }, :class => 'btn btn-mini'%>
-        </td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
-
-<br>
-
+<ul class="thumbnails">
+<% @asignaturas.each do |asignatura| %>
+  <li class="span4">
+    <div class="thumbnail">
+      <h4> <%= link_to asignatura.nombre_compuesto, asignatura, :class => 'link' %> </h4>
+      <% for etiqueta in asignatura.listado_de_etiquetas %>
+        <span class="label"><%= etiqueta %></span>
+      <% end %> <br>
+      Preguntas: <%= asignatura.pregunta.count %> <br>
+      Examenes: <%= asignatura.examen.count %> <br>
+      Estudiantes: <%= asignatura.listado.estudiantes.split.length %>
+      <p> <%= asignatura.descripcion %> </p>
+      <%= link_to 'Editar', edit_asignatura_path(asignatura), :class => 'btn btn-mini btn-primary' %>
+      <%= link_to 'Eliminar', asignatura, method: :delete, data: { confirm: 'Are you sure?' }, :class => 'btn btn-mini btn-danger'%>
+    </div>
+  </li>
+<% end %>
+</ul>

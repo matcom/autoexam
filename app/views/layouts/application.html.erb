@@ -50,6 +50,9 @@
           <div class="container nav-collapse">
             <ul class="nav">
               <li><%= link_to "Asignaturas", asignaturas_path  %></li>
+              <% if current_user %>
+                <li><%= link_to "Logout #{current_user.email}", destroy_user_session_path, :method => :delete  %></li>
+              <% end %>
             </ul>
           </div><!--/.nav-collapse -->
         </div>
@@ -60,9 +63,11 @@
       <div class="row">
         <div class="span10">
           <%= bootstrap_flash %>
-          <div class="well well-small">
-            <%= content_for :menu %>
-          </div>
+          <% if content_for :menu %>
+            <div class="well well-small">
+              <%= content_for :menu %>
+            </div>
+          <% end %>
           <%= yield %>
         </div>
       </div>

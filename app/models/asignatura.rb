@@ -15,4 +15,8 @@ class Asignatura < ActiveRecord::Base
   def listado_de_etiquetas
     self.etiquetas.to_s.split(',').map {|e| e.strip }
   end
+
+  def nombre_compuesto
+    "#{nombre_largo} (#{nombre_corto})"
+  end
 end
