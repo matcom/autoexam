@@ -9,9 +9,7 @@
   <li class="span4">
     <div class="thumbnail">
       <h4> <%= link_to asignatura.nombre_compuesto, asignatura, :class => 'link' %> </h4>
-      <% for etiqueta in asignatura.listado_de_etiquetas %>
-        <span class="label"><%= etiqueta %></span>
-      <% end %> <br>
+      <%= etiquetas_de(asignatura) %> <br>
       Preguntas: <%= asignatura.pregunta.count %> <br>
       Examenes: <%= asignatura.examen.count %> <br>
       Estudiantes: <%= asignatura.listado.estudiantes.split.length %>
