@@ -1,0 +1,62 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage[spanish]{babel}
+
+\geometry{left=2cm, right=2cm, top=2cm, bottom=1cm}
+\pagestyle{empty}
+
+\setlength{\parindent}{0cm}
+
+%opening
+\begin{document}
+
+  %\begin{figure}[h!]
+     \hspace{0.2cm}
+     \includegraphics[width=2cm]{qrcode-{{ number }}.png}
+     \hspace{0.5cm}
+     \parbox[b]{10cm}{Examen: {{ number }} \vspace{1cm} }
+     \hspace{1cm}
+     \\
+     \includegraphics[width=0.5cm]{../../marker.png}
+     \hspace{13.5cm}
+     \includegraphics[width=0.5cm]{../../marker.png}
+  %\end{figure}
+
+  \hspace{0.01cm}
+  \begin{tabular}{c@{\hspace{0cm}}c@{\hspace{0cm}}c@{\hspace{0cm}}c@{\hspace{0cm}}c}
+    %\hline
+    {% for i, q in test %}
+      \begin{tabular}{c|cc|}
+        \cline{2-3}
+        \hspace{0.5cm} & \hspace{0.5cm} & \hspace{0.5cm} \\
+
+      {% for t, n in q.options_text(i+1, max) %}
+        {% if n %}
+        {{ t }} & {{ n }} & \fbox{} \\
+        {% else %}
+          & & \phantom{\fbox{}} \\
+        {% endif %}
+        {% if not loop.last %}
+        & & \\
+        {% endif %}
+      {% endfor %}
+        & & \\
+      \cline{2-3}
+      \end{tabular}
+      {% if loop.index0 % 5 == 0 %}
+        &
+      {% endif %}
+    {% endfor %}
+  %\\ \hline
+  \end{tabular}
+
+  \includegraphics[width=0.5cm]{../../marker.png}
+  \hspace{13.5cm}
+  \includegraphics[width=0.5cm]{../../marker.png}
+  \vspace{2cm}
+
+\end{document}
