@@ -11,7 +11,7 @@ class Examan < ActiveRecord::Base
   end
 
   def maximo(etiqueta)
-    cantidades = preguntas_por_tema.split('|')
+    cantidades = preguntas_por_tema.to_s.split('|')
     for c in cantidades
       etiq, cant = c.split(':')
       if etiq == etiqueta

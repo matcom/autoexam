@@ -7,7 +7,7 @@
 
 <% content_for :sidebar do %>
   <div class="well sidebar">
-    <%= @asignatura.listado.estudiantes.html_safe %>
+    <%= @asignatura.listado.estudiantes.html_safe rescue 0 %>
   </div>
 <% end %>
 

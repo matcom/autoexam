@@ -12,7 +12,7 @@
       <%= etiquetas_de(asignatura) %> <br>
       Preguntas: <%= asignatura.pregunta.count %> <br>
       Examenes: <%= asignatura.examen.count %> <br>
-      Estudiantes: <%= asignatura.listado.estudiantes.split.length %>
+      Estudiantes: <%= asignatura.listado.estudiantes.split.length rescue 0 %>
       <p> <%= asignatura.descripcion %> </p>
       <%= link_to 'Editar', edit_asignatura_path(asignatura), :class => 'btn btn-mini btn-primary' %>
       <%= link_to 'Eliminar', asignatura, method: :delete, data: { confirm: 'Are you sure?' }, :class => 'btn btn-mini btn-danger'%>
