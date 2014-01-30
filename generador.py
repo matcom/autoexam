@@ -23,7 +23,7 @@ def preprocess_line(line, remove_comments=True):
         print(u'Reading line: "%s"' % line.decode('utf8'))
 
     line = line.strip().decode('utf8')
-    if '%' in line:
+    if remove_comments and '%' in line:
         idx = line.index('%')
         if idx >= 0 and (idx == 0 or line[idx-1] != '\\'):
             line = line[:idx].strip()
