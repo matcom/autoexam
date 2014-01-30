@@ -1,12 +1,7 @@
 # coding: utf8
 
 import json
-import os
-import sys
 import scanresults as sr
-
-version = sys.argv[1]
-
 
 class QuestionGrader(object):
 	
@@ -95,12 +90,13 @@ def evaluate(grader_sheet_file,results_json_file):
 	tests_scans = sr.parse(results_json_file)
 	grades = {}
 	for test_id, exam in tests_scans.items():
-		if grader.id_exam == exam.exam_id:
+		if str(grader.id_exam) == str(exam.exam_id):
 			total_grade = 0
 			q_grades = {}
 			for question_id, question in exam.questions.items():
 				answers = [(i, i+1 in question.answers) for i in range(0,question.total_answers)]
-				q_grade = grader.getQuestionGrader(question_id).evaluate(answers)
+				print answers
+				q_grade = grader.getQuestionGrader(str(question_id)).evaluate(answers)
 				total_grade += q_grade
 				q_grades[question_id]=q_grade
 			grades[test_id]={"total_grade":total_grade,"questions_grades":q_grades}
@@ -108,68 +104,4 @@ def evaluate(grader_sheet_file,results_json_file):
 			pass
 	return grades
 
-
-def evaluator():
-    tmp_file = open('tests_results.txt')
-    if os.path.exists('grades.txt'):
-        raise Exception('Ya existe el archivo: grades.txt')
-        
-    result = open('grades.txt', 'w')   
-    tests= json.load(tmp_file)
-    
-    gs = {}
-    
-    for i in sorted(tests):
-        sol = open(os.path.join( "generated", version ,u"TestSolution-" + str(i) + u".txt"))
-        f = read_evaluate_test(sol)
-        gs[tests[i]["test"]["student_id"]] = (evaluate_test(result, f, tests[i]["test"], tests[i]["warnings"]))
-        
-    result.close()
-
-    
-def read_evaluate_test(file_test):
-    
-    file_test = file_test.readlines()
-    f = []    
-    
-    for i in file_test:
-        f_i = i.strip()                   
-        if f_i:
-            f.append(int(f_i))
-    
-    return f
-    
-    
-def evaluate_test(result, answers, test, warnings):
- 
-    g = 0
-    
-    uctys = set()    
-    
-    for w in warnings:
-        uctys.add(w["question"])
-        
-    if warnings:
-        print("STUDENT: {0} ({1})".format(test["student_id"], test["test_id"]))
-    
-    for i in range(len(answers)):
-        if i in uctys:
-            print(u"Ambigüedad en la pregunta {0}".format(i))
-            print(u"  La respuesta correcta era: {0}".format(answers[i]))
-            while 1:
-                r = raw_input(u"  Aceptar respuesta? ([s]í / [n]o): ")
-                if r == 's':
-                    g += 1
-                    break
-                elif r == 'n':
-                    break
-                
-        elif answers[i] == test["questions"][str(i+1)]["answers"][0]:
-            g += 1
-            
-    result.write(u'{0}: {1}\n'.format(test["student_id"], g))
-            
-    return g
-            
-evaluator()
             
