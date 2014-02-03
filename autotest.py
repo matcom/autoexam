@@ -43,12 +43,13 @@ doc_parameters = {
 }
 
 class TestScanner:
-    def __init__(self, w, h, **kw):
+    def __init__(self, w, h, testsfile, **kw):
         for (k,v) in kw.items():        
             doc_parameters[k]=v
         doc_parameters["scanner"] = QRScanner(w,h);
         doc_parameters["loaded_marker"] = cv2.imread(doc_parameters["marker_image"],0)
         doc_parameters["init"] = True
+        doc_parameters["tests"] = scanresults.parse(testsfile)
 
     def scan(self, source):
         return get_scan_report(source)
@@ -111,9 +112,7 @@ def get_image_report(frame):
     # Check qrcode validity
     if len(qrcode)==1 and qrcode_ok(qrcode[0]):
         qrcode = qrcode.pop()
-        info = get_qrcode_info(qrcode)
-        test = Test(info["student_id"], info["id"], info["questions"])
-        report.test = test
+        report.test = get_test_from_qrcode(qrcode)
         #paint the qrcode in white to lower the chances of getting wrong matches
         cv2.fillConvexPoly(image,np.int32([list(x) for x in qrcode.location]) ,(255))
         size = int(doc_parameters["marker_size"]*dist(qrcode.location[0],qrcode.location[1]));
@@ -128,11 +127,11 @@ def get_image_report(frame):
             rows = doc_parameters["answer_rows"]
             #TODO make a parameter out of wish order to scan the tests 
             answer_imgs = get_answer_images(answer_area,cols,rows)
-            n=1
+            n=0
             bad_data = False
             for img in answer_imgs:                           
-                correct, selection = get_selections(img, test.questions[n]["total_answers"], n)
-                if correct: test.questions[n]["answers"] = selection                        
+                correct, selection = get_selections(img, report.test.questions[n]["total_answers"], n)
+                if correct: report.test.questions[n]["answers"] = selection                        
                 else: 
                     bad_data = True
                 n+=1
@@ -152,21 +151,20 @@ def get_image_report(frame):
 
     return report  
 
-def get_qrcode_info(qrcode):
-    info = qrcode.data.split('|')      
-    info = {}
-    info["exam_id"]  = info[0]
-    info["id"] = int(info[1])
-    info["questions"] = {}
-    total_q = int(info[vars_in_qrcode-1])
-    for q in range(total_q):
-        if len(info)-vars_in_qrcode==1:
-            info["questions"][q+1]= Question(q+1, int(info[len(info)-1]),not doc_parameters["single_selection"])
-        else:
-            info["questions"][q+1]= Question(q+1, int(info[q+vars_in_qrcode]), not doc_parameters["single_selection"])
+#   exam id | test id
+DATA_RE = re.compile(r'''[0-9]+\|[0-9]+''',re.UNICODE)
 
-    return info
+def qrcode_ok(qrcode):
+    data = qrcode.data
+    #if the data matches the rege and the test_id is in the test set
+    return DATA_RE.match(data) and data.split('|')[1] in doc_parameters["tests"]
 
+def get_test_from_qrcode(qrcode):
+    info = qrcode.data.split('|')  
+    exam_id = int(info[0]) #not used right now
+    test_id = int(info[1])
+    return doc_parameters["tests"][test_id]
+  
 class QRCode(object):
     """QRCode class"""
     def __init__(self, data, location):
@@ -197,20 +195,6 @@ class QRScanner(object):
 
     def cv2_to_zbar_image(self, cv2_image):
         return zbar.Image(self.width, self.height, 'Y800',cv2_image.tostring())
-
-#TODO think about the need of this variable and the possibility of using only std_id and test_id
-vars_in_qrcode = 4
-#   student id | test id | marker size | # of questions | answers per question
-DATA_RE = re.compile(r'''[\w|\s|\.]+\|[0-9]+\|[0-9]+\.[0-9]+\|[0-9]+[\|[0-9]+]*''',re.UNICODE)
-
-def qrcode_ok(qrcode):
-    data = qrcode.data
-    if DATA_RE.match(data):
-        s = data.split("|")
-        return ( len(s)-vars_in_qrcode==1 and int(s[vars_in_qrcode-1])!=0 ) or int(s[vars_in_qrcode-1])==len(s)-vars_in_qrcode 
-    return False
-
-
 
 def fix_rotation_with_perspective(qr_rect, image):
     """Fixes the rotation of the image using the qrcode rectangle. -> cv2.image"""

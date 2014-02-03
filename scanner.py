@@ -12,7 +12,7 @@ import os
 source = ImageSource(0)
 w,h = source.get_size()
 #Set document processing parameters and initialize scanner
-scanner = TestScanner(w, h, show_image=True, single_selection=True, answers_id = [0,1,2,3,4,5,6,7,8,9])
+scanner = TestScanner(w, h, "testslayout.json", show_image=True, single_selection=True, answers_id = [0,1,2,3,4,5,6,7,8,9])
 
 tests = {}
 #While user does not press the q key
