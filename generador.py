@@ -9,11 +9,13 @@ import qrcode
 import os
 import sys
 import pprint
+import json
+import scanresults
 
 
 database = collections.defaultdict(lambda: [])
 restrictions = {}
-now = 1
+test_id = 1
 debug = sys.argv.count('-d')
 count = 0
 
@@ -258,6 +260,11 @@ class Question:
                 self.options[pos] = o
                 self.options[idx] = tmp
 
+    def convert(self):
+        order = [self.options_id[o] for o in self.options]
+        return scanresults.Question(self.number, len(self.options),
+                                    self.multiple, order=order)
+
     @property
     def multiple(self):
         return len([o for o in self.options if o[0]]) > 1
@@ -291,16 +298,15 @@ class Question:
 
 
 def qrcode_data(test_id, i, test):
-    return "%i|%i|%i|%s" % (test_id, i, len(test),
-                            "|".join(q.qrcode() for q in test))
+    return "%i|%i" % (test_id, i)
 
 
 def generate_qrcode(i, test):
-    filename = 'generated/v{0}/qrcode-{1}.png'.format(now, i)
+    filename = 'generated/v{0}/qrcode-{1}.png'.format(test_id, i)
 
     f = open(filename, 'w')
     qr = qrcode.QRCode(box_size=10, border=0)
-    data = qrcode_data(now, i, test)
+    data = qrcode_data(test_id, i, test)
     qr.add_data(data)
 
     if debug > 1:
@@ -375,7 +381,7 @@ def generate(n, header):
     master_template = jinja2.Template(open('latex/master_template.tex').
                                       read().decode('utf8'))
 
-    master_file = open('generated/v{0}/Master.tex'.format(now), 'w')
+    master_file = open('generated/v{0}/Master.tex'.format(test_id), 'w')
 
     questions = set()
     for qs in database.values():
@@ -388,17 +394,21 @@ def generate(n, header):
                       header=header).encode('utf8'))
     master_file.close()
 
-    sol_file = open('generated/v{0}/Solution.txt'.format(now), 'w')
+    sol_file = open('generated/v{0}/Solution.txt'.format(test_id), 'w')
     sol_file.write(sol_template.render(test=questions,
-                   test_id=now).encode('utf8'))
+                   test_id=test_id).encode('utf8'))
     sol_file.close()
+
+    order = {}
 
     for i in range(n):
         if debug:
             print('Generating quiz number %i' % i)
 
         test = generate_quiz()
-        text_file = open('generated/v{0}/Test-{1}.tex'.format(now, i), 'w')
+        order[i] = scanresults.Test(test_id, i, [q.convert() for q in test])
+
+        text_file = open('generated/v{0}/Test-{1}.tex'.format(test_id, i), 'w')
 
         generate_qrcode(i, test)
 
@@ -406,11 +416,13 @@ def generate(n, header):
                         test=test, number=i).encode('utf8'))
         text_file.close()
 
-        answer_file = open('generated/v{0}/Answer-{1}.tex'.format(now, i), 'w')
+        answer_file = open('generated/v{0}/Answer-{1}.tex'.format(test_id, i), 'w')
         answer_file.write(answer_template.render(test=enumerate(test), number=i,
                           max=max(len(q.options) for q in test)).
                           encode('utf8'))
         answer_file.close()
+
+    scanresults.dump(order, 'generated/v{0}/Order.txt'.format(test_id))
 
 
 if __name__ == '__main__':
@@ -419,12 +431,12 @@ if __name__ == '__main__':
 
     for d in os.listdir('generated'):
         num = int(d[1:])
-        if num >= now:
-            now = num + 1
+        if num >= test_id:
+            test_id = num + 1
 
-    os.mkdir('generated/v{0}'.format(now))
+    os.mkdir('generated/v{0}'.format(test_id))
 
     parser()
     generate(10, "Sample Test")
 
-    print('Generated v{0}'.format(now))
+    print('Generated v{0}'.format(test_id))
