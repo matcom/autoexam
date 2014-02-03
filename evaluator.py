@@ -95,7 +95,6 @@ def evaluate(grader_sheet_file,results_json_file):
 			q_grades = {}
 			for question_id, question in exam.questions.items():
 				answers = [(i, i+1 in question.answers) for i in range(0,question.total_answers)]
-				print answers
 				q_grade = grader.getQuestionGrader(str(question_id)).evaluate(answers)
 				total_grade += q_grade
 				q_grades[question_id]=q_grade
@@ -104,4 +103,18 @@ def evaluate(grader_sheet_file,results_json_file):
 			pass
 	return grades
 
-            
+
+def main():
+	import argparse
+	parser = argparse.ArgumentParser(description='Autoexam evaluator')
+	parser.add_argument("gradersheet", help="Gradersheet file")
+	parser.add_argument("scansjson", help="Scans json file")
+	parser.add_argument("resultsjson", help="Results json file")
+	args = parser.parse_args()
+	result = evaluate(args.gradersheet,args.scansjson)
+	print result
+	json.dump(result,open(args.resultsjson,"wb"))
+	return 0
+
+if __name__ == '__main__':
+	main()
