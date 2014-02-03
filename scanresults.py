@@ -54,19 +54,21 @@ class QuestionError(object):
 
 class Question:
     """Question Class"""
-    def __init__(self, id, total_answers, multiple, answers = []):
+    def __init__(self, id, total_answers, multiple, answers = [], order = []):
         self.answers = answers
         self.total_answers = total_answers  
         self.multiple = multiple
+        self.order = order
         self.id = id
 
     @classmethod
     def load_from_json(cls,json):
-        return Question(json["id"],json["total_answers"],json["multiple"],json["answers"])
+        return Question(id = json["id"],total_answers = json["total_answers"],multiple = json["multiple"],answers = json["answers"], order = json["order"])
 
     def to_dict(self):
         result = {}
         result["id"] = self.id
+        result["order"] = self.order
         result["answers"] = self.answers
         result["total_answers"] = self.total_answers
         result["multiple"] = self.multiple
