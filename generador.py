@@ -19,6 +19,8 @@ test_id = 1
 debug = sys.argv.count('-d')
 count = 0
 
+VERSION = 1
+
 
 def preprocess_line(line, remove_comments=True):
     if debug > 1:
@@ -298,7 +300,7 @@ class Question:
 
 
 def qrcode_data(test_id, i, test):
-    return "%i|%i" % (test_id, i)
+    return "%i|%i|%i" % (test_id, i, VERSION)
 
 
 def generate_qrcode(i, test):
