@@ -22,9 +22,9 @@ class Warning(object):
 
     def __str__(self):
         if self.wtype == WarningTypes.UNCERTANTY:
-            return "The selection of the answer %s in question %d is uncertain"%(self.selection, self.question) 
+            return "The selection of the answer %s in question %d is uncertain"%(self.selection, self.question)
         elif self.wtype == WarningTypes.MULT_SELECTION:
-            return "Is possible that the question %d has additional selections. Possible values %s"%(self.question,self.selection) 
+            return "Is possible that the question %d has additional selections. Possible values %s"%(self.question,self.selection)
 
     def to_dict(self):
         return {'type': self.wtype, 'question': self.question, 'selection': self.selection, 'message': self.__str__() }
@@ -36,13 +36,13 @@ class Warning(object):
 class QrcodeError(object):
     """QRCode error class"""
     def __str__(self):
-        return "There was an error with the detection of the QRCode"   
+        return "There was an error with the detection of the QRCode"
 
 class MarkersError(object):
     """Marker error class"""
     def __str__(self):
-        return "There was an error with the detection of the markers"   
-          
+        return "There was an error with the detection of the markers"
+
 class QuestionError(object):
     """docstring for QuestionError"""
     def __init__(self, q, msg):
@@ -56,7 +56,7 @@ class Question:
     """Question Class"""
     def __init__(self, id, total_answers, multiple, answers = []):
         self.answers = answers
-        self.total_answers = total_answers  
+        self.total_answers = total_answers
         self.multiple = multiple
         self.id = id
 
@@ -71,10 +71,10 @@ class Question:
         result["total_answers"] = self.total_answers
         result["multiple"] = self.multiple
         return result
-        
+
 class Test(object):
     """Test class"""
-    def __init__(self, exam_id, id, questions, warnings={}):              
+    def __init__(self, exam_id, id, questions, warnings={}):
         self.exam_id = exam_id
         self.id = id
         self.questions = questions
@@ -85,7 +85,7 @@ class Test(object):
         questions = {}
         for k,v in json["questions"].items():
             questions[int(k)] = Question.load_from_json(v)
-        
+
         warnings = [Warning.load_from_json(w) for w in json["warnings"]]
 
         return Test(json["exam_id"],json["id"],questions, warnings)
@@ -93,9 +93,9 @@ class Test(object):
 
     def __str__(self):
         result = "Exam ID: %s\nTest ID: %s\nTotal Questions: %d\n"%(self.exam_id,self.id,len(self.questions))
-        for (k,v) in self.questions.items():            
+        for (k,v) in self.questions.items():
             result+="%d -> %s\n"%(k,v.answers)
-        for w in self.warnings:            
+        for w in self.warnings:
             result+="%s\n"%(w)
 
         return result
@@ -131,8 +131,8 @@ def dump(tests, filename, overwrite = False):
         print('Saving test: {0}'.format(k))
         to_serialize[k]=v.to_dict();
     #dump in json format
-    f = file(filename,'w') 
-    json.dump(to_serialize, f) 
+    f = file(filename,'w')
+    json.dump(to_serialize, f)
     f.close()
 
 def parse(filename):
@@ -148,8 +148,8 @@ def parse(filename):
         return tests
 
 def dump_single(test,file_prefix="test_"):
-    f = file(file_prefix+str(test.id)+".json",'w') 
-    json.dump(test.to_dict(), f) 
+    f = file(file_prefix+str(test.id)+".json",'w')
+    json.dump(test.to_dict(), f)
     f.close()
 
 def parse_single(filename):
@@ -159,8 +159,3 @@ def parse_single(filename):
         f.close()
 
         return Test.load_from_json(content)
-
-
-
-
-
