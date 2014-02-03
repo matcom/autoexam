@@ -93,11 +93,11 @@ def evaluate(grader_sheet_file,results_json_file):
 		if str(grader.id_exam) == str(exam.exam_id):
 			total_grade = 0
 			q_grades = {}
-			for question_id, question in exam.questions.items():
+			for question in exam.questions:
 				answers = [(i, i+1 in question.answers) for i in range(0,question.total_answers)]
-				q_grade = grader.getQuestionGrader(str(question_id)).evaluate(answers)
+				q_grade = grader.getQuestionGrader(str(question.id)).evaluate(answers)
 				total_grade += q_grade
-				q_grades[question_id]=q_grade
+				q_grades[str(question.id)]=q_grade
 			grades[test_id]={"total_grade":total_grade,"questions_grades":q_grades}
 		else:
 			pass
@@ -112,7 +112,6 @@ def main():
 	parser.add_argument("resultsjson", help="Results json file")
 	args = parser.parse_args()
 	result = evaluate(args.gradersheet,args.scansjson)
-	print result
 	json.dump(result,open(args.resultsjson,"wb"))
 	return 0
 
