@@ -1,3 +1,5 @@
+###Python###
+
 *.py[cod]
 
 # C extensions
@@ -34,3 +36,24 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+###Linux###
+
+.*
+!.gitignore
+*~
+
+###PyCharm###
+
+# PyCharm
+# http://www.jetbrains.com/pycharm/webhelp/project.html
+.idea
+.iml
+
+###SublimeText###
+
+# SublimeText project files
+*.sublime-workspace
+*.sublime-project
+
+generated/*
