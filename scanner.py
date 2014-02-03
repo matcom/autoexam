@@ -37,7 +37,7 @@ scanner.finalize()
 source.release()
 
 #dummy test
-tests[1] = Test(1,1,{22:Question(22,4,True,[2,1,6]), 23:Question(23,4,False,[2])},[Warning(23,2,WarningTypes.UNCERTANTY), Warning(22,[1,0],WarningTypes.MULT_SELECTION)])
+tests[1] = Test(1,1,[Question(22,4,True,[2,1,6]),Question(23,4,False,[2])],[Warning(23,2,WarningTypes.UNCERTANTY), Warning(22,[1,0],WarningTypes.MULT_SELECTION)])
 #dump_single(tests[34])
 for (k,v) in tests.items():
     print unicode(v).encode("utf8")

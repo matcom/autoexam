@@ -39,7 +39,7 @@ doc_parameters = {
     "selection_box_padding":0.5, #padding used to select the inner area of the selection boxes       
     "selection_threshold": 130, #threshold that is used to decide if the answer is selected based on the mean intensity range:[0,255]
     "selection_error": 30, #threshold around the selection_threshold that marks the uncertainty range:[0,255]
-    "single_selection": False #if it's true it will return the answer with the highest mean value (it still uses the selection_threshold and selection_error to display warnings)    
+    "version": 1 #version control to reject invalid qrcodes
 }
 
 class TestScanner:
@@ -49,7 +49,7 @@ class TestScanner:
         doc_parameters["scanner"] = QRScanner(w,h);
         doc_parameters["loaded_marker"] = cv2.imread(doc_parameters["marker_image"],0)
         doc_parameters["init"] = True
-        doc_parameters["tests"] = scanresults.parse(testsfile)
+        doc_parameters["tests"] = parse(testsfile)
 
     def scan(self, source):
         return get_scan_report(source)
@@ -130,7 +130,7 @@ def get_image_report(frame):
             n=0
             bad_data = False
             for img in answer_imgs:                           
-                correct, selection = get_selections(img, report.test.questions[n]["total_answers"], n)
+                correct, selection = get_selections(img, report.test.questions[n], n)
                 if correct: report.test.questions[n]["answers"] = selection                        
                 else: 
                     bad_data = True
@@ -152,12 +152,12 @@ def get_image_report(frame):
     return report  
 
 #   exam id | test id
-DATA_RE = re.compile(r'''[0-9]+\|[0-9]+''',re.UNICODE)
+DATA_RE = re.compile(r'''[0-9]+\|[0-9]+\|[0-9]+''',re.UNICODE)
 
 def qrcode_ok(qrcode):
     data = qrcode.data
     #if the data matches the rege and the test_id is in the test set
-    return DATA_RE.match(data) and data.split('|')[1] in doc_parameters["tests"]
+    return DATA_RE.match(data) and doc_parameters["version"]==int(data.split('|')[2]) and data.split('|')[1] in doc_parameters["tests"]
 
 def get_test_from_qrcode(qrcode):
     info = qrcode.data.split('|')  
@@ -313,9 +313,9 @@ def get_answer_images(image, cols, rows):
 
     return result
 
-def get_selections(image, total, question):
+def get_selections(image, question, index):
     """Finds the answers selected by the student. -> (bool correctness, list of answers)"""   
-    success, contours = get_contours(image,total,question)
+    success, contours = get_contours(image,question.total_answers,index)
     if not success:
         report.success = False
         return False,[]
@@ -324,14 +324,14 @@ def get_selections(image, total, question):
     error = doc_parameters["selection_error"]
 
     answers = []
-    if not doc_parameters["single_selection"]:
+    if question.multiple:
         a=0
         for data in contours:
             mean = data["mean_intensity"]
             if mean>thresh:
                 answers.append(doc_parameters["answers_id"][a])
             if abs(thresh-mean)<=error:
-                w = Warning(question,doc_parameters["answers_id"][a],WarningTypes.UNCERTANTY)
+                w = Warning(index,doc_parameters["answers_id"][a],WarningTypes.UNCERTANTY)
                 report.test.warnings.append(w)
             a+=1
     else:
@@ -343,13 +343,13 @@ def get_selections(image, total, question):
         sec_max_mean =  contours[1]["mean_intensity"]
 
         if max_mean<thresh or abs(max_mean-sec_max_mean)<=error:
-            w = Warning(question,doc_parameters["answers_id"][best_contour["index"]],WarningTypes.UNCERTANTY);
+            w = Warning(index,doc_parameters["answers_id"][best_contour["index"]],WarningTypes.UNCERTANTY);
             report.test.warnings.append(w)
 
         posible_selected = [doc_parameters["answers_id"][c["index"]] for c in contours if c["mean_intensity"]>thresh and c["index"]!=contours[0]["index"]]
         
         if len(posible_selected)>0:
-            w = Warning(question,posible_selected,WarningTypes.MULT_SELECTION)
+            w = Warning(index,posible_selected,WarningTypes.MULT_SELECTION)
             report.test.warnings.append(w)     
 
     return True, answers
