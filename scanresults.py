@@ -84,20 +84,16 @@ class Test(object):
 
     @classmethod
     def load_from_json(cls,json):
-        questions = {}
-        for k,v in json["questions"].items():
-            questions[int(k)] = Question.load_from_json(v)
-
+        questions = [Question.load_from_json(q) for q in json["questions"]]        
         warnings = [Warning.load_from_json(w) for w in json["warnings"]]
 
         return Test(json["exam_id"],json["id"],questions, warnings)
 
-
     def __str__(self):
         result = "Exam ID: %s\nTest ID: %s\nTotal Questions: %d\n"%(self.exam_id,self.id,len(self.questions))
-        for (k,v) in self.questions.items():
-            result+="%d -> %s\n"%(k,v.answers)
-        for w in self.warnings:
+        for q in self.questions:            
+            result+="%d -> %s\n"%(q.id,q.answers)
+        for w in self.warnings:            
             result+="%s\n"%(w)
 
         return result
@@ -112,9 +108,7 @@ class Test(object):
         result = {}
         result["exam_id"] = self.exam_id
         result["id"] = self.id
-        result["questions"] = {}
-        for k,v in self.questions.items():
-            result["questions"][k]=v.to_dict()
+        result["questions"] = [q.to_dict() for q in self.questions]
         result["warnings"] = [w.to_dict() for w in self.warnings]
         return result
 
