@@ -61,6 +61,12 @@ class Question:
         self.order = order
         self.id = id
 
+    def __eq__(self,other):
+        return self.total_answers == other.total_answers and self.multiple == other.multiple and self.answers==other.answers
+
+    def __ne__(self,other):
+        return not self.__eq__(other)
+
     @classmethod
     def load_from_json(cls,json):
         return Question(id = json["id"],total_answers = json["total_answers"],multiple = json["multiple"],answers = json["answers"], order = json["order"])
@@ -99,7 +105,15 @@ class Test(object):
         return result
 
     def __eq__(self,other):
-        return self.exam_id == other.exam_id and self.id==other.id and self.questions == other.questions
+        print "testing eq"
+        if len(self.questions) != len(other.questions):
+            return False
+        for i in range(0, len(self.questions)):
+            if self.questions[i] != other.questions[i]:
+                print "returned f2"
+                return False
+
+        return self.exam_id == other.exam_id and self.id==other.id
 
     def __ne__(self,other):
         return not self.__eq__(other)

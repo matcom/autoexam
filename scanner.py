@@ -27,8 +27,9 @@ while cv2.waitKey(1) & 0xFF != ord('q'):
             print "Test ID:", unicode(report.test.id).encode("utf8")
             for q in report.test.questions:
                 print "%d%s -> %s"%(q.id,"m" if q.multiple else "s",q.answers)
-            print "Warnings:"
-            for w in report.test.warnings: print "\t", w    	
+            if len(report.test.warnings)>0:
+                print "Warnings:"
+                for w in report.test.warnings: print "\t", w    	
     #if recognition went wrong print the reasons
     else:
         for e in [x for x in report.errors if isinstance(x, QuestionError)]: # in this case only the question errors

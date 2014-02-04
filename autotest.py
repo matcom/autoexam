@@ -3,6 +3,7 @@ import cv2
 import zbar
 import numpy as np
 import sys
+import copy
 from scanresults import *
 
 import math
@@ -137,6 +138,7 @@ def get_image_report(frame):
 
             if not bad_data:
                 report.success = True
+                report.test = copy.deepcopy(report.test)
                 return report
 
         else:
@@ -333,7 +335,8 @@ def get_selections(image, question, index):
                 report.test.warnings.append(w)
             a+=1
     else:
-        contours.sort(key = lambda cont: cont["mean_intensity"], reverse = True)#sort contours using mean intensity values from high to low
+        #sort contours using mean intensity values from high to low
+        contours.sort(key=lambda cont: cont["mean_intensity"], reverse=True)
         best_contour = contours[0]
         answers.append(question.order[best_contour["index"]])
 
