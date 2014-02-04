@@ -138,7 +138,6 @@ def get_image_report(frame):
 
             if not bad_data:
                 report.success = True
-                report.test = copy.deepcopy(report.test)
                 return report
 
         else:
@@ -162,7 +161,7 @@ def get_test_from_qrcode(qrcode):
     info = qrcode.data.split('|')  
     exam_id = int(info[0]) #not used right now
     test_id = int(info[1])
-    return doc_parameters["tests"][test_id]
+    return copy.deepcopy(doc_parameters["tests"][test_id])
   
 class QRCode(object):
     """QRCode class"""
@@ -328,12 +327,15 @@ def get_selections(image, question, index):
         a=0
         for data in contours:
             mean = data["mean_intensity"]
-            if mean>thresh:
+            if mean > thresh:
                 answers.append(question.order[a])
-            if abs(thresh-mean)<=error:
-                w = Warning(index,question.order[a],WarningTypes.UNCERTANTY)
+                if mean-thresh <= error:
+                    w = Warning(index, a, WarningTypes.UNCERTANTY, selected=True)
+                    report.test.warnings.append(w)
+            elif thresh-mean <= error:
+                w = Warning(index, a, WarningTypes.UNCERTANTY, selected=False)
                 report.test.warnings.append(w)
-            a+=1
+            a += 1
     else:
         #sort contours using mean intensity values from high to low
         contours.sort(key=lambda cont: cont["mean_intensity"], reverse=True)
@@ -344,13 +346,13 @@ def get_selections(image, question, index):
         sec_max_mean =  contours[1]["mean_intensity"] if len(contours)>1 else thresh
 
         if max_mean<thresh or abs(max_mean-sec_max_mean)<=error:
-            w = Warning(index,question.order[best_contour["index"]],WarningTypes.UNCERTANTY);
+            w = Warning(index, best_contour["index"], WarningTypes.UNCERTANTY, selected=True);
             report.test.warnings.append(w)
 
-        posible_selected = [question.order[c["index"]] for c in contours if c["mean_intensity"]>thresh and c["index"]!=contours[0]["index"]]
+        posible_selected = [ c["index"] for c in contours if c["mean_intensity"]>thresh and c["index"]!=contours[0]["index"]]
         
         if len(posible_selected)>0:
-            w = Warning(index,posible_selected,WarningTypes.MULT_SELECTION)
+            w = Warning(index, posible_selected, WarningTypes.MULT_SELECTION, selected = False)
             report.test.warnings.append(w)     
 
     return True, answers

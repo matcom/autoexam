@@ -16,9 +16,9 @@ scanner = TestScanner(w, h, "generated/v1/Order.txt", show_image=True)
 
 tests = {}
 #While user does not press the q key
-while cv2.waitKey(1) & 0xFF != ord('q'):   
-    #Get the scan report of the source image   
-    report = scanner.scan(source)   
+while cv2.waitKey(1) & 0xFF != ord('q'):
+    #Get the scan report of the source image
+    report = scanner.scan(source)
     #if test recognized OK
     if report.success:
         if not report.test.id in tests:
@@ -29,11 +29,13 @@ while cv2.waitKey(1) & 0xFF != ord('q'):
                 print "%d%s -> %s"%(q.id,"m" if q.multiple else "s",q.answers)
             if len(report.test.warnings)>0:
                 print "Warnings:"
-                for w in report.test.warnings: print "\t", w    	
+                for w in report.test.warnings:
+                    print "\t", w
     #if recognition went wrong print the reasons
     else:
         for e in [x for x in report.errors if isinstance(x, QuestionError)]: # in this case only the question errors
             print e
+
 
 
 scanner.finalize()

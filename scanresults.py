@@ -15,23 +15,33 @@ class Report(object):
 
 class Warning(object):
     """Warnings"""
-    def __init__(self, question, selection, wtype):
+    def __init__(self, question, selection, wtype, selected = False):
         self.question = question
         self.selection = selection
+        self.selected = selected
         self.wtype = wtype
+
+    def __eq__(self,other):
+        return self.question == other.question and self.selection == other.selection and self.wtype==other.wtype and self.selected == other.selected
+
+    def __ne__(self,other):
+        return not self.__eq__(other)
 
     def __str__(self):
         if self.wtype == WarningTypes.UNCERTANTY:
-            return "The selection of the answer %s in question %d is uncertain"%(self.selection, self.question)
+            if self.selected:
+                return "In the question %d the answer %s was recognized as marked but this decision must be verified"%(self.question, self.selection,)
+            else:
+                return "In the question %d the answer %s was recognized as unmarked but it's possible that the user selected it"%(self.question, self.selection)            
         elif self.wtype == WarningTypes.MULT_SELECTION:
-            return "Is possible that the question %d has additional selections. Possible values %s"%(self.question,self.selection)
+            return "The question %d is single selection and is possible that it has additional answers marked. Possible values %s"%(self.question, self.selection)
 
     def to_dict(self):
-        return {'type': self.wtype, 'question': self.question, 'selection': self.selection, 'message': self.__str__() }
+        return {'type': self.wtype, 'question': self.question, 'selection': self.selection, 'selected': self.selected, 'message': self.__str__() }
 
     @classmethod
     def load_from_json(cls,json):
-        return Warning(json["question"],json["selection"],json["type"])
+        return Warning(json["question"],json["selection"],json["type"],json["selected"])
 
 class QrcodeError(object):
     """QRCode error class"""
@@ -105,15 +115,7 @@ class Test(object):
         return result
 
     def __eq__(self,other):
-        print "testing eq"
-        if len(self.questions) != len(other.questions):
-            return False
-        for i in range(0, len(self.questions)):
-            if self.questions[i] != other.questions[i]:
-                print "returned f2"
-                return False
-
-        return self.exam_id == other.exam_id and self.id==other.id
+        return self.warnings == other.warnings and self.questions == other.questions and self.exam_id == other.exam_id and self.id==other.id
 
     def __ne__(self,other):
         return not self.__eq__(other)
