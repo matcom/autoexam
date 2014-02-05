@@ -15,23 +15,33 @@ class Report(object):
 
 class Warning(object):
     """Warnings"""
-    def __init__(self, question, selection, wtype):
+    def __init__(self, question, selection, wtype, selected = False):
         self.question = question
         self.selection = selection
+        self.selected = selected
         self.wtype = wtype
+
+    def __eq__(self,other):
+        return self.question == other.question and self.selection == other.selection and self.wtype==other.wtype and self.selected == other.selected
+
+    def __ne__(self,other):
+        return not self.__eq__(other)
 
     def __str__(self):
         if self.wtype == WarningTypes.UNCERTANTY:
-            return "The selection of the answer %s in question %d is uncertain"%(self.selection, self.question)
+            if self.selected:
+                return "In the question %d the answer %s was recognized as marked but this decision must be verified"%(self.question, self.selection,)
+            else:
+                return "In the question %d the answer %s was recognized as unmarked but it's possible that the user selected it"%(self.question, self.selection)            
         elif self.wtype == WarningTypes.MULT_SELECTION:
-            return "Is possible that the question %d has additional selections. Possible values %s"%(self.question,self.selection)
+            return "The question %d is single selection and is possible that it has additional answers marked. Possible values %s"%(self.question, self.selection)
 
     def to_dict(self):
-        return {'type': self.wtype, 'question': self.question, 'selection': self.selection, 'message': self.__str__() }
+        return {'type': self.wtype, 'question': self.question, 'selection': self.selection, 'selected': self.selected, 'message': self.__str__() }
 
     @classmethod
     def load_from_json(cls,json):
-        return Warning(json["question"],json["selection"],json["type"])
+        return Warning(json["question"],json["selection"],json["type"],json["selected"])
 
 class QrcodeError(object):
     """QRCode error class"""
@@ -54,19 +64,27 @@ class QuestionError(object):
 
 class Question:
     """Question Class"""
-    def __init__(self, id, total_answers, multiple, answers = []):
+    def __init__(self, id, total_answers, multiple, answers = [], order = []):
         self.answers = answers
         self.total_answers = total_answers
         self.multiple = multiple
+        self.order = order
         self.id = id
+
+    def __eq__(self,other):
+        return self.total_answers == other.total_answers and self.multiple == other.multiple and self.answers==other.answers
+
+    def __ne__(self,other):
+        return not self.__eq__(other)
 
     @classmethod
     def load_from_json(cls,json):
-        return Question(json["id"],json["total_answers"],json["multiple"],json["answers"])
+        return Question(id = json["id"],total_answers = json["total_answers"],multiple = json["multiple"],answers = json["answers"], order = json["order"])
 
     def to_dict(self):
         result = {}
         result["id"] = self.id
+        result["order"] = self.order
         result["answers"] = self.answers
         result["total_answers"] = self.total_answers
         result["multiple"] = self.multiple
@@ -82,26 +100,22 @@ class Test(object):
 
     @classmethod
     def load_from_json(cls,json):
-        questions = {}
-        for k,v in json["questions"].items():
-            questions[int(k)] = Question.load_from_json(v)
-
+        questions = [Question.load_from_json(q) for q in json["questions"]]
         warnings = [Warning.load_from_json(w) for w in json["warnings"]]
 
         return Test(json["exam_id"],json["id"],questions, warnings)
 
-
     def __str__(self):
         result = "Exam ID: %s\nTest ID: %s\nTotal Questions: %d\n"%(self.exam_id,self.id,len(self.questions))
-        for (k,v) in self.questions.items():
-            result+="%d -> %s\n"%(k,v.answers)
+        for q in self.questions:
+            result+="%d -> %s\n"%(q.id,q.answers)
         for w in self.warnings:
             result+="%s\n"%(w)
 
         return result
 
     def __eq__(self,other):
-        return self.exam_id == other.exam_id and self.id==other.id and self.questions == other.questions
+        return self.warnings == other.warnings and self.questions == other.questions and self.exam_id == other.exam_id and self.id==other.id
 
     def __ne__(self,other):
         return not self.__eq__(other)
@@ -110,9 +124,7 @@ class Test(object):
         result = {}
         result["exam_id"] = self.exam_id
         result["id"] = self.id
-        result["questions"] = {}
-        for k,v in self.questions.items():
-            result["questions"][k]=v.to_dict()
+        result["questions"] = [q.to_dict() for q in self.questions]
         result["warnings"] = [w.to_dict() for w in self.warnings]
         return result
 
