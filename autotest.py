@@ -3,6 +3,7 @@ import cv2
 import zbar
 import numpy as np
 import sys
+import copy
 from scanresults import *
 
 import math
@@ -13,25 +14,23 @@ doc_parameters = {
     "show_image": True, #if it is a camera it shows a window with the images, and if it is an image it shows the image
     "double_check": True, #Makes a double confirmation before to return a success report
     "marker_image": "marker.png", #Image of the marker to use in the borders
-    "answer_rows": 4, #answers rows     
-    "answer_cols": 5, #answers cols
+    "answer_cols": 5, ##the number of questions per column, this value is fixed
     "marker_match_min_quality": 0.6, #threshold level to apply to the template matching results
     "marker_size": 0.25, #size of the marker with respect to the qrcode width
-    "answers_id": ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"], #the id used to identify the answers in order
     #TODO try to recode this to use percent and not pixel units as they are now
     "qrcode_width": 100, #qrcode final width in pixels after perspective transformation
     "margin" : 60, #margin used to crop image after the rotation rectification 
 
     #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
-    "up_margin": 0.058, 
-    "down_margin": 0.033,
+    "up_margin": 0.03, 
+    "down_margin": 0.03,
     "left_margin": 0.0,
-    "right_margin": 0.0,
+    "right_margin": 0.00,
 
     #padding between the rectangle with the selection cells and the inner cell area (used to rectify any misalignment within the answer selection rectangle)
-    "cell_up_margin": 0.07,
-    "cell_down_margin": 0.07,
-    "cell_left_margin": 0.75,
+    "cell_up_margin": 0.03,
+    "cell_down_margin": 0.03,
+    "cell_left_margin": 0.74,
     "cell_right_margin": 0.05,    
 
     "distance_threshold": 0.5, #threshold of the allowed distance between the selection boxes over the mean distance    
@@ -119,22 +118,21 @@ def get_image_report(frame):
         rotated, gray_image =  fix_rotation(qrcode.location, image, gray_image)  
         small_marker = cv2.resize(marker,(size,size))
         markers =  get_marker_positions(rotated, small_marker, doc_parameters["marker_match_min_quality"])
-
         if len(markers)==4 and rectangle_sort(markers,rotated):
-
             answer_area = perspective_transform(gray_image, markers) 
             cols = doc_parameters["answer_cols"]
-            rows = doc_parameters["answer_rows"]
+            rows = (len(report.test.questions)/cols)+1
             #TODO make a parameter out of wish order to scan the tests 
-            answer_imgs = get_answer_images(answer_area,cols,rows)
-            n=0
+            answer_imgs = get_answer_images(answer_area, cols, rows, len(report.test.questions))
+            question=0
             bad_data = False
             for img in answer_imgs:                           
-                correct, selection = get_selections(img, report.test.questions[n], n)
-                if correct: report.test.questions[n]["answers"] = selection                        
-                else: 
+                correct, selection = get_selections(img, report.test.questions[question], question)
+                if correct:
+                    report.test.questions[question].answers = selection
+                else:
                     bad_data = True
-                n+=1
+                question+=1
             #TODO debug
             cv2.imshow("answer_area",answer_area)
 
@@ -157,13 +155,13 @@ DATA_RE = re.compile(r'''[0-9]+\|[0-9]+\|[0-9]+''',re.UNICODE)
 def qrcode_ok(qrcode):
     data = qrcode.data
     #if the data matches the rege and the test_id is in the test set
-    return DATA_RE.match(data) and doc_parameters["version"]==int(data.split('|')[2]) and data.split('|')[1] in doc_parameters["tests"]
+    return DATA_RE.match(data) and doc_parameters["version"]==int(data.split('|')[2]) and  int(data.split('|')[1]) in doc_parameters["tests"]
 
 def get_test_from_qrcode(qrcode):
     info = qrcode.data.split('|')  
     exam_id = int(info[0]) #not used right now
     test_id = int(info[1])
-    return doc_parameters["tests"][test_id]
+    return copy.deepcopy(doc_parameters["tests"][test_id])
   
 class QRCode(object):
     """QRCode class"""
@@ -209,8 +207,8 @@ def fix_rotation_with_perspective(qr_rect, image):
     result_h = h*qrcode_w/old_dist
     result_w = w*qrcode_w/old_dist
 
-    M = cv2.getPerspectiveTransform(pts1,pts2)
-    result = cv2.warpPerspective(image,M,(int(result_w),int(result_h)))
+    M = cv2.getPerspectiveTransform(pts1, pts2)
+    result = cv2.warpPerspective(image, M, (int(result_w), int(result_h)))
 
     return result,((margin,margin), (margin,qrcode_w+margin), (qrcode_w+margin,qrcode_w+margin), (qrcode_w+margin,margin))
 
@@ -280,7 +278,7 @@ def perspective_transform(image, markers):
     M = cv2.getPerspectiveTransform(pts1,pts2)
     return cv2.warpPerspective(image,M,(w,h))
 
-def get_answer_images(image, cols, rows):
+def get_answer_images(image, cols, rows, total):
     """Crops the rectangle between the markers that should contain the answers. -> list of cv2.image"""
     result = []
     w, h = image.shape[::-1]
@@ -300,16 +298,17 @@ def get_answer_images(image, cols, rows):
 
     cell_h = int(cell_h)
     cell_w = int(cell_w)
+    for question in range(0,total):
 
-    for c in range(0,cols):
-        for r in range(0,rows):
+        r = int(math.floor(question/cols))
+        c = int(question%cols)
 
-            y1= cell_h*r    +u_margin+cell_u_margin
-            y2= y1+cell_h   -cell_u_margin-cell_d_margin
-            x1= cell_w*c    +l_margin+cell_l_margin
-            x2= x1+cell_w   -cell_l_margin-cell_r_margin
+        y1= cell_h*r    +u_margin+cell_u_margin
+        y2= y1+cell_h   -cell_u_margin-cell_d_margin
+        x1= cell_w*c    +l_margin+cell_l_margin
+        x2= x1+cell_w   -cell_l_margin-cell_r_margin
 
-            result.append( image[ y1:y2 , x1:x2 ] )
+        result.append( image[ y1:y2 , x1:x2 ] )
 
     return result
 
@@ -328,28 +327,32 @@ def get_selections(image, question, index):
         a=0
         for data in contours:
             mean = data["mean_intensity"]
-            if mean>thresh:
-                answers.append(doc_parameters["answers_id"][a])
-            if abs(thresh-mean)<=error:
-                w = Warning(index,doc_parameters["answers_id"][a],WarningTypes.UNCERTANTY)
+            if mean > thresh:
+                answers.append(question.order[a])
+                if mean-thresh <= error:
+                    w = Warning(index, a, WarningTypes.UNCERTANTY, selected=True)
+                    report.test.warnings.append(w)
+            elif thresh-mean <= error:
+                w = Warning(index, a, WarningTypes.UNCERTANTY, selected=False)
                 report.test.warnings.append(w)
-            a+=1
+            a += 1
     else:
-        contours.sort(key = lambda cont: cont["mean_intensity"], reverse = True)#sort contours using mean intensity values from high to low
+        #sort contours using mean intensity values from high to low
+        contours.sort(key=lambda cont: cont["mean_intensity"], reverse=True)
         best_contour = contours[0]
-        answers.append(doc_parameters["answers_id"][best_contour["index"]])
+        answers.append(question.order[best_contour["index"]])
 
-        max_mean =      contours[0]["mean_intensity"]
-        sec_max_mean =  contours[1]["mean_intensity"]
+        max_mean =      contours[0]["mean_intensity"]    
+        sec_max_mean =  contours[1]["mean_intensity"] if len(contours)>1 else thresh
 
         if max_mean<thresh or abs(max_mean-sec_max_mean)<=error:
-            w = Warning(index,doc_parameters["answers_id"][best_contour["index"]],WarningTypes.UNCERTANTY);
+            w = Warning(index, best_contour["index"], WarningTypes.UNCERTANTY, selected=True);
             report.test.warnings.append(w)
 
-        posible_selected = [doc_parameters["answers_id"][c["index"]] for c in contours if c["mean_intensity"]>thresh and c["index"]!=contours[0]["index"]]
+        posible_selected = [ c["index"] for c in contours if c["mean_intensity"]>thresh and c["index"]!=contours[0]["index"]]
         
         if len(posible_selected)>0:
-            w = Warning(index,posible_selected,WarningTypes.MULT_SELECTION)
+            w = Warning(index, posible_selected, WarningTypes.MULT_SELECTION, selected = False)
             report.test.warnings.append(w)     
 
     return True, answers
