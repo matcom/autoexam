@@ -1,0 +1,69 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage[spanish]{babel}
+
+\geometry{left=1.5cm, right=1.5cm, top=2cm, bottom=1.5cm}
+\pagestyle{empty}
+
+\hyphenation{ ta-re-as arro-jan na-tu-ral cons-ti-tu-yen di-fe-ren-cia pro-ble-ma pa-la-bra 
+ocu-rren-cias pro-pues-tas mo-di-fi-ca-dor va-lo-res e-le-men-to 
+fun-da-men-tal-men-te dis-tri-bu-ir di-fe-ren-tes re-cons-truir 
+de-sa-rro-llan-do de-sa-rro-lla-ron mo-de-lo
+in-fe-ren-cia po-si-ti-va es-tre-llas opi-nio-nes di-fe-ren-te pa-la-bras
+si-no-ni-mia ne-ga-ti-vo ne-ga-ti-va sub-es-pa-cio va-rian-za apro-xi-ma-da
+ejem-plos se-pa-ra-dor co-rri-das do-cu-men-tos con-si-de-ra ope-ran co-rrec-ta 
+eva-luar te-ner-se si-mi-la-res pre-fe-ren-cias pre-fe-ren-cia
+co-rres-pon-de}
+
+\title{}
+\date{}
+
+%opening
+\begin{document}
+
+%\maketitle
+
+\begin{center}
+{% if number %}
+ \hspace{0.2cm}
+ \includegraphics[width=2cm]{qrcode-{{ number }}.png}
+ \hspace{0.5cm}     
+ \Large{Examen de Sistemas de Información (No. {{ number }})}
+{% else %}
+ \Large{Examen de Sistemas de Información\\Listado de Preguntas Usadas}
+{% endif %}
+\end{center}
+
+%\begin{small}
+
+\begin{multicols}{2}
+
+\begin{enumerate}
+ %\setlength{\itemsep}{-0.1cm}
+
+{% for q in questions %}  
+
+  \item {{ q.header }}
+  % Correcta: {{ q.correct }}
+  
+  % {{ q.correct_option }}
+  
+  \begin{enumerate}
+   %\setlength{\itemsep}{-0.1cm}
+   \item {{ q.options[0] }}
+   \item {{ q.options[1] }}
+   \item {{ q.options[2] }}
+   \item {{ q.options[3] }}
+  \end{enumerate}
+
+{% endfor %}
+\end{enumerate}
+
+\end{multicols}
+
+%\end{small}
+
+\end{document}
