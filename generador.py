@@ -15,24 +15,29 @@ tags = u"""s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,
         clasificacion,web25"""
 
 end_phrases = [
-  u"ninguna de las anteriores",
-  u"ninguno de los anteriores",
-  u"todos los anteriores",
-  u"todas las anteriores",
-  u"ninguna de las anteriores es una respuesta correcta",
-  u"ninguno de los anteriores es una respuesta correcta",
-  u"todos los anteriores son respuestas correctas",
-  u"todas las anteriores son respuestas correctas",
+    u"ninguna de las anteriores",
+    u"ninguno de los anteriores",
+    u"todos los anteriores",
+    u"todas las anteriores",
+    u"ninguna de las anteriores es una respuesta correcta",
+    u"ninguno de los anteriores es una respuesta correcta",
+    u"todos los anteriores son respuestas correctas",
+    u"todas las anteriores son respuestas correctas",
 ]
 
 data_base = collections.defaultdict(lambda: [])
-
 now = 1
 
+
 def parser():
-    f = open(os.path.join(os.path.abspath(os.path.dirname(__file__)), u"example-master.txt"))
+    """
+    Lee el archivo master y se parsea cada una de las preguntas.
+    """
+    f = open(os.path.join(os.path.abspath(
+             os.path.dirname(__file__)), u"master.txt"))
     lines = f.readlines()
 
+    #parsear el listado de preguntas
     lquestion = []
     i = 0
     while i < len(lines):
@@ -56,12 +61,17 @@ def parse_question(lines):
 
     print(lines)
 
-    #la pregunta empieza con un listado de tags
+    #la pregunta empieza con un número entre paréntesis
+    n = lines.pop(0).split()[1:-1]
+    if int(n):
+        Exception("hay una pregunta sin número")
+
+    #luego tiene un listado de tags
     ts = lines.pop(0).split()
 
     #parsear el header
     header = ""
-    while lines and lines[0][0] != u'_':
+    while lines and (lines[0][0] != u'_' or lines[0][0:2] != u"x_"):
         header += " " + lines.pop(0)
     print("=============")
     print(header)
@@ -70,13 +80,15 @@ def parse_question(lines):
     #parsear las opciones
     ops = []
     for l in lines:
-        if l and l[0] == u'_':
+        if l and (l[0] == u'_'):
             ops.append(l[1:].strip())
+        elif l[0:2] == u"x_":
+            ops.append(l[2:].strip())
         else:
-            ops[-1] += " " +l
+            ops[-1] += " " + l
 
     #construir el objeto question
-    question = Question(header,ops)
+    question = Question(header, ops, n)
 
     #agregar las preguntas en el contenido correspondiente
     for t in ts:
@@ -84,11 +96,13 @@ def parse_question(lines):
 
     return question
 
+
 class Question:
     """las preguntas tienen un header que es el enunciado,
-    y 4 opciones donde la primera es la correcta"""
+    y opciones. Algunas de estas oppciones pueden considerarse
+    respuestas correctas"""
 
-    def __init__(self, header, options):
+    def __init__(self, header, options, number):
         if (not header or len(options) != 4):
             print(header)
             print(len(options))
@@ -97,8 +111,12 @@ class Question:
         self.header = header
         self.correct_option = self.options[0]
         self.correct = 0
+        self.number = number
 
     def shuffle(self):
+        """
+        Devuelve las opciones desordenadas.
+        """
         random.shuffle(self.options)
 
         # Poner la opción final (ninguna o todas las anteriores)
@@ -111,7 +129,7 @@ class Question:
                 break
 
         # Buscar la respuesta correcta
-        for i,o in enumerate(self.options):
+        for i, o in enumerate(self.options):
             if o == self.correct_option:
                 self.correct = i
                 return
@@ -131,6 +149,8 @@ def generate_qrcode(data, filename='qrcode.png'):
 
 
 def generateTest():
+    """Genera la hoja de marcar del examen.
+    """
     tmp_file = open('latex/pruebas.tex')
     names = open('names.txt').readlines()
     template = jinja2.Template(tmp_file.read().decode('utf8'))
@@ -140,11 +160,15 @@ def generateTest():
         name2 = names[i+1].strip().decode('utf8') if i+1 < len(names) else ""
 
         # Generar los qr-code
-        generate_qrcode(u'{0}|{1}|0.0|20|4'.format(name1, i), u'generated/v{1}/qrcode-{0}.png'.format(i, now))
-        generate_qrcode(u'{0}|{1}|0.0|20|4'.format(name2, i+1), u'generated/v{1}/qrcode-{0}.png'.format(i+1, now))
+        generate_qrcode(u'{0}|{1}|0.0|20|4'.format(name1, i),
+                        u'generated/v{1}/qrcode-{0}.png'.format(i, now))
+        generate_qrcode(u'{0}|{1}|0.0|20|4'.format(name2, i+1),
+                        u'generated/v{1}/qrcode-{0}.png'.format(i+1, now))
 
-        out = open(u'generated/v{4}/{0}-{1}-{2}-{3}.tex'.format(name1, i, name2, i+1, now), 'w')
-        out.write(template.render(student=[name1, name2], number=[i, i+1]).encode('utf8'))
+        out = open(u'generated/v{4}/{0}-{1}-{2}-{3}.tex'
+                   .format(name1, i, name2, i+1, now), 'w')
+        out.write(template.render(student=[name1, name2],
+                  number=[i, i+1]).encode('utf8'))
         out.close()
 
     tmp_file.close()
@@ -173,9 +197,14 @@ def generateQuiz(n, exclude=()):
 
     return test
 
-EXCLUDE = '#s1 #s2 #s3 #s4 #s5 #s6 #s7 #s8 #web #booleano #web #crawler #meta #booleano #vectorial #probab #boolextendido #evaluacion'.split()
+EXCLUDE = '#s1 #s2 #s3 #s4 #s5 #s6 #s7 #s8 #web #booleano #web #crawler #meta '\
+          '#booleano #vectorial #probab #boolextendido #evaluacion'.split()
+
 
 def generateTextTest():
+    """Genera el texto del examen y
+    genera la solución dell mismo.
+    """
     tmp_file = open('latex/pruebasTexto.tex')
     template = jinja2.Template(tmp_file.read().decode('utf8'))
 
@@ -217,20 +246,19 @@ def generatePattern():
 
 def evaluator():
     tmp_file = open('tests_results.txt')
-
-    tests= json.load(tmp_file)
-
+    tests = json.load(tmp_file)
     gs = {}
 
     for i in tests:
-        sol = open(os.path.join( "generated",u"TestSolution-" + str(i) + u".txt"))
+        sol = open(os.path.join("generated",
+                                u"TestSolution-" + str(i) + u".txt"))
         f = read_evaluate_test(sol)
         gs[tests[i]["student_id"]] = (evaluate_test(f, tests[i]))
 
     print gs
 
-def read_evaluate_test(file_test):
 
+def read_evaluate_test(file_test):
     file_test = file_test.readlines()
     f = []
 
@@ -241,8 +269,8 @@ def read_evaluate_test(file_test):
 
     return f
 
-def evaluate_test(answers, test):
 
+def evaluate_test(answers, test):
     g = 0
 
     for i in range(len(answers)):
@@ -250,6 +278,7 @@ def evaluate_test(answers, test):
             g += 1
 
     return g
+
 
 if __name__ == '__main__':
     for d in os.listdir('generated'):
@@ -265,4 +294,3 @@ if __name__ == '__main__':
     generatePattern()
 
     print('Generated v{0}'.format(now))
-
