@@ -2,51 +2,53 @@
 import cv2
 import zbar
 import numpy as np
+import sys
+import copy
+from scanresults import *
 
 import math
 import re
 
 report = None
 doc_parameters = {
-    "show_image": True, #if it is a camera it shows a windows with the images, and if it is an image it shows the image
+    "show_image": True, #if it is a camera it shows a window with the images, and if it is an image it shows the image
     "double_check": True, #Makes a double confirmation before to return a success report
     "marker_image": "marker.png", #Image of the marker to use in the borders
-    "answer_rows": 4, #answers rows     
-    "answer_cols": 5, #answers cols
+    "answer_cols": 5, ##the number of questions per column, this value is fixed
     "marker_match_min_quality": 0.6, #threshold level to apply to the template matching results
     "marker_size": 0.25, #size of the marker with respect to the qrcode width
-    "answers_id": ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"], #the id used to identify the answers in order
     #TODO try to recode this to use percent and not pixel units as they are now
     "qrcode_width": 100, #qrcode final width in pixels after perspective transformation
     "margin" : 60, #margin used to crop image after the rotation rectification 
 
     #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
-    "up_margin": 0.058, 
-    "down_margin": 0.033,
+    "up_margin": 0.03, 
+    "down_margin": 0.03,
     "left_margin": 0.0,
-    "right_margin": 0.0,
+    "right_margin": 0.00,
 
     #padding between the rectangle with the selection cells and the inner cell area (used to rectify any misalignment within the answer selection rectangle)
-    "cell_up_margin": 0.07,
-    "cell_down_margin": 0.07,
-    "cell_left_margin": 0.75,
+    "cell_up_margin": 0.03,
+    "cell_down_margin": 0.03,
+    "cell_left_margin": 0.74,
     "cell_right_margin": 0.05,    
 
     "distance_threshold": 0.5, #threshold of the allowed distance between the selection boxes over the mean distance    
     "aligned_threshold": 0.5, #threshold of the alignment allowed between the selection boxes over the mean displacement    
     "selection_box_padding":0.5, #padding used to select the inner area of the selection boxes       
-    "selection_threshold": 130, #threshold that is used to decide if the answer is selected based on the mean intensity
-    "selection_error": 30, #threshold around the selection_threshold that marks the uncertainty
-    "single_selection": False #if it's true it will return the answer with the highest mean value (it still uses the selection_threshold and selection_error to display warnings)    
+    "selection_threshold": 130, #threshold that is used to decide if the answer is selected based on the mean intensity range:[0,255]
+    "selection_error": 30, #threshold around the selection_threshold that marks the uncertainty range:[0,255]
+    "version": 1 #version control to reject invalid qrcodes
 }
 
 class TestScanner:
-    def __init__(self, w, h, **kw):
+    def __init__(self, w, h, testsfile, **kw):
         for (k,v) in kw.items():        
             doc_parameters[k]=v
         doc_parameters["scanner"] = QRScanner(w,h);
         doc_parameters["loaded_marker"] = cv2.imread(doc_parameters["marker_image"],0)
         doc_parameters["init"] = True
+        doc_parameters["tests"] = parse(testsfile)
 
     def scan(self, source):
         return get_scan_report(source)
@@ -109,30 +111,28 @@ def get_image_report(frame):
     # Check qrcode validity
     if len(qrcode)==1 and qrcode_ok(qrcode[0]):
         qrcode = qrcode.pop()
-        test = Test(qrcode)
-        report.test = test
+        report.test = get_test_from_qrcode(qrcode)
         #paint the qrcode in white to lower the chances of getting wrong matches
         cv2.fillConvexPoly(image,np.int32([list(x) for x in qrcode.location]) ,(255))
         size = int(doc_parameters["marker_size"]*dist(qrcode.location[0],qrcode.location[1]));
         rotated, gray_image =  fix_rotation(qrcode.location, image, gray_image)  
         small_marker = cv2.resize(marker,(size,size))
         markers =  get_marker_positions(rotated, small_marker, doc_parameters["marker_match_min_quality"])
-
         if len(markers)==4 and rectangle_sort(markers,rotated):
-
             answer_area = perspective_transform(gray_image, markers) 
             cols = doc_parameters["answer_cols"]
-            rows = doc_parameters["answer_rows"]
+            rows = (len(report.test.questions)/cols)+1
             #TODO make a parameter out of wish order to scan the tests 
-            answer_imgs = get_answer_images(answer_area,cols,rows)
-            n=1
+            answer_imgs = get_answer_images(answer_area, cols, rows, len(report.test.questions))
+            question=0
             bad_data = False
             for img in answer_imgs:                           
-                correct, selection = get_selections(img, test.questions[n]["total_answers"], n)
-                if correct: test.questions[n]["answers"] = selection                        
-                else: 
+                correct, selection = get_selections(img, report.test.questions[question], question)
+                if correct:
+                    report.test.questions[question].answers = selection
+                else:
                     bad_data = True
-                n+=1
+                question+=1
             #TODO debug
             cv2.imshow("answer_area",answer_area)
 
@@ -149,6 +149,20 @@ def get_image_report(frame):
 
     return report  
 
+#   exam id | test id
+DATA_RE = re.compile(r'''[0-9]+\|[0-9]+\|[0-9]+''',re.UNICODE)
+
+def qrcode_ok(qrcode):
+    data = qrcode.data
+    #if the data matches the rege and the test_id is in the test set
+    return DATA_RE.match(data) and doc_parameters["version"]==int(data.split('|')[2]) and  int(data.split('|')[1]) in doc_parameters["tests"]
+
+def get_test_from_qrcode(qrcode):
+    info = qrcode.data.split('|')  
+    exam_id = int(info[0]) #not used right now
+    test_id = int(info[1])
+    return copy.deepcopy(doc_parameters["tests"][test_id])
+  
 class QRCode(object):
     """QRCode class"""
     def __init__(self, data, location):
@@ -180,55 +194,6 @@ class QRScanner(object):
     def cv2_to_zbar_image(self, cv2_image):
         return zbar.Image(self.width, self.height, 'Y800',cv2_image.tostring())
 
-#TODO think about the need of this variable and the possibility of using only std_id and test_id
-vars_in_code = 4
-#   student id | test id | marker size | # of questions | answers per question
-DATA_RE = re.compile(r'''[\w|\s|\.]+\|[0-9]+\|[0-9]+\.[0-9]+\|[0-9]+[\|[0-9]+]*''',re.UNICODE)
-
-def qrcode_ok(qrcode):
-    data = qrcode.data
-    if DATA_RE.match(data):
-        s = data.split("|")
-        return ( len(s)-vars_in_code==1 and int(s[vars_in_code-1])!=0 ) or int(s[vars_in_code-1])==len(s)-vars_in_code 
-    return False
-
-class Test(object):
-    """Test class"""
-    def __init__(self, qrcode):
-        info = qrcode.data.split('|')        
-        self.student_id = info[0]
-        self.test_id = int(info[1])
-        self.questions = {}
-        self.grade = -1
-        total_q = int(info[vars_in_code-1])
-        for q in range(total_q):
-            if len(info)-vars_in_code==1:
-                self.questions[q+1]={ "total_answers": int(info[len(info)-1]) }
-            else:
-                self.questions[q+1]={ "total_answers": int(info[q+vars_in_code]) }
-
-    def __str__(self):
-        result = "Student ID: %s\nTest ID: %s\nTotal Questions: %d\n"%(self.student_id,self.test_id,len(self.questions))
-        for (k,v) in self.questions.items():            
-            result+="%d -> %s\n"%(k,v.get("answers"))
-        result+="Grade: %d"%self.grade 
-
-        return result
-
-    def __eq__(self,other):
-        return self.student_id == other.student_id and self.test_id==other.test_id and self.questions == other.questions
-
-    def __ne__(self,other):
-        return not self.__eq__(other)
-
-    def to_dict(self):
-        result = {}
-        result["student_id"] = self.student_id
-        result["test_id"] = self.test_id
-        result["questions"] = self.questions
-        result["grade"] = self.grade
-        return result
-
 def fix_rotation_with_perspective(qr_rect, image):
     """Fixes the rotation of the image using the qrcode rectangle. -> cv2.image"""
     qrcode_w = doc_parameters["qrcode_width"]
@@ -242,8 +207,8 @@ def fix_rotation_with_perspective(qr_rect, image):
     result_h = h*qrcode_w/old_dist
     result_w = w*qrcode_w/old_dist
 
-    M = cv2.getPerspectiveTransform(pts1,pts2)
-    result = cv2.warpPerspective(image,M,(int(result_w),int(result_h)))
+    M = cv2.getPerspectiveTransform(pts1, pts2)
+    result = cv2.warpPerspective(image, M, (int(result_w), int(result_h)))
 
     return result,((margin,margin), (margin,qrcode_w+margin), (qrcode_w+margin,qrcode_w+margin), (qrcode_w+margin,margin))
 
@@ -313,7 +278,7 @@ def perspective_transform(image, markers):
     M = cv2.getPerspectiveTransform(pts1,pts2)
     return cv2.warpPerspective(image,M,(w,h))
 
-def get_answer_images(image, cols, rows):
+def get_answer_images(image, cols, rows, total):
     """Crops the rectangle between the markers that should contain the answers. -> list of cv2.image"""
     result = []
     w, h = image.shape[::-1]
@@ -333,22 +298,23 @@ def get_answer_images(image, cols, rows):
 
     cell_h = int(cell_h)
     cell_w = int(cell_w)
+    for question in range(0,total):
 
-    for c in range(0,cols):
-        for r in range(0,rows):
+        r = int(math.floor(question/cols))
+        c = int(question%cols)
 
-            y1= cell_h*r    +u_margin+cell_u_margin
-            y2= y1+cell_h   -cell_u_margin-cell_d_margin
-            x1= cell_w*c    +l_margin+cell_l_margin
-            x2= x1+cell_w   -cell_l_margin-cell_r_margin
+        y1= cell_h*r    +u_margin+cell_u_margin
+        y2= y1+cell_h   -cell_u_margin-cell_d_margin
+        x1= cell_w*c    +l_margin+cell_l_margin
+        x2= x1+cell_w   -cell_l_margin-cell_r_margin
 
-            result.append( image[ y1:y2 , x1:x2 ] )
+        result.append( image[ y1:y2 , x1:x2 ] )
 
     return result
 
-def get_selections(image, total, question):
+def get_selections(image, question, index):
     """Finds the answers selected by the student. -> (bool correctness, list of answers)"""   
-    success, contours = get_contours(image,total,question)
+    success, contours = get_contours(image,question.total_answers,index)
     if not success:
         report.success = False
         return False,[]
@@ -357,31 +323,38 @@ def get_selections(image, total, question):
     error = doc_parameters["selection_error"]
 
     answers = []
-    if not doc_parameters["single_selection"]:
+    if question.multiple:
         a=0
         for data in contours:
             mean = data["mean_intensity"]
-            if mean>thresh:
-                answers.append(doc_parameters["answers_id"][a])
-            if abs(thresh-mean)<=error:
-                report.warnings.append(UctyWarning(question,doc_parameters["answers_id"][a]))
-            a+=1
+            if mean > thresh:
+                answers.append(question.order[a])
+                if mean-thresh <= error:
+                    w = Warning(index, a, WarningTypes.UNCERTANTY, selected=True)
+                    report.test.warnings.append(w)
+            elif thresh-mean <= error:
+                w = Warning(index, a, WarningTypes.UNCERTANTY, selected=False)
+                report.test.warnings.append(w)
+            a += 1
     else:
-        contours.sort(key = lambda cont: cont["mean_intensity"], reverse = True)#sort contours using mean intensity values from high to low
+        #sort contours using mean intensity values from high to low
+        contours.sort(key=lambda cont: cont["mean_intensity"], reverse=True)
         best_contour = contours[0]
-        answers.append(doc_parameters["answers_id"][best_contour["index"]])
+        answers.append(question.order[best_contour["index"]])
 
-        max_mean =      contours[0]["mean_intensity"]
-        sec_max_mean =  contours[1]["mean_intensity"]
+        max_mean =      contours[0]["mean_intensity"]    
+        sec_max_mean =  contours[1]["mean_intensity"] if len(contours)>1 else thresh
 
         if max_mean<thresh or abs(max_mean-sec_max_mean)<=error:
-            report.warnings.append(UctyWarning(question,doc_parameters["answers_id"][best_contour["index"]]))
+            w = Warning(index, best_contour["index"], WarningTypes.UNCERTANTY, selected=True);
+            report.test.warnings.append(w)
 
-        posible_selected = [doc_parameters["answers_id"][c["index"]] for c in contours if c["mean_intensity"]>thresh and c["index"]!=contours[0]["index"]]
-
+        posible_selected = [ c["index"] for c in contours if c["mean_intensity"]>thresh and c["index"]!=contours[0]["index"]]
+        
         if len(posible_selected)>0:
-            report.warnings.append(UctyWarning(question,posible_selected))
-     
+            w = Warning(index, posible_selected, WarningTypes.MULT_SELECTION, selected = False)
+            report.test.warnings.append(w)     
+
     return True, answers
 
 def get_contours(image, total, question):    
@@ -394,7 +367,10 @@ def get_contours(image, total, question):
 
     contours, hierarchy = cv2.findContours(image.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     contours.reverse()
-    contours = [get_contour_data(c.astype('int'), image) for c in contours]
+    if cv2.__version__=="2.4.3": #a bug in opencv 2.4.3, the fix is to add .astype("int") in the contour element
+      contours = [get_contour_data(c.astype('int'), image) for c in contours]
+    else: 
+      contours = [get_contour_data(c, image) for c in contours]
     contours = [c for c in contours if not c["empty"]]
     for i in range(0,len(contours)): contours[i]["index"]=i
 
@@ -403,7 +379,7 @@ def get_contours(image, total, question):
             merged = try_merge_nearby_contours(contours,image)
             if merged == 1: 
                 for i in range(0,len(contours)): contours[i]["index"]=i
-            if merged==0 or len(contours)<=total: break
+            if merged == 0 or len(contours)<=total: break
 
     if len(contours)!= total:
         report.errors.append(QuestionError(question,"The number of boxes do not match"))        
@@ -439,8 +415,8 @@ def merge_contours(big,small):
     result = []
     for c in [big,small]:
         for p in c["points"]:
-            result.append( [[ p[0][0],p[0][1] ]] )    
-    return np.array(result)
+            result.append(p)    
+    return np.array([[p] for p in result],dtype=np.int32)
     
 def are_sorted(contours):
     for i in range(0,len(contours)-1): 
@@ -448,22 +424,20 @@ def are_sorted(contours):
     return True
 
 def get_contour_data(contour, image):
-    data = {}
+    data = {}           
     data["empty"] = cv2.contourArea(contour)==0
     data["convex"] = cv2.isContourConvex(contour)
     data["rect"] = cv2.boundingRect(contour)    
     x,y,w,h = data["rect"]
-    contour =  np.array([[[x,y]],[[x,y+h]],[[x+w,y+h]],[[x+w,y]]])        
-    data["points"] = contour    
     data["size"] = max(w,h)#float(w+h)/2
-    M = cv2.moments(contour)
+    data["points"] = [(x,y),(x,y+h),(x+w,y+h),(x+w,y)] 
+    M = cv2.moments(np.array([[p] for p in data["points"]],dtype=np.int32))    
     data["center"] = (M['m10']/(M['m00']+0.00001), M['m01']/(M['m00']+0.00001))     
-    b = doc_parameters["selection_box_padding"]/2.0
-    fillarea = np.array([[[int(x+b*w),int(y+b*h)]],[[int(x+b*w),int(y+h-b*h)]],[[int(x+w-b*w),int(y+h-b*h)]],[[int(x+w-b*w),int(y+b*h)]]])
+    b = doc_parameters["selection_box_padding"]/2.0 
+    fillarea = np.array([ [[x+b*w,y+b*h]] , [[x+b*w,y+h-b*h]] , [[x+w-b*w,y+h-b*h]] , [[x+w-b*w,y+b*h]] ], dtype=np.int32 )
     mask = np.zeros(image.shape,np.uint8)
-    cv2.drawContours(mask,[fillarea],0,255,-1)   
+    cv2.drawContours(mask,[fillarea],0,255,-1)       
     data["mean_intensity"] = cv2.mean(image,mask = mask)[0]    
-
     return data
 
 def are_squared(contours):
@@ -503,6 +477,8 @@ class ImageSource(object):
         self.is_camera = type(source)==int
         if self.is_camera:
             self.source = cv2.VideoCapture(source)
+            self.source.set(3,640)
+            self.source.set(4,480)
         else:
             self.source = cv2.imread(source,1)
 
@@ -521,54 +497,3 @@ class ImageSource(object):
     def release(self):
         if self.is_camera:
             self.source.release()
-
-class Report(object):
-    """Class to represent the reports"""
-    def __init__(self):
-        self.errors = []
-        self.warnings = []
-        self.success = False
-        self.test = None
-
-class UctyWarning(object):
-    """Uncertainty warning"""
-    def __init__(self, q, s):
-        self.question = q
-        self.selection = s
-
-    def __str__(self):
-        return "The selection of the answer %s in question %d is uncertain"%(self.selection,self.question) 
-
-    def to_dict(self):
-        return {'type': 'ucty', 'question': self.question, 'selection': self.selection}
-
-class MultSelWarning(object):
-    """Multiple selection warning"""
-    def __init__(self, q, s):
-        self.question = q
-        self.aditional_selections = s
-
-    def __str__(self):
-        return "Is possible that the question %d has additional selections. Possible values %s"%(self.question,self.aditional_selections) 
-        
-    def to_dict(self):
-        return {'type': 'ucty', 'question': self.question, 'selection': self.selection}
-
-class QrcodeError(object):
-    """QRCode error class"""
-    def __str__(self):
-        return "There was an error with the detection of the QRCode"   
-
-class MarkersError(object):
-    """Marker error class"""
-    def __str__(self):
-        return "There was an error with the detection of the markers"   
-          
-class QuestionError(object):
-    """docstring for QuestionError"""
-    def __init__(self, q, msg):
-        self.question = q
-        self.message = msg
-
-    def __str__(self):
-        return self.message + " in question %d"%self.question
