@@ -58,3 +58,4 @@ nosetests.xml
 *.sublime-project
 
 generated/*
+Documentos/
