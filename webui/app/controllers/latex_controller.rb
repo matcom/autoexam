@@ -1,0 +1,2 @@
+class LatexController < ApplicationController
+end
