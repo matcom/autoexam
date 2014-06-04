@@ -80,7 +80,11 @@ def main():
                         print "\t", w
         #if recognition went wrong print the reasons
         else:
-            for e in [x for x in report.errors if isinstance(x, QuestionError)]: # in this case only the question errors
+            # show only the question detection errors and the
+            # errors in the format of the qrcodes
+            for e in [x for x in report.errors
+                        if isinstance(x, QuestionError) or
+                        (isinstance(x, QrcodeError) and x.err_type == QRCodeErrorTypes.FORMAT) ]:
                 print e
 
     scanner.finalize()

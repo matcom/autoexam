@@ -19,10 +19,10 @@ doc_parameters = {
     "marker_size": 0.25, #size of the marker with respect to the qrcode width
     #TODO try to recode this to use percent and not pixel units as they are now
     "qrcode_width": 100, #qrcode final width in pixels after perspective transformation
-    "margin" : 60, #margin used to crop image after the rotation rectification 
+    "margin" : 60, #margin used to crop image after the rotation rectification
 
     #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
-    "up_margin": 0.03, 
+    "up_margin": 0.03,
     "down_margin": 0.03,
     "left_margin": 0.0,
     "right_margin": 0.00,
@@ -31,11 +31,11 @@ doc_parameters = {
     "cell_up_margin": 0.03,
     "cell_down_margin": 0.03,
     "cell_left_margin": 0.74,
-    "cell_right_margin": 0.05,    
+    "cell_right_margin": 0.05,
 
-    "distance_threshold": 0.5, #threshold of the allowed distance between the selection boxes over the mean distance    
-    "aligned_threshold": 0.5, #threshold of the alignment allowed between the selection boxes over the mean displacement    
-    "selection_box_padding":0.5, #padding used to select the inner area of the selection boxes       
+    "distance_threshold": 0.5, #threshold of the allowed distance between the selection boxes over the mean distance
+    "aligned_threshold": 0.5, #threshold of the alignment allowed between the selection boxes over the mean displacement
+    "selection_box_padding":0.5, #padding used to select the inner area of the selection boxes
     "selection_threshold": 130, #threshold that is used to decide if the answer is selected based on the mean intensity range:[0,255]
     "selection_error": 30, #threshold around the selection_threshold that marks the uncertainty range:[0,255]
     "version": 1 #version control to reject invalid qrcodes
@@ -43,7 +43,7 @@ doc_parameters = {
 
 class TestScanner:
     def __init__(self, w, h, testsfile, **kw):
-        for (k,v) in kw.items():        
+        for (k,v) in kw.items():
             doc_parameters[k]=v
         doc_parameters["scanner"] = QRScanner(w,h);
         doc_parameters["loaded_marker"] = cv2.imread(doc_parameters["marker_image"],0)
@@ -57,13 +57,13 @@ class TestScanner:
         doc_parameters["scanner"] = None
         doc_parameters["loaded_marker"] = None
         doc_parameters["init"] = False
-        cv2.destroyAllWindows() 
+        cv2.destroyAllWindows()
 
 def get_scan_report(source):
     show = doc_parameters["show_image"]
     if show:
         window_name = "Input"
-        cv2.namedWindow(window_name)        
+        cv2.namedWindow(window_name)
 
     if not doc_parameters["init"]: return Report()
 
@@ -71,25 +71,25 @@ def get_scan_report(source):
 
     if not doc_parameters["double_check"]:
         report = Report()
-        frame = source.get_next()  
-        if show: 
+        frame = source.get_next()
+        if show:
             flipped = cv2.flip(frame, 1)
             cv2.imshow(window_name,flipped)
         return get_image_report(frame)
     #if double check is enabled...
     while True:
         report = Report()
-        frame = source.get_next()  
-        if show: 
+        frame = source.get_next()
+        if show:
             flipped = cv2.flip(frame, 1)
             cv2.imshow(window_name,flipped)
         first = get_image_report(frame)
-        if not first.success: 
+        if not first.success:
             return first
         else:
             report = Report()
-            frame = source.get_next()  
-            if show: 
+            frame = source.get_next()
+            if show:
                 flipped = cv2.flip(frame, 1)
                 cv2.imshow(window_name,flipped)
             second = get_image_report(frame)
@@ -101,32 +101,33 @@ def get_scan_report(source):
 def get_image_report(frame):
     scanner = doc_parameters.get("scanner")
     marker = doc_parameters.get("loaded_marker")
-    #TODO reject blurred images       
+    #TODO reject blurred images
     # Set it to gray scale
     gray_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     # make it binary
     image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,21,5)
     # Scan for QRcodes
-    qrcode = scanner.get_qrcodes(image)
+    qrcodes = scanner.get_qrcodes(image)
     # Check qrcode validity
-    if len(qrcode)==1 and qrcode_ok(qrcode[0]):
-        qrcode = qrcode.pop()
+    qr_is_ok, err_msg = qrcode_ok(qrcodes)
+    if qr_is_ok:
+        qrcode = qrcodes.pop()
         report.test = get_test_from_qrcode(qrcode)
         #paint the qrcode in white to lower the chances of getting wrong matches
         cv2.fillConvexPoly(image,np.int32([list(x) for x in qrcode.location]) ,(255))
         size = int(doc_parameters["marker_size"]*dist(qrcode.location[0],qrcode.location[1]));
-        rotated, gray_image =  fix_rotation(qrcode.location, image, gray_image)  
+        rotated, gray_image =  fix_rotation(qrcode.location, image, gray_image)
         small_marker = cv2.resize(marker,(size,size))
         markers =  get_marker_positions(rotated, small_marker, doc_parameters["marker_match_min_quality"])
         if len(markers)==4 and rectangle_sort(markers,rotated):
-            answer_area = perspective_transform(gray_image, markers) 
+            answer_area = perspective_transform(gray_image, markers)
             cols = doc_parameters["answer_cols"]
             rows = (len(report.test.questions)/cols)+1
-            #TODO make a parameter out of wish order to scan the tests 
+            #TODO make a parameter out of wish order to scan the tests
             answer_imgs = get_answer_images(answer_area, cols, rows, len(report.test.questions))
             question=0
             bad_data = False
-            for img in answer_imgs:                           
+            for img in answer_imgs:
                 correct, selection = get_selections(img, report.test.questions[question], question)
                 if correct:
                     report.test.questions[question].answers = selection
@@ -142,27 +143,46 @@ def get_image_report(frame):
 
         else:
             report.errors.append(MarkersError())
-            pass
     else:
-        report.errors.append(QrcodeError())
-        pass
+        report.errors.append(err_msg)
 
-    return report  
+    return report
 
-#   exam id | test id
+#   exam id | test id | version
 DATA_RE = re.compile(r'''[0-9]+\|[0-9]+\|[0-9]+''',re.UNICODE)
 
-def qrcode_ok(qrcode):
-    data = qrcode.data
-    #if the data matches the rege and the test_id is in the test set
-    return DATA_RE.match(data) and doc_parameters["version"]==int(data.split('|')[2]) and  int(data.split('|')[1]) in doc_parameters["tests"]
+def qrcode_ok(qrcodes):
+    if len(qrcodes)!=1:
+        return False, QrcodeError()
+    data = qrcodes[0].data
+    #the qrcode matches the format
+    if DATA_RE.match(data):
+        version = int(data.split('|')[2])
+        test_id = int(data.split('|')[1])
+        exam_id = int(data.split('|')[0])
+        #has the correct version
+        if doc_parameters["version"]!=version:
+            return False, QrcodeError(  err_type=QRCodeErrorTypes.FORMAT,
+                                        msg = "The test was created with a different version of this software.")
+        #the id is in the tests pool
+        if test_id not in doc_parameters["tests"]:
+            return False, QrcodeError(  err_type=QRCodeErrorTypes.FORMAT,
+                                        msg = "The metadata of the test is not on the input file.")
+        #get the test and check the if is has the correct exam id
+        test = doc_parameters["tests"][test_id]
+        if test.exam_id != exam_id:
+            return False, QrcodeError(  err_type=QRCodeErrorTypes.FORMAT,
+                                        msg = "The test is from the exam: %d and the metadata is for the exam: %d"%(exam_id,test.exam_id))
+        return True, "Ok"
+    else:
+        return False, QrcodeError(  err_type=QRCodeErrorTypes.FORMAT,
+                                    msg = "The QRCode has a wrong format")
 
 def get_test_from_qrcode(qrcode):
-    info = qrcode.data.split('|')  
-    exam_id = int(info[0]) #not used right now
+    info = qrcode.data.split('|')
     test_id = int(info[1])
     return copy.deepcopy(doc_parameters["tests"][test_id])
-  
+
 class QRCode(object):
     """QRCode class"""
     def __init__(self, data, location):
@@ -174,7 +194,7 @@ class QRScanner(object):
     def __init__(self, width, height):
         self.scanner = zbar.ImageScanner()
         self.scanner.parse_config('enable')
-        self.width = width 
+        self.width = width
         self.height = height
 
     def get_qrcodes(self, image):
@@ -198,9 +218,9 @@ def fix_rotation_with_perspective(qr_rect, image):
     """Fixes the rotation of the image using the qrcode rectangle. -> cv2.image"""
     qrcode_w = doc_parameters["qrcode_width"]
     margin = doc_parameters["margin"]
-    pts1 = np.float32([list(x) for x in qr_rect])    
+    pts1 = np.float32([list(x) for x in qr_rect])
     pts2 = np.float32([[margin,margin],[margin,qrcode_w+margin],[qrcode_w+margin,qrcode_w+margin],[qrcode_w+margin,margin]])
-    
+
     w, h = image.shape[::-1]
 
     old_dist = dist(qr_rect[0],qr_rect[1])
@@ -214,7 +234,7 @@ def fix_rotation_with_perspective(qr_rect, image):
 
 def fix_rotation(qr_rect, image, aux_image):
     """Fixes the rotation of the image using the qrcode rectangle. -> cv2.image"""
-    actual_down = np.array( [   float(qr_rect[1][0]-qr_rect[0][0]) , 
+    actual_down = np.array( [   float(qr_rect[1][0]-qr_rect[0][0]) ,
                                 float(qr_rect[1][1]-qr_rect[0][1]) ] )
     actual_down = actual_down/np.linalg.norm(actual_down)
     real_down = np.array([0,1])
@@ -223,12 +243,12 @@ def fix_rotation(qr_rect, image, aux_image):
 
     if np.isnan(angle):
         if (actual_down == real_down).all(): angle = 0.0
-        else: angle = np.pi            
-    
+        else: angle = np.pi
+
     if actual_down[0]>0: angle = 2*np.pi-angle
 
-    w, h = image.shape[::-1] 
-    M = cv2.getRotationMatrix2D((w/2,h/2),180*angle/np.pi,1)    
+    w, h = image.shape[::-1]
+    M = cv2.getRotationMatrix2D((w/2,h/2),180*angle/np.pi,1)
     #TODO o not use the variable margin here, try to find the real w, h that accounts for the new transformation
     margin = doc_parameters["margin"]
     return ( cv2.warpAffine(image,M,(w+2*margin,h+2*margin)), cv2.warpAffine(aux_image,M,(w+2*margin,h+2*margin)) )
@@ -237,7 +257,7 @@ def get_marker_positions(image, marker,threshold):
     """Finds the 4 markers that surround the answer area in the image. -> list of tuples"""
     res = cv2.matchTemplate(image,marker,cv2.TM_CCOEFF_NORMED)
     loc = np.where( res >= threshold)
-    w, h = marker.shape[::-1] 
+    w, h = marker.shape[::-1]
     points = [ (pt[0]+w/2,pt[1]+h/2) for pt in zip(*loc[::-1]) ]
     if len(points)<=4: return points
     #do kmeans and separate the four corners
@@ -252,7 +272,7 @@ def get_marker_positions(image, marker,threshold):
 
 def rectangle_sort(markers,image):
     result = [0,0,0,0]
-    w, h = image.shape[::-1]  
+    w, h = image.shape[::-1]
     mid_x = w/2.0
     mid_y = h/2.0
     for p in markers:
@@ -268,11 +288,11 @@ def rectangle_sort(markers,image):
     for n in range(0,4): markers.pop()
     markers.extend(result)
     return True
-  
+
 def perspective_transform(image, markers):
     """Makes the perspective transformation to remove possible deformations of the answer area"""
-    w, h = image.shape[::-1] 
-    pts1 = np.float32([list(x) for x in markers])    
+    w, h = image.shape[::-1]
+    pts1 = np.float32([list(x) for x in markers])
     pts2 = np.float32([[0,0],[0,h],[w,h],[w,0]])
 
     M = cv2.getPerspectiveTransform(pts1,pts2)
@@ -286,7 +306,7 @@ def get_answer_images(image, cols, rows, total):
     u_margin = int(doc_parameters["up_margin"]*h)
     d_margin = int(doc_parameters["down_margin"]*h)
     l_margin = int(doc_parameters["left_margin"]*w)
-    r_margin = int(doc_parameters["right_margin"]*w)    
+    r_margin = int(doc_parameters["right_margin"]*w)
 
     cell_w = (w-(l_margin+r_margin))/cols
     cell_h = (h-(u_margin+d_margin))/rows
@@ -313,7 +333,7 @@ def get_answer_images(image, cols, rows, total):
     return result
 
 def get_selections(image, question, index):
-    """Finds the answers selected by the student. -> (bool correctness, list of answers)"""   
+    """Finds the answers selected by the student. -> (bool correctness, list of answers)"""
     success, contours = get_contours(image,question.total_answers,index)
     if not success:
         report.success = False
@@ -342,7 +362,7 @@ def get_selections(image, question, index):
         best_contour = contours[0]
         answers.append(question.order[best_contour["index"]])
 
-        max_mean =      contours[0]["mean_intensity"]    
+        max_mean =      contours[0]["mean_intensity"]
         sec_max_mean =  contours[1]["mean_intensity"] if len(contours)>1 else thresh
 
         if max_mean<thresh or abs(max_mean-sec_max_mean)<=error:
@@ -350,16 +370,16 @@ def get_selections(image, question, index):
             report.test.warnings.append(w)
 
         posible_selected = [ c["index"] for c in contours if c["mean_intensity"]>thresh and c["index"]!=contours[0]["index"]]
-        
+
         if len(posible_selected)>0:
             w = Warning(index, posible_selected, WarningTypes.MULT_SELECTION, selected = False)
-            report.test.warnings.append(w)     
+            report.test.warnings.append(w)
 
     return True, answers
 
-def get_contours(image, total, question):    
+def get_contours(image, total, question):
     #Otsu's thresholding
-    #cv2.threshold(image,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU,image) 
+    #cv2.threshold(image,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU,image)
     w, h = image.shape[::-1]
     block_size = w
     if block_size%2==0: block_size+=1
@@ -369,43 +389,43 @@ def get_contours(image, total, question):
     contours.reverse()
     if cv2.__version__=="2.4.3": #a bug in opencv 2.4.3, the fix is to add .astype("int") in the contour element
       contours = [get_contour_data(c.astype('int'), image) for c in contours]
-    else: 
+    else:
       contours = [get_contour_data(c, image) for c in contours]
     contours = [c for c in contours if not c["empty"]]
     for i in range(0,len(contours)): contours[i]["index"]=i
 
-    if len(contours)>total: 
+    if len(contours)>total:
         while True:
             merged = try_merge_nearby_contours(contours,image)
-            if merged == 1: 
+            if merged == 1:
                 for i in range(0,len(contours)): contours[i]["index"]=i
             if merged == 0 or len(contours)<=total: break
 
     if len(contours)!= total:
-        report.errors.append(QuestionError(question,"The number of boxes do not match"))        
+        report.errors.append(QuestionError(question,"The number of boxes do not match"))
     if not are_squared(contours):
-        report.errors.append(QuestionError(question,"Not all the boxes are squared"))        
+        report.errors.append(QuestionError(question,"Not all the boxes are squared"))
     if len(contours)>1:
         if not same_distance(contours,doc_parameters["distance_threshold"]):
-            report.errors.append(QuestionError(question,"Not all the boxes are within the same distance"))        
-        if not are_sorted(contours): 
-            report.errors.append(QuestionError(question,"The boxes are not sorted")) 
+            report.errors.append(QuestionError(question,"Not all the boxes are within the same distance"))
+        if not are_sorted(contours):
+            report.errors.append(QuestionError(question,"The boxes are not sorted"))
         #if not are_aligned(contours,doc_parameters["aligned_threshold"]):
-        #    report.errors.append(QuestionError(question,"Not all the boxes are aligned")) 
+        #    report.errors.append(QuestionError(question,"Not all the boxes are aligned"))
 
     if len(report.errors)>0: return False,[]
     return True, contours
 
-def try_merge_nearby_contours(contours,image):    
+def try_merge_nearby_contours(contours,image):
     for c1 in contours:
         for c2 in contours:
             if c1["index"]==c2["index"]: continue
             big = c1
             small = c2
-            if c1["size"]<c2["size"]: 
+            if c1["size"]<c2["size"]:
                 big = c2
                 small = c1
-            if dist(big["center"],small["center"])<big["size"]:                
+            if dist(big["center"],small["center"])<big["size"]:
                 contours[big["index"]] = get_contour_data(merge_contours(big,small),image)
                 contours.pop(small["index"])
                 return 1
@@ -415,29 +435,29 @@ def merge_contours(big,small):
     result = []
     for c in [big,small]:
         for p in c["points"]:
-            result.append(p)    
+            result.append(p)
     return np.array([[p] for p in result],dtype=np.int32)
-    
+
 def are_sorted(contours):
-    for i in range(0,len(contours)-1): 
+    for i in range(0,len(contours)-1):
         if contours[i]["center"][1]>contours[i+1]["center"][1]: return False
     return True
 
 def get_contour_data(contour, image):
-    data = {}           
+    data = {}
     data["empty"] = cv2.contourArea(contour)==0
     data["convex"] = cv2.isContourConvex(contour)
-    data["rect"] = cv2.boundingRect(contour)    
+    data["rect"] = cv2.boundingRect(contour)
     x,y,w,h = data["rect"]
     data["size"] = max(w,h)#float(w+h)/2
-    data["points"] = [(x,y),(x,y+h),(x+w,y+h),(x+w,y)] 
-    M = cv2.moments(np.array([[p] for p in data["points"]],dtype=np.int32))    
-    data["center"] = (M['m10']/(M['m00']+0.00001), M['m01']/(M['m00']+0.00001))     
-    b = doc_parameters["selection_box_padding"]/2.0 
+    data["points"] = [(x,y),(x,y+h),(x+w,y+h),(x+w,y)]
+    M = cv2.moments(np.array([[p] for p in data["points"]],dtype=np.int32))
+    data["center"] = (M['m10']/(M['m00']+0.00001), M['m01']/(M['m00']+0.00001))
+    b = doc_parameters["selection_box_padding"]/2.0
     fillarea = np.array([ [[x+b*w,y+b*h]] , [[x+b*w,y+h-b*h]] , [[x+w-b*w,y+h-b*h]] , [[x+w-b*w,y+b*h]] ], dtype=np.int32 )
     mask = np.zeros(image.shape,np.uint8)
-    cv2.drawContours(mask,[fillarea],0,255,-1)       
-    data["mean_intensity"] = cv2.mean(image,mask = mask)[0]    
+    cv2.drawContours(mask,[fillarea],0,255,-1)
+    data["mean_intensity"] = cv2.mean(image,mask = mask)[0]
     return data
 
 def are_squared(contours):
@@ -453,7 +473,7 @@ def are_aligned(contours, threshold):
     mean = 0;
     for c in contours: mean+=c["rect"][2]
     mean = float(mean)/len(contours)
-    
+
     return abs(w-mean)<threshold*mean
 
 def same_distance(contours, threshold):
@@ -465,7 +485,7 @@ def same_distance(contours, threshold):
         if abs(dist(contours[i]["center"],contours[i+1]["center"])-mean)>threshold*mean: return False
 
     return True
-      
+
 def dist(x,y):
     return math.sqrt( (x[0] - y[0])**2 + (x[1] - y[1])**2 )
 
@@ -489,10 +509,10 @@ class ImageSource(object):
             return (self.source.shape[1],self.source.shape[0])
 
     def get_next(self):
-        if self.is_camera:            
+        if self.is_camera:
             return self.source.read()[1]
         else:
-            return self.source     
+            return self.source
 
     def release(self):
         if self.is_camera:

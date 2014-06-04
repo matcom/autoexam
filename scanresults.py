@@ -5,6 +5,7 @@ def enum(**enums):
     return type('Enum', (), enums)
 
 WarningTypes = enum(MULT_SELECTION = "Multiple Selection",UNCERTANTY = "Uncertainty");
+QRCodeErrorTypes = enum(FORMAT = "Wrong Format",  AMOUNT = "Wrong Amount");
 
 class Report(object):
     """Class to represent the scan report"""
@@ -32,7 +33,7 @@ class Warning(object):
             if self.selected:
                 return "In the question %d the answer %s was recognized as marked but this decision must be verified"%(self.question, self.selection,)
             else:
-                return "In the question %d the answer %s was recognized as unmarked but it's possible that the user selected it"%(self.question, self.selection)            
+                return "In the question %d the answer %s was recognized as unmarked but it's possible that the user selected it"%(self.question, self.selection)
         elif self.wtype == WarningTypes.MULT_SELECTION:
             return "The question %d is single selection and is possible that it has additional answers marked. Possible values %s"%(self.question, self.selection)
 
@@ -45,8 +46,11 @@ class Warning(object):
 
 class QrcodeError(object):
     """QRCode error class"""
+    def __init__(self, err_type = QRCodeErrorTypes.AMOUNT, msg = "There was an error with the detection of the QRCode"):
+        self.msg = msg
+        self.err_type = err_type
     def __str__(self):
-        return "There was an error with the detection of the QRCode"
+        return self.msg
 
 class MarkersError(object):
     """Marker error class"""
