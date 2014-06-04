@@ -5,6 +5,7 @@ def enum(**enums):
     return type('Enum', (), enums)
 
 WarningTypes = enum(MULT_SELECTION = "Multiple Selection",UNCERTANTY = "Uncertainty");
+QRCodeErrorTypes = enum(FORMAT = "Wrong Format",  AMOUNT = "Wrong Amount");
 
 class Report(object):
     """Class to represent the scan report"""
@@ -45,8 +46,9 @@ class Warning(object):
 
 class QrcodeError(object):
     """QRCode error class"""
-    def __init__(self, msg = "There was an error with the detection of the QRCode"):
+    def __init__(self, err_type = QRCodeErrorTypes.AMOUNT, msg = "There was an error with the detection of the QRCode"):
         self.msg = msg
+        self.err_type = err_type
     def __str__(self):
         return self.msg
 

@@ -107,14 +107,11 @@ def get_image_report(frame):
     # make it binary
     image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,21,5)
     # Scan for QRcodes
-    qrcode = scanner.get_qrcodes(image)
+    qrcodes = scanner.get_qrcodes(image)
     # Check qrcode validity
-    if len(qrcode)!=1:
-        report.errors.append(QrcodeError())
-        return report
-    qr_is_ok, err_msg = qrcode_ok(qrcode[0])
+    qr_is_ok, err_msg = qrcode_ok(qrcodes)
     if qr_is_ok:
-        qrcode = qrcode.pop()
+        qrcode = qrcodes.pop()
         report.test = get_test_from_qrcode(qrcode)
         #paint the qrcode in white to lower the chances of getting wrong matches
         cv2.fillConvexPoly(image,np.int32([list(x) for x in qrcode.location]) ,(255))
@@ -147,15 +144,17 @@ def get_image_report(frame):
         else:
             report.errors.append(MarkersError())
     else:
-        report.errors.append(QrcodeError(err_msg))
+        report.errors.append(err_msg)
 
     return report
 
 #   exam id | test id | version
 DATA_RE = re.compile(r'''[0-9]+\|[0-9]+\|[0-9]+''',re.UNICODE)
 
-def qrcode_ok(qrcode):
-    data = qrcode.data
+def qrcode_ok(qrcodes):
+    if len(qrcodes)!=1:
+        return False, QrcodeError()
+    data = qrcodes[0].data
     #the qrcode matches the format
     if DATA_RE.match(data):
         version = int(data.split('|')[2])
@@ -163,21 +162,24 @@ def qrcode_ok(qrcode):
         exam_id = int(data.split('|')[0])
         #has the correct version
         if doc_parameters["version"]!=version:
-            return False, "The test was created with a different version of this software."
+            return False, QrcodeError(  err_type=QRCodeErrorTypes.FORMAT,
+                                        msg = "The test was created with a different version of this software.")
         #the id is in the tests pool
         if test_id not in doc_parameters["tests"]:
-            return False, "The metadata of the test is not on the input file."
+            return False, QrcodeError(  err_type=QRCodeErrorTypes.FORMAT,
+                                        msg = "The metadata of the test is not on the input file.")
         #get the test and check the if is has the correct exam id
         test = doc_parameters["tests"][test_id]
         if test.exam_id != exam_id:
-            return False, "The test is from the exam: %d and the metadata is for the exam: %d"%(test.exam_id,exam_id)
+            return False, QrcodeError(  err_type=QRCodeErrorTypes.FORMAT,
+                                        msg = "The test is from the exam: %d and the metadata is for the exam: %d"%(exam_id,test.exam_id))
         return True, "Ok"
     else:
-        return False, "The QRCode has a wrong format"
+        return False, QrcodeError(  err_type=QRCodeErrorTypes.FORMAT,
+                                    msg = "The QRCode has a wrong format")
 
 def get_test_from_qrcode(qrcode):
     info = qrcode.data.split('|')
-    exam_id = int(info[0]) #not used right now
     test_id = int(info[1])
     return copy.deepcopy(doc_parameters["tests"][test_id])
 
