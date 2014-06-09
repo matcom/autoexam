@@ -33,11 +33,12 @@ doc_parameters = {
     "cell_left_margin": 0.74,
     "cell_right_margin": 0.05,
 
-    "distance_threshold": 0.5, #threshold of the allowed distance between the selection boxes over the mean distance
+    "distance_threshold": 0.6, #threshold of the allowed distance between the selection boxes over the mean distance
     "aligned_threshold": 0.5, #threshold of the alignment allowed between the selection boxes over the mean displacement
     "selection_box_padding":0.5, #padding used to select the inner area of the selection boxes
     "selection_threshold": 130, #threshold that is used to decide if the answer is selected based on the mean intensity range:[0,255]
     "selection_error": 30, #threshold around the selection_threshold that marks the uncertainty range:[0,255]
+    "merge_size_factor": 1.5, #Size factor to decide if a merge is needed in the scattered squares
     "version": 1 #version control to reject invalid qrcodes
 }
 
@@ -343,37 +344,38 @@ def get_selections(image, question, index):
     error = doc_parameters["selection_error"]
 
     answers = []
-    if question.multiple:
-        a=0
-        for data in contours:
-            mean = data["mean_intensity"]
-            if mean > thresh:
-                answers.append(question.order[a])
-                if mean-thresh <= error:
-                    w = Warning(index, a, WarningTypes.UNCERTANTY, selected=True)
-                    report.test.warnings.append(w)
-            elif thresh-mean <= error:
-                w = Warning(index, a, WarningTypes.UNCERTANTY, selected=False)
+    #make allways multiple choice algoirithm
+    #if question.multiple:
+    a=0
+    for data in contours:
+        mean = data["mean_intensity"]
+        if mean > thresh:
+            answers.append(question.order[a])
+            if mean-thresh <= error:
+                w = Warning(index, a, WarningTypes.UNCERTANTY, selected=True)
                 report.test.warnings.append(w)
-            a += 1
-    else:
-        #sort contours using mean intensity values from high to low
-        contours.sort(key=lambda cont: cont["mean_intensity"], reverse=True)
-        best_contour = contours[0]
-        answers.append(question.order[best_contour["index"]])
-
-        max_mean =      contours[0]["mean_intensity"]
-        sec_max_mean =  contours[1]["mean_intensity"] if len(contours)>1 else thresh
-
-        if max_mean<thresh or abs(max_mean-sec_max_mean)<=error:
-            w = Warning(index, best_contour["index"], WarningTypes.UNCERTANTY, selected=True);
+        elif thresh-mean <= error:
+            w = Warning(index, a, WarningTypes.UNCERTANTY, selected=False)
             report.test.warnings.append(w)
+        a += 1
+    # else:
+    #     #sort contours using mean intensity values from high to low
+    #     contours.sort(key=lambda cont: cont["mean_intensity"], reverse=True)
+    #     best_contour = contours[0]
+    #     answers.append(question.order[best_contour["index"]])
 
-        posible_selected = [ c["index"] for c in contours if c["mean_intensity"]>thresh and c["index"]!=contours[0]["index"]]
+    #     max_mean =      contours[0]["mean_intensity"]
+    #     sec_max_mean =  contours[1]["mean_intensity"] if len(contours)>1 else thresh
 
-        if len(posible_selected)>0:
-            w = Warning(index, posible_selected, WarningTypes.MULT_SELECTION, selected = False)
-            report.test.warnings.append(w)
+    #     if max_mean<thresh or abs(max_mean-sec_max_mean)<=error:
+    #         w = Warning(index, best_contour["index"], WarningTypes.UNCERTANTY, selected=True);
+    #         report.test.warnings.append(w)
+
+    #     posible_selected = [ c["index"] for c in contours if c["mean_intensity"]>thresh and c["index"]!=contours[0]["index"]]
+
+    #     if len(posible_selected)>0:
+    #         w = Warning(index, posible_selected, WarningTypes.MULT_SELECTION, selected = False)
+    #         report.test.warnings.append(w)
 
     return True, answers
 
@@ -425,7 +427,7 @@ def try_merge_nearby_contours(contours,image):
             if c1["size"]<c2["size"]:
                 big = c2
                 small = c1
-            if dist(big["center"],small["center"])<big["size"]:
+            if dist(big["center"],small["center"])<big["size"]*doc_parameters["merge_size_factor"]:
                 contours[big["index"]] = get_contour_data(merge_contours(big,small),image)
                 contours.pop(small["index"])
                 return 1
