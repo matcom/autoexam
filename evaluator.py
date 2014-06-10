@@ -94,7 +94,7 @@ def evaluate(grader_sheet_file,results_json_file):
 			total_grade = 0
 			q_grades = {}
 			for question in exam.questions:
-				answers = [(i, i+1 in question.answers) for i in range(0,question.total_answers)]
+				answers = [(i, i in question.answers) for i in range(0,question.total_answers)]
 				q_grade = grader.getQuestionGrader(str(question.id)).evaluate(answers)
 				total_grade += q_grade
 				q_grades[str(question.id)]=q_grade
