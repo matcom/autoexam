@@ -56,4 +56,8 @@ nosetests.xml
 *.sublime-workspace
 *.sublime-project
 
+#Stuff in davids workspace
 generated/*
+bd_test_result.json
+generador viejo/*
+using_json_loader.py
