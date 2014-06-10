@@ -59,7 +59,7 @@ def main():
     source = ImageSource(args.camera)
     w, h = source.get_size()
     #Set document processing parameters and initialize scanner
-    scanner = TestScanner(w, h, args.exams_file, show_image=True)
+    scanner = TestScanner(w, h, args.exams_file, show_image=True, double_check=True)
 
     tests = {}
     #While user does not press the q key
