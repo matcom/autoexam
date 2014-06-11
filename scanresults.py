@@ -70,10 +70,11 @@ class QuestionError(object):
 
 class Question:
     """Question Class"""
-    def __init__(self, id, total_answers, multiple, answers = [], order = []):
-        self.answers = answers
+    def __init__(self, id, total_answers, multiple, answers = [], order = [], visual_answers = []):
         self.total_answers = total_answers
+        self.visual_answers = visual_answers
         self.multiple = multiple
+        self.answers = answers
         self.order = order
         self.id = id
 
@@ -83,9 +84,22 @@ class Question:
     def __ne__(self,other):
         return not self.__eq__(other)
 
+    #get the answers base on the order of the test and not the master exam.
+    def get_local_selection(self):
+        return [self.order.index(a)+1 for a in self.answers]
+
+    def __str__(self):
+        return "%s (%d%s. %s)"%(self.get_local_selection(), self.id,"m" if self.multiple else "s", self.answers)
+
     @classmethod
     def load_from_json(cls,json):
-        return Question(id = json["id"],total_answers = json["total_answers"],multiple = json["multiple"],answers = json["answers"], order = json["order"])
+        q = Question(id = json["id"],
+                        total_answers = json["total_answers"],
+                        multiple = json["multiple"],
+                        answers = json["answers"],
+                        order = json["order"])
+        q.visual_answers = q.get_local_selection()
+        return q
 
     def to_dict(self):
         result = {}
@@ -94,6 +108,7 @@ class Question:
         result["answers"] = self.answers
         result["total_answers"] = self.total_answers
         result["multiple"] = self.multiple
+        result["visual_answers"] = self.get_local_selection()
         return result
 
 class Test(object):

@@ -59,7 +59,7 @@ def main():
     source = ImageSource(args.camera)
     w, h = source.get_size()
     #Set document processing parameters and initialize scanner
-    scanner = TestScanner(w, h, args.exams_file, show_image=True, double_check=True)
+    scanner = TestScanner(w, h, args.exams_file, show_image=True, double_check=True, debug = False)
 
     tests = {}
     #While user does not press the q key
@@ -72,8 +72,8 @@ def main():
                 beep.beep()
                 tests[report.test.id] = report.test
                 print "Test ID:", unicode(report.test.id).encode("utf8")
-                for q in report.test.questions:
-                    print "%d%s -> %s"%(q.id,"m" if q.multiple else "s",q.answers)
+                for i, q in enumerate(report.test.questions):
+                    print "%d. %s"%(i, q)
                 if len(report.test.warnings)>0:
                     print "Warnings:"
                     for w in report.test.warnings:
