@@ -4,7 +4,7 @@ import json
 def enum(**enums):
     return type('Enum', (), enums)
 
-WarningTypes = enum(MULT_SELECTION = "Multiple Selection",UNCERTANTY = "Uncertainty");
+WarningTypes = enum(MULT_SELECTION = "Multiple Selection", UNCERTANTY = "Uncertainty", EMPTY_SELECTION = "Empty Selection");
 QRCodeErrorTypes = enum(FORMAT = "Wrong Format",  AMOUNT = "Wrong Amount");
 
 class Report(object):
@@ -35,7 +35,9 @@ class Warning(object):
             else:
                 return "In the question %d the answer %s was recognized as unmarked but it's possible that the user selected it"%(self.question, self.selection)
         elif self.wtype == WarningTypes.MULT_SELECTION:
-            return "The question %d is single selection and is possible that it has additional answers marked. Possible values %s"%(self.question, self.selection)
+            return "The question %d is single selection and it seems to have additional answers marked. The selection is %s"%(self.question, self.selection)
+        elif self.wtype == WarningTypes.EMPTY_SELECTION:
+            return "The question %d is single selection and the scan reported no selection at all."%(self.question)
 
     def to_dict(self):
         return {'type': self.wtype, 'question': self.question, 'selection': self.selection, 'selected': self.selected, 'message': self.__str__() }
@@ -119,7 +121,12 @@ class Test(object):
         return result
 
     def __eq__(self,other):
-        return self.warnings == other.warnings and self.questions == other.questions and self.exam_id == other.exam_id and self.id==other.id
+        w =  self.warnings == other.warnings
+        q = self.questions == other.questions
+        tst_id = self.id == other.id
+        ex_id = self.exam_id == other.exam_id
+
+        return q and tst_id and ex_id #and w
 
     def __ne__(self,other):
         return not self.__eq__(other)

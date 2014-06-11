@@ -11,6 +11,7 @@ import re
 
 report = None
 doc_parameters = {
+    "debug": False, #Show images of all the recognition process
     "show_image": True, #if it is a camera it shows a window with the images, and if it is an image it shows the image
     "double_check": True, #Makes a double confirmation before to return a success report
     "marker_image": "marker.png", #Image of the marker to use in the borders
@@ -20,11 +21,12 @@ doc_parameters = {
     #TODO try to recode this to use percent and not pixel units as they are now
     "qrcode_width": 100, #qrcode final width in pixels after perspective transformation
     "margin" : 60, #margin used to crop image after the rotation rectification
+    "work_size": 500, #resolution of the smaller side of the image after rectification, like saying 1000p
 
     #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
     "up_margin": 0.03,
     "down_margin": 0.03,
-    "left_margin": 0.0,
+    "left_margin": 0.00,
     "right_margin": 0.00,
 
     #padding between the rectangle with the selection cells and the inner cell area (used to rectify any misalignment within the answer selection rectangle)
@@ -78,13 +80,15 @@ def get_scan_report(source):
             cv2.imshow(window_name,flipped)
         return get_image_report(frame)
     #if double check is enabled...
+    first = None
     while True:
-        report = Report()
-        frame = source.get_next()
-        if show:
-            flipped = cv2.flip(frame, 1)
-            cv2.imshow(window_name,flipped)
-        first = get_image_report(frame)
+        if not first:
+            report = Report()
+            frame = source.get_next()
+            if show:
+                flipped = cv2.flip(frame, 1)
+                cv2.imshow(window_name,flipped)
+            first = get_image_report(frame)
         if not first.success:
             return first
         else:
@@ -97,6 +101,7 @@ def get_scan_report(source):
             if not second.success or second.test==first.test:
                 return second
             else:
+                first = second
                 continue
 
 def get_image_report(frame):
@@ -116,14 +121,20 @@ def get_image_report(frame):
         report.test = get_test_from_qrcode(qrcode)
         #paint the qrcode in white to lower the chances of getting wrong matches
         cv2.fillConvexPoly(image,np.int32([list(x) for x in qrcode.location]) ,(255))
-        size = int(doc_parameters["marker_size"]*dist(qrcode.location[0],qrcode.location[1]));
+        show_debug_image(image,"QR filled.")
+        size = int(doc_parameters["marker_size"] * dist(qrcode.location[0],qrcode.location[1]));
         rotated, gray_image =  fix_rotation(qrcode.location, image, gray_image)
+        show_debug_image(rotated,"After rotation.")
+        show_debug_image(gray_image,"Gray after rotation")
         small_marker = cv2.resize(marker,(size,size))
         markers =  get_marker_positions(rotated, small_marker, doc_parameters["marker_match_min_quality"])
         if len(markers)==4 and rectangle_sort(markers,rotated):
             answer_area = perspective_transform(gray_image, markers)
+            show_debug_image(answer_area,"All Answer area cropped.")
             cols = doc_parameters["answer_cols"]
-            rows = (len(report.test.questions)/cols)+1
+            total_q = len(report.test.questions)
+            rows = total_q/cols if total_q%cols==0 else (total_q/cols)+1
+
             #TODO make a parameter out of wish order to scan the tests
             answer_imgs = get_answer_images(answer_area, cols, rows, len(report.test.questions))
             question=0
@@ -136,7 +147,7 @@ def get_image_report(frame):
                     bad_data = True
                 question+=1
             #TODO debug
-            cv2.imshow("answer_area",answer_area)
+            show_debug_image(answer_area,"Answer area marked.",False)
 
             if not bad_data:
                 report.success = True
@@ -247,12 +258,21 @@ def fix_rotation(qr_rect, image, aux_image):
         else: angle = np.pi
 
     if actual_down[0]>0: angle = 2*np.pi-angle
-
+    #calculate the size of the borders to make it squared
     w, h = image.shape[::-1]
-    M = cv2.getRotationMatrix2D((w/2,h/2),180*angle/np.pi,1)
+    if w>h:
+        top, bott, left, right = (w-h)/2, (w-h)/2, 0, 0
+    else:
+        top, bott, left, right = (h-w)/2, (h-w)/2, 0, 0
+    #add the borders
+    bigger_img = cv2.copyMakeBorder(image,top,bott,left,right,cv2.BORDER_CONSTANT,value=[0,0,0])
+    bigger_aux = cv2.copyMakeBorder(aux_image,top,bott,left,right,cv2.BORDER_CONSTANT,value=[0,0,0])
+    #calculate the tramsformation
+    w, h = bigger_img.shape[::-1]
+    M = cv2.getRotationMatrix2D((w/2,h/2),180*angle/np.pi,1.0)
     #TODO o not use the variable margin here, try to find the real w, h that accounts for the new transformation
-    margin = doc_parameters["margin"]
-    return ( cv2.warpAffine(image,M,(w+2*margin,h+2*margin)), cv2.warpAffine(aux_image,M,(w+2*margin,h+2*margin)) )
+    #margin = doc_parameters["margin"]
+    return ( cv2.warpAffine(bigger_img,M,(w,h)), cv2.warpAffine(bigger_aux,M,(w,h)) )
 
 def get_marker_positions(image, marker,threshold):
     """Finds the 4 markers that surround the answer area in the image. -> list of tuples"""
@@ -292,12 +312,22 @@ def rectangle_sort(markers,image):
 
 def perspective_transform(image, markers):
     """Makes the perspective transformation to remove possible deformations of the answer area"""
-    w, h = image.shape[::-1]
-    pts1 = np.float32([list(x) for x in markers])
-    pts2 = np.float32([[0,0],[0,h],[w,h],[w,0]])
+    pts_area = np.float32([list(x) for x in markers])
+    area_w = np.linalg.norm(pts_area[1] - pts_area[2])
+    area_h = np.linalg.norm(pts_area[0] - pts_area[1])
+    w_s = doc_parameters["work_size"]
+    if area_w>area_h:
+        final_h = w_s
+        final_w = int(w_s*area_w/area_h)
+    else:
+        final_h = int(w_s*area_h/area_w)
+        final_w = w_s
 
-    M = cv2.getPerspectiveTransform(pts1,pts2)
-    return cv2.warpPerspective(image,M,(w,h))
+    w, h = image.shape[::-1]
+    pts2 = np.float32([[0,0],[0,final_h],[final_w,final_h],[final_w,0]])
+
+    M = cv2.getPerspectiveTransform(pts_area,pts2)
+    return cv2.warpPerspective(image,M,(final_w,final_h))
 
 def get_answer_images(image, cols, rows, total):
     """Crops the rectangle between the markers that should contain the answers. -> list of cv2.image"""
@@ -343,26 +373,37 @@ def get_selections(image, question, index):
     thresh = doc_parameters["selection_threshold"]
     error = doc_parameters["selection_error"]
 
-    answers = []
+    master_answers = []
+    local_answers = []
     #make allways multiple choice algoirithm
     #if question.multiple:
     a=0
     for data in contours:
         mean = data["mean_intensity"]
         if mean > thresh:
-            answers.append(question.order[a])
+            master_answers.append(question.order[a])
+            local_answers.append(a+1)
             if mean-thresh <= error:
-                w = Warning(index, a, WarningTypes.UNCERTANTY, selected=True)
+                w = Warning(index + 1, a + 1, WarningTypes.UNCERTANTY, selected=True)
                 report.test.warnings.append(w)
         elif thresh-mean <= error:
-            w = Warning(index, a, WarningTypes.UNCERTANTY, selected=False)
+            w = Warning(index + 1, a + 1, WarningTypes.UNCERTANTY, selected=False)
             report.test.warnings.append(w)
         a += 1
+
+    #TODO: add here the warnings of multilple selection and single
+    if len(master_answers)>1:
+        w = Warning(index + 1, local_answers, WarningTypes.MULT_SELECTION, selected = False)
+        report.test.warnings.append(w)
+
+    if len(master_answers)==0:
+        w = Warning(index + 1, local_answers, WarningTypes.EMPTY_SELECTION, selected = False)
+        report.test.warnings.append(w)
     # else:
     #     #sort contours using mean intensity values from high to low
     #     contours.sort(key=lambda cont: cont["mean_intensity"], reverse=True)
     #     best_contour = contours[0]
-    #     answers.append(question.order[best_contour["index"]])
+    #     master_answers.append(question.order[best_contour["index"]])
 
     #     max_mean =      contours[0]["mean_intensity"]
     #     sec_max_mean =  contours[1]["mean_intensity"] if len(contours)>1 else thresh
@@ -377,7 +418,7 @@ def get_selections(image, question, index):
     #         w = Warning(index, posible_selected, WarningTypes.MULT_SELECTION, selected = False)
     #         report.test.warnings.append(w)
 
-    return True, answers
+    return True, master_answers
 
 def get_contours(image, total, question):
     #Otsu's thresholding
@@ -490,6 +531,10 @@ def same_distance(contours, threshold):
 
 def dist(x,y):
     return math.sqrt( (x[0] - y[0])**2 + (x[1] - y[1])**2 )
+
+def show_debug_image(img, window_name, check_debug=True):
+    if not check_debug or doc_parameters["debug"]:
+        cv2.imshow(window_name,img.copy())
 
 def nothing(x):pass
 
