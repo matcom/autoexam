@@ -79,7 +79,7 @@ class Question:
         self.id = id
 
     def __eq__(self,other):
-        return self.total_answers == other.total_answers and self.multiple == other.multiple and self.answers==other.answers
+        return self.total_answers == other.total_answers and self.multiple == other.multiple and set(self.answers)==set(other.answers)
 
     def __ne__(self,other):
         return not self.__eq__(other)

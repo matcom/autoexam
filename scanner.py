@@ -73,7 +73,7 @@ def main():
                 tests[report.test.id] = report.test
                 print "Test ID:", unicode(report.test.id).encode("utf8")
                 for i, q in enumerate(report.test.questions):
-                    print "%d. %s"%(i, q)
+                    print "%d. %s"%(i+1, q)
                 if len(report.test.warnings)>0:
                     print "Warnings:"
                     for w in report.test.warnings:

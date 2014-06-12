@@ -24,16 +24,16 @@ doc_parameters = {
     "work_size": 500, #resolution of the smaller side of the image after rectification, like saying 1000p
 
     #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
-    "up_margin": 0.03,
-    "down_margin": 0.03,
+    "up_margin": 0.0145,
+    "down_margin": 0.012,
     "left_margin": 0.00,
     "right_margin": 0.00,
 
     #padding between the rectangle with the selection cells and the inner cell area (used to rectify any misalignment within the answer selection rectangle)
-    "cell_up_margin": 0.03,
-    "cell_down_margin": 0.03,
-    "cell_left_margin": 0.74,
-    "cell_right_margin": 0.05,
+    "cell_up_margin": 0.02,
+    "cell_down_margin": 0.02,
+    "cell_left_margin": 0.69,
+    "cell_right_margin": 0.02,
 
     "distance_threshold": 0.6, #threshold of the allowed distance between the selection boxes over the mean distance
     "aligned_threshold": 0.5, #threshold of the alignment allowed between the selection boxes over the mean displacement
@@ -111,7 +111,7 @@ def get_image_report(frame):
     # Set it to gray scale
     gray_image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     # make it binary
-    image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,21,5)
+    image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY, 21, 5)
     # Scan for QRcodes
     qrcodes = scanner.get_qrcodes(image)
     # Check qrcode validity
@@ -124,6 +124,7 @@ def get_image_report(frame):
         show_debug_image(image,"QR filled.")
         size = int(doc_parameters["marker_size"] * dist(qrcode.location[0],qrcode.location[1]));
         rotated, gray_image =  fix_rotation(qrcode.location, image, gray_image)
+        #detect_lines(rotated) #Search for lines
         show_debug_image(rotated,"After rotation.")
         show_debug_image(gray_image,"Gray after rotation")
         small_marker = cv2.resize(marker,(size,size))
@@ -225,6 +226,25 @@ class QRScanner(object):
 
     def cv2_to_zbar_image(self, cv2_image):
         return zbar.Image(self.width, self.height, 'Y800',cv2_image.tostring())
+
+def detect_lines(gray):
+    #edges = cv2.Canny(gray,50,150,apertureSize = 3)
+    edges = gray
+    lines = cv2.HoughLines(edges,1.0,np.pi/200.0,850)
+    color = cv2.cvtColor(edges,cv2.COLOR_GRAY2BGR)
+    if not lines.any() or len(lines)==0: return
+    for rho,theta in lines[0]:
+        a = np.cos(theta)
+        b = np.sin(theta)
+        x0 = a*rho
+        y0 = b*rho
+        x1 = int(x0 + 1000*(-b))
+        y1 = int(y0 + 1000*(a))
+        x2 = int(x0 - 1000*(-b))
+        y2 = int(y0 - 1000*(a))
+        cv2.line(color,(x1,y1),(x2,y2),(0,0,255),2)
+
+    show_debug_image(color,"lines")
 
 def fix_rotation_with_perspective(qr_rect, image):
     """Fixes the rotation of the image using the qrcode rectangle. -> cv2.image"""
@@ -426,7 +446,7 @@ def get_contours(image, total, question):
     w, h = image.shape[::-1]
     block_size = w
     if block_size%2==0: block_size+=1
-    cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY_INV,block_size,10,image)
+    cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY_INV,block_size,15,image)
 
     contours, hierarchy = cv2.findContours(image.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     contours.reverse()
@@ -435,14 +455,20 @@ def get_contours(image, total, question):
     else:
       contours = [get_contour_data(c, image) for c in contours]
     contours = [c for c in contours if not c["empty"]]
-    for i in range(0,len(contours)): contours[i]["index"]=i
+    for i in range(len(contours)): contours[i]["index"]=i
 
     if len(contours)>total:
         while True:
             merged = try_merge_nearby_contours(contours,image)
             if merged == 1:
-                for i in range(0,len(contours)): contours[i]["index"]=i
+                for i in range(len(contours)): contours[i]["index"]=i
             if merged == 0 or len(contours)<=total: break
+
+    if len(contours)> total:
+        list.sort(contours, key = lambda x: x["size"], reverse=True)
+        contours = contours[:total]
+        list.sort(contours, key = lambda x: x["index"])
+        for i in range(len(contours)): contours[i]["index"]=i
 
     if len(contours)!= total:
         report.errors.append(QuestionError(question,"The number of boxes do not match"))
