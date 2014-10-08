@@ -11,6 +11,7 @@ import sys
 import pprint
 import json
 import scanresults
+import argparse
 
 
 database = collections.defaultdict(lambda: [])
@@ -373,7 +374,7 @@ def generate_quiz():
     return test
 
 
-def generate(n, header):
+def generate(n, header, answers_per_page):
     text_template = jinja2.Template(open('latex/text_template.tex').
                                     read().decode('utf8'))
     answer_template = jinja2.Template(open('latex/answer_template.tex').
@@ -403,6 +404,8 @@ def generate(n, header):
 
     order = {}
 
+    answers = []
+
     for i in range(n):
         if debug:
             print('Generating quiz number %i' % i)
@@ -415,19 +418,29 @@ def generate(n, header):
         generate_qrcode(i, test)
 
         text_file.write(text_template.render(
-                        test=test, number=i).encode('utf8'))
+                        test=test, number=i, header=header).encode('utf8'))
         text_file.close()
 
-        answer_file = open('generated/v{0}/Answer-{1}.tex'.format(test_id, i), 'w')
-        answer_file.write(answer_template.render(test=enumerate(test), number=i,
-                          max=max(len(q.options) for q in test)).
-                          encode('utf8'))
-        answer_file.close()
+        answers.append(dict(test=enumerate(test), number=i, max=max(len(q.options) for q in test)))
+
+        if len(answers) == answers_per_page or i == n - 1:
+            answer_file = open('generated/v{0}/Answer-{1}.tex'.format(test_id, i / answers_per_page), 'w')
+            answer_file.write(answer_template.render(answers=answers).encode('utf8'))
+            answer_file.close()
+            answers = []
 
     scanresults.dump(order, 'generated/v{0}/Order.txt'.format(test_id))
 
 
 if __name__ == '__main__':
+    args_parser = argparse.ArgumentParser(description="Parses a master file and generates tests.")
+    args_parser.add_argument('master-file', metavar="PATH", help="Path to the master file that contains the test description.")
+    args_parser.add_argument('-c', '--tests-count', metavar='N', help="Number of actual tests to generate. If not supplied, only the master file will be generated.", type=int, default=0)
+    args_parser.add_argument('-a', '--answers-per-page', help="Number of answer sections to generate per page. By default is 1. It is up to you to ensure all them fit right in your template.", metavar='N', type=int, default=1)
+    args_parser.add_argument('-t', '--title', help="Title of the test.", default="")
+
+    args = args_parser.parse_args()
+
     if not os.path.exists('generated'):
         os.mkdir('generated')
 
@@ -439,6 +452,6 @@ if __name__ == '__main__':
     os.mkdir('generated/v{0}'.format(test_id))
 
     parser()
-    generate(10, "Sample Test")
+    generate(args.tests_count, args.title, args.answers_per_page)
 
     print('Generated v{0}'.format(test_id))
