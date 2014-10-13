@@ -230,9 +230,9 @@ def parse_id(i, lines):
 
 
 class Question:
-    """las preguntas tienen un header que es el enunciado,
+    """Las preguntas tienen un campo `header` que es el enunciado,
     y opciones. Algunas de estas opciones pueden considerarse
-    respuestas correctas"""
+    respuestas correctas."""
 
     def __init__(self, header, options, number):
         if (not header or not options):
@@ -248,6 +248,14 @@ class Question:
             self.options_id[o] = i
             if o[1]:
                 self.fixed[o] = i
+
+    @property
+    def correct_answers(self):
+        return len([None for r, f, o in self.options if r])
+
+    @property
+    def answers_count(self):
+        return len(self.options)
 
     def shuffle(self):
         """
@@ -374,7 +382,7 @@ def generate_quiz():
     return test
 
 
-def generate(n, header, answers_per_page):
+def generate(n, header, answers_per_page, questions_value):
     text_template = jinja2.Template(open('latex/text_template.tex').
                                     read().decode('utf8'))
     answer_template = jinja2.Template(open('latex/answer_template.tex').
@@ -399,7 +407,7 @@ def generate(n, header, answers_per_page):
 
     sol_file = open('generated/v{0}/Solution.txt'.format(test_id), 'w')
     sol_file.write(sol_template.render(test=questions,
-                   test_id=test_id).encode('utf8'))
+                   test_id=test_id, questions_value=questions_value).encode('utf8'))
     sol_file.close()
 
     order = {}
@@ -438,6 +446,7 @@ if __name__ == '__main__':
     args_parser.add_argument('-c', '--tests-count', metavar='N', help="Number of actual tests to generate. If not supplied, only the master file will be generated.", type=int, default=0)
     args_parser.add_argument('-a', '--answers-per-page', help="Number of answer sections to generate per page. By default is 1. It is up to you to ensure all them fit right in your template.", metavar='N', type=int, default=1)
     args_parser.add_argument('-t', '--title', help="Title of the test.", default="")
+    args_parser.add_argument('-v', '--questions-value', help="Default value for each question.", metavar='N', type=float, default=1.)
 
     args = args_parser.parse_args()
 
@@ -452,6 +461,6 @@ if __name__ == '__main__':
     os.mkdir('generated/v{0}'.format(test_id))
 
     parser()
-    generate(args.tests_count, args.title, args.answers_per_page)
+    generate(args.tests_count, args.title, args.answers_per_page, args.questions_value)
 
     print('Generated v{0}'.format(test_id))
