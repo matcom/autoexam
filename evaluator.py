@@ -4,28 +4,28 @@ import json
 import scanresults as sr
 
 class QuestionGrader(object):
-	
+
 	def __init__(self,id_question,multiple,total_value,options_values):
 		self.id_question = id_question
 		self.multiple = multiple
 		self.total_value = total_value
 		self.options_values = options_values
-		
+
 	def getId(self):
 		return self.id_question
-		
+
 	def isMultiple(self):
 		return False
-		
+
 	def getTotalValue(self):
 		return self.total_value
-		
+
 	def getNumberOfOptions(self):
 		return len(options_values)
 
 	def getOptionValue(self,option):
 		return self.options_values[option]
-		
+
 	def evaluate(self,answers):
 		value = 0
 		count = 0
@@ -38,17 +38,17 @@ class QuestionGrader(object):
 			else:
 				value += self.getOptionValue(a[0])[1]
 		return value
-		
-		
+
+
 class Grader(object):
-	
+
 	def __init__(self,id_exam):
 		self.id_exam = id_exam
 		self.questions = {}
-		
+
 	def addQuestionGrader(self,question):
 		self.questions[question.getId()] = question
-		
+
 	def getQuestionGrader(self,id_question):
 		return self.questions[id_question]
 
@@ -68,7 +68,7 @@ def parse_grader_sheet(grader_sheet_file):
 		if options_line:
 			options_line = False
 			blank_line = True
-			options = [(int(i.split(":")[0]),int(i.split(":")[1])) for i in line.strip().split(" ")]
+			options = [(float(i.split(":")[0]),float(i.split(":")[1])) for i in line.strip().split(" ")]
 			grader.addQuestionGrader(QuestionGrader(id_question,multiple,total,options))
 		if total_line:
 			total_line = False
@@ -109,7 +109,7 @@ def main():
 	parser = argparse.ArgumentParser(description='Autoexam evaluator')
 	parser.add_argument("gradersheet", help="Gradersheet file")
 	parser.add_argument("scansjson", help="Scans json file")
-	parser.add_argument("resultsjson", help="Results json file")
+	parser.add_argument("resultsjson", help="Results json file")s
 	args = parser.parse_args()
 	result = evaluate(args.gradersheet,args.scansjson)
 	json.dump(result,open(args.resultsjson,"wb"))
