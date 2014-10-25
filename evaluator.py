@@ -89,19 +89,32 @@ def evaluate(grader_sheet_file,results_json_file):
 	grader = parse_grader_sheet(grader_sheet_file)
 	tests_scans = sr.parse(results_json_file)
 	grades = {}
+	stats = {}
 	for test_id, exam in tests_scans.items():
 		if str(grader.id_exam) == str(exam.exam_id):
 			total_grade = 0
 			q_grades = {}
 			for question in exam.questions:
+				#grading part
 				answers = [(i, i in question.answers) for i in range(0,question.total_answers)]
 				q_grade = grader.getQuestionGrader(str(question.id)).evaluate(answers)
 				total_grade += q_grade
 				q_grades[str(question.id)]=q_grade
+				#stats part
+				if not question.id in stats:
+					stats[question.id] = {}
+					stats[question.id]["count"]=0
+					stats[question.id]["options"]={}
+				stats[question.id]["count"]=stats[question.id]["count"]+1
+				for a in answers:
+					if not a[0] in stats[question.id]["options"]:
+						stats[question.id]["options"][a[0]]=0
+					if a[1]:
+						stats[question.id]["options"][a[0]]=stats[question.id]["options"][a[0]]+1
 			grades[test_id]={"total_grade":total_grade,"questions_grades":q_grades}
 		else:
 			pass
-	return grades
+	return {"grades":grades,"stats":stats}
 
 
 def main():
@@ -109,7 +122,7 @@ def main():
 	parser = argparse.ArgumentParser(description='Autoexam evaluator')
 	parser.add_argument("gradersheet", help="Gradersheet file")
 	parser.add_argument("scansjson", help="Scans json file")
-	parser.add_argument("resultsjson", help="Results json file")s
+	parser.add_argument("resultsjson", help="Results json file")
 	args = parser.parse_args()
 	result = evaluate(args.gradersheet,args.scansjson)
 	json.dump(result,open(args.resultsjson,"wb"))
