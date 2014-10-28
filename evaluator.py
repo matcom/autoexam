@@ -1,7 +1,8 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
 
 import json
 import scanresults as sr
+from os import path
 
 class QuestionGrader(object):
 
@@ -89,43 +90,51 @@ def evaluate(grader_sheet_file,results_json_file):
 	grader = parse_grader_sheet(grader_sheet_file)
 	tests_scans = sr.parse(results_json_file)
 	grades = {}
-	stats = {}
 	for test_id, exam in tests_scans.items():
 		if str(grader.id_exam) == str(exam.exam_id):
 			total_grade = 0
 			q_grades = {}
 			for question in exam.questions:
-				#grading part
 				answers = [(i, i in question.answers) for i in range(0,question.total_answers)]
 				q_grade = grader.getQuestionGrader(str(question.id)).evaluate(answers)
 				total_grade += q_grade
 				q_grades[str(question.id)]=q_grade
-				#stats part
-				if not question.id in stats:
-					stats[question.id] = {}
-					stats[question.id]["count"]=0
-					stats[question.id]["options"]={}
-				stats[question.id]["count"]=stats[question.id]["count"]+1
-				for a in answers:
-					if not a[0] in stats[question.id]["options"]:
-						stats[question.id]["options"][a[0]]=0
-					if a[1]:
-						stats[question.id]["options"][a[0]]=stats[question.id]["options"][a[0]]+1
 			grades[test_id]={"total_grade":total_grade,"questions_grades":q_grades}
 		else:
 			pass
-	return {"grades":grades,"stats":stats}
+	return grades
+	
+def get_stats(results_json_file):
+	tests_scans = sr.parse(results_json_file)
+	stats = {}
+	for test_id, exam in tests_scans.items():		
+		for question in exam.questions:
+			answers = [(i, i in question.answers) for i in range(0,question.total_answers)]
+			if not question.id in stats:
+				stats[question.id] = {}
+				stats[question.id]["count"]=0
+				stats[question.id]["options"]={}
+			stats[question.id]["count"]=stats[question.id]["count"]+1
+			for a in answers:
+				if not a[0] in stats[question.id]["options"]:
+					stats[question.id]["options"][a[0]]=0
+				if a[1]:
+					stats[question.id]["options"][a[0]]=stats[question.id]["options"][a[0]]+1
+	return stats
 
 
 def main():
 	import argparse
 	parser = argparse.ArgumentParser(description='Autoexam evaluator')
-	parser.add_argument("gradersheet", help="Gradersheet file")
+	parser.add_argument("-g","--gradersheet", help="Gradersheet file")
 	parser.add_argument("scansjson", help="Scans json file")
 	parser.add_argument("resultsjson", help="Results json file")
 	args = parser.parse_args()
-	result = evaluate(args.gradersheet,args.scansjson)
-	json.dump(result,open(args.resultsjson,"wb"))
+	grades = None
+	if args.gradersheet <> None:
+		grades = evaluate(args.gradersheet,args.scansjson)
+	stats = get_stats(args.scansjson)
+	json.dump({"grades":grades,"stats":stats},open(args.resultsjson,"wb"))
 	return 0
 
 if __name__ == '__main__':
