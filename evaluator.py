@@ -16,7 +16,7 @@ class QuestionGrader(object):
 		return self.id_question
 
 	def isMultiple(self):
-		return False
+		return self.multiple
 
 	def getTotalValue(self):
 		return self.total_value
