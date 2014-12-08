@@ -40,11 +40,11 @@ def preprocess_line(line, remove_comments=True):
     return line
 
 
-def parser():
+def parser(args):
     """
     Lee el archivo master y se parsea cada una de las preguntas.
     """
-    master_path = sys.argv[1] if len(sys.argv) > 1 else "master.txt"
+    master_path = args.master
     master = open(os.path.join(os.path.abspath(
                   os.path.dirname(__file__)), master_path))
     lines = master.readlines()
@@ -260,6 +260,9 @@ class Question:
     def answers_count(self):
         return len(self.options)
 
+    def enumerate_options(self):
+        return enumerate(self.options)
+
     def shuffle(self):
         """
         Devuelve las opciones desordenadas.
@@ -356,7 +359,8 @@ def generate_quiz(args):
         if not base[tag]:
             base.pop(tag)
 
-        q.shuffle()
+        if not args.dont_shuffle_options:
+            q.shuffle()
 
         if debug > 1:
             print(u'Selection question:\n%s' % str(q))
@@ -385,17 +389,20 @@ def generate_quiz(args):
     if args.dont_shuffle_tags:
         test.sort(key=lambda q: restrictions_order[q.tags[0]])
 
+    if args.sort_questions:
+        test.sort(key=lambda q: q.number)
+
     return test
 
 
 def generate(n, args):
-    text_template = jinja2.Template(open('latex/text_template.tex').
+    text_template = jinja2.Template(open(args.text_template).
                                     read().decode('utf8'))
-    answer_template = jinja2.Template(open('latex/answer_template.tex').
+    answer_template = jinja2.Template(open(args.answer_template).
                                       read().decode('utf8'))
     sol_template = jinja2.Template(open('latex/solution_template.txt').
                                    read().decode('utf8'))
-    master_template = jinja2.Template(open('latex/master_template.tex').
+    master_template = jinja2.Template(open(args.master_template).
                                       read().decode('utf8'))
 
     master_file = open('generated/v{0}/Master.tex'.format(test_id), 'w')
@@ -427,15 +434,16 @@ def generate(n, args):
         test = generate_quiz(args)
         order[i] = scanresults.Test(test_id, i, [q.convert() for q in test])
 
-        text_file = open('generated/v{0}/Test-{1}.tex'.format(test_id, i), 'w')
-
         generate_qrcode(i, test)
 
-        text_file.write(text_template.render(
-                        test=test, number=i, header=args.title).encode('utf8'))
-        text_file.close()
+        if not args.dont_generate_text:
+            text_file = open('generated/v{0}/Test-{1}.tex'.format(test_id, i), 'w')
 
-        answers.append(dict(test=enumerate(test), number=i, max=max(len(q.options) for q in test)))
+            text_file.write(text_template.render(
+                            test=test, number=i, header=args.title).encode('utf8'))
+            text_file.close()
+
+        answers.append(dict(test=list(enumerate(test)), number=i, max=max(len(q.options) for q in test)))
 
         if len(answers) == args.answers_per_page or i == n - 1:
             answer_file = open('generated/v{0}/Answer-{1}.tex'.format(test_id, i / args.answers_per_page), 'w')
@@ -448,14 +456,27 @@ def generate(n, args):
 
 if __name__ == '__main__':
     args_parser = argparse.ArgumentParser(description="Parses a master file and generates tests.")
-    args_parser.add_argument('master-file', metavar="PATH", help="Path to the master file that contains the test description.")
+    args_parser.add_argument('master', metavar="PATH", help="Path to the master file that contains the test description.")
     args_parser.add_argument('-c', '--tests-count', metavar='N', help="Number of actual tests to generate. If not supplied, only the master file will be generated.", type=int, default=0)
     args_parser.add_argument('-a', '--answers-per-page', help="Number of answer sections to generate per page. By default is 1. It is up to you to ensure all them fit right in your template.", metavar='N', type=int, default=1)
     args_parser.add_argument('-t', '--title', help="Title of the test.", default="")
+    args_parser.add_argument('--answer-template', help="Template for the answers sheets.", default="latex/answer_template.tex")
+    args_parser.add_argument('--master-template', help="Template for the master sheet.", default="latex/master_template.tex")
+    args_parser.add_argument('--text-template', help="Template for the text sheets.", default="latex/text_template.tex")
     args_parser.add_argument('-v', '--questions-value', help="Default value for each question.", metavar='N', type=float, default=1.)
     args_parser.add_argument('--dont-shuffle-tags', help="Disallow shuffling of tags.", action='store_true')
+    args_parser.add_argument('--sort-questions', help="After selecting questions, put them in the same order as in the master.", action='store_true')
+    args_parser.add_argument('--dont-shuffle-options', help="Do not shuffle the options in the questions.", action='store_true')
+    args_parser.add_argument('--dont-generate-text', help="Do not generate text sheets, only answers.", action='store_true')
+    args_parser.add_argument('--election', help="Toggle all options for election mode.", action='store_true')
 
     args = args_parser.parse_args()
+
+    if args.election:
+        args.answer_template = 'latex/election_template.tex'
+        args.sort_questions = True
+        args.dont_shuffle_options = True
+        args.dont_generate_text = True
 
     if not os.path.exists('generated'):
         os.mkdir('generated')
@@ -467,7 +488,7 @@ if __name__ == '__main__':
 
     os.mkdir('generated/v{0}'.format(test_id))
 
-    parser()
+    parser(args)
     generate(args.tests_count, args)
 
     print('Generated v{0}'.format(test_id))
