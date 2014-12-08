@@ -30,8 +30,8 @@ doc_parameters = {
     "right_margin": 0.00,
 
     #padding between the rectangle with the selection cells and the inner cell area (used to rectify any misalignment within the answer selection rectangle)
-    "cell_up_margin": 0.02,
-    "cell_down_margin": 0.02,
+    "cell_up_margin": 0.05,
+    "cell_down_margin": 0.05,
     "cell_left_margin": 0.69,
     "cell_right_margin": 0.02,
 
@@ -40,7 +40,7 @@ doc_parameters = {
     "selection_box_padding":0.5, #padding used to select the inner area of the selection boxes
     "selection_threshold": 130, #threshold that is used to decide if the answer is selected based on the mean intensity range:[0,255]
     "selection_error": 30, #threshold around the selection_threshold that marks the uncertainty range:[0,255]
-    "merge_size_factor": 1.5, #Size factor to decide if a merge is needed in the scattered squares
+    "merge_size_factor": 1.8, #Size factor to decide if a merge is needed in the scattered squares
     "version": 1 #version control to reject invalid qrcodes
 }
 
@@ -446,7 +446,7 @@ def get_contours(image, total, question):
     w, h = image.shape[::-1]
     block_size = w
     if block_size%2==0: block_size+=1
-    cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY_INV,block_size,15,image)
+    cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY_INV,block_size,10,image)
 
     contours, hierarchy = cv2.findContours(image.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     contours.reverse()
@@ -570,8 +570,8 @@ class ImageSource(object):
         self.is_camera = type(source)==int
         if self.is_camera:
             self.source = cv2.VideoCapture(source)
-            self.source.set(3,640)
-            self.source.set(4,480)
+            self.source.set(3,1920)
+            self.source.set(4,1080)
         else:
             self.source = cv2.imread(source,1)
 
