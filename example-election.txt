@@ -1,0 +1,30 @@
+% ============================================================================
+% Example Master file for elections
+% ============================================================================
+% This is an example master file for generating election tickets.
+% Please refer to the example-master.txt file for general purpose instructions.
+% Here we are only concerned with generating election tickets.
+
+total: 2    % A separate question for each of the possible things to vote for
+
+----------------------------------------- % The usual separator
+
+(1)
+@president % Use tags for whatever you want, they'll appear in the statistics
+Presidente
+_X Nombre-Largo-1 Primer-Apellido Segundo-Apellido
+_X Nombre-Largo-2 Primer-Apellido Segundo-Apellido
+_X Nombre-Largo-3 Primer-Apellido Segundo-Apellido
+_X Nombre-Largo-4 Primer-Apellido Segundo-Apellido
+_X Nombre-Largo-5 Primer-Apellido Segundo-Apellido
+_X Nombre-Largo-6 Primer-Apellido Segundo-Apellido
+
+(2) % A new question for every voting option, and yes, repeat the names ;(
+@member
+Miembro
+_X Nombre-Largo-1 Primer-Apellido Segundo-Apellido
+_X Nombre-Largo-2 Primer-Apellido Segundo-Apellido
+_X Nombre-Largo-3 Primer-Apellido Segundo-Apellido
+_X Nombre-Largo-4 Primer-Apellido Segundo-Apellido
+_X Nombre-Largo-5 Primer-Apellido Segundo-Apellido
+_X Nombre-Largo-6 Primer-Apellido Segundo-Apellido
