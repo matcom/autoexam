@@ -28,6 +28,11 @@ def parse_and_check_args():
                         help='the file name to dump the scan results. If the file exists it will append the results.')
     parser.add_argument('-c','--camera', type=int, default = 0,
                         help='the index of the camera used to scan the tests.')
+    parser.add_argument('-d', '--debug', action='store_true', default=False,
+                        help='debug mode enabled')
+    #TODO: PLEASE REMOVE THIS AS SOON AS POSIBLE
+    parser.add_argument('-p', '--poll', action='store_true', default=False,
+                        help='if present the margins of the polls are used (REMOVE THIS OPTION).')
     args = parser.parse_args()
 
     args.outfile = abspath(args.outfile)
@@ -59,7 +64,7 @@ def main():
     source = ImageSource(args.camera)
     w, h = source.get_size()
     #Set document processing parameters and initialize scanner
-    scanner = TestScanner(w, h, args.exams_file, show_image=True, double_check=True, debug = False)
+    scanner = TestScanner(w, h, args.exams_file, show_image=True, double_check=True, debug = args.debug, poll = args.poll)
 
     tests = {}
     #While user does not press the q key

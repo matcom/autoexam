@@ -23,6 +23,24 @@ doc_parameters = {
     "margin" : 60, #margin used to crop image after the rotation rectification
     "work_size": 500, #resolution of the smaller side of the image after rectification, like saying 1000p
 
+    #---------------------------------------------REMOVE ALL OF THIS---------------------------------------------
+    "poll": False, #if we are scanning a poll or not
+
+    "p_answer_cols": 2, ##the number of questions per column, this value is fixed
+
+    #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
+    "p_up_margin": 0.17,
+    "p_down_margin": 0.08,
+    "p_left_margin": 0.65,
+    "p_right_margin": 0.00,
+
+    #padding between the rectangle with the selection cells and the inner cell area (used to rectify any misalignment within the answer selection rectangle)
+    "p_cell_up_margin": 0.03,
+    "p_cell_down_margin": 0.05,
+    "p_cell_left_margin": 0.33,
+    "p_cell_right_margin": 0.33,
+    #-----------------------------------------------------------------------------------------------------------
+
     #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
     "up_margin": 0.0145,
     "down_margin": 0.012,
@@ -30,8 +48,8 @@ doc_parameters = {
     "right_margin": 0.00,
 
     #padding between the rectangle with the selection cells and the inner cell area (used to rectify any misalignment within the answer selection rectangle)
-    "cell_up_margin": 0.02,
-    "cell_down_margin": 0.02,
+    "cell_up_margin": 0.05,
+    "cell_down_margin": 0.05,
     "cell_left_margin": 0.69,
     "cell_right_margin": 0.02,
 
@@ -40,7 +58,8 @@ doc_parameters = {
     "selection_box_padding":0.5, #padding used to select the inner area of the selection boxes
     "selection_threshold": 130, #threshold that is used to decide if the answer is selected based on the mean intensity range:[0,255]
     "selection_error": 30, #threshold around the selection_threshold that marks the uncertainty range:[0,255]
-    "merge_size_factor": 1.5, #Size factor to decide if a merge is needed in the scattered squares
+    "merge_size_factor": 1.8, #Size factor to decide if a merge is needed in the scattered squares
+    "adaptative_threshold_size": 10, #size of the kernel in the adaptive threshold to highlight the square
     "version": 1 #version control to reject invalid qrcodes
 }
 
@@ -52,6 +71,22 @@ class TestScanner:
         doc_parameters["loaded_marker"] = cv2.imread(doc_parameters["marker_image"],0)
         doc_parameters["init"] = True
         doc_parameters["tests"] = parse(testsfile)
+
+        #---------------------REMOVE ALL THIS---------------------
+        if doc_parameters["poll"]:
+            doc_parameters["up_margin"] = doc_parameters["p_up_margin"]
+            doc_parameters["down_margin"] = doc_parameters["p_down_margin"]
+            doc_parameters["left_margin"] = doc_parameters["p_left_margin"]
+            doc_parameters["right_margin"] = doc_parameters["p_right_margin"]
+
+            doc_parameters["cell_up_margin"] = doc_parameters["p_cell_up_margin"]
+            doc_parameters["cell_down_margin"] = doc_parameters["p_cell_down_margin"]
+            doc_parameters["cell_left_margin"] = doc_parameters["p_cell_left_margin"]
+            doc_parameters["cell_right_margin"] = doc_parameters["p_cell_right_margin"]
+            
+            doc_parameters["answer_cols"] = doc_parameters["p_answer_cols"]
+        #---------------------------------------------------------
+
 
     def scan(self, source):
         return get_scan_report(source)
@@ -395,7 +430,7 @@ def get_selections(image, question, index):
 
     master_answers = []
     local_answers = []
-    #make allways multiple choice algoirithm
+    #use always the multiple choice algorithm
     #if question.multiple:
     a=0
     for data in contours:
@@ -412,11 +447,11 @@ def get_selections(image, question, index):
         a += 1
 
     #TODO: add here the warnings of multilple selection and single
-    if len(master_answers)>1:
+    if len(master_answers)>1 and not question.multiple:
         w = Warning(index + 1, local_answers, WarningTypes.MULT_SELECTION, selected = False)
         report.test.warnings.append(w)
 
-    if len(master_answers)==0:
+    if len(master_answers)==0 and not question.multiple:
         w = Warning(index + 1, local_answers, WarningTypes.EMPTY_SELECTION, selected = False)
         report.test.warnings.append(w)
     # else:
@@ -446,7 +481,7 @@ def get_contours(image, total, question):
     w, h = image.shape[::-1]
     block_size = w
     if block_size%2==0: block_size+=1
-    cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY_INV,block_size,15,image)
+    cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY_INV,block_size,doc_parameters["adaptative_threshold_size"],image)
 
     contours, hierarchy = cv2.findContours(image.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     contours.reverse()
@@ -570,8 +605,8 @@ class ImageSource(object):
         self.is_camera = type(source)==int
         if self.is_camera:
             self.source = cv2.VideoCapture(source)
-            self.source.set(3,640)
-            self.source.set(4,480)
+            # self.source.set(3,1920)
+            # self.source.set(4,1080)
         else:
             self.source = cv2.imread(source,1)
 
