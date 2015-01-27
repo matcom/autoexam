@@ -197,7 +197,7 @@ def parse_tag(i, lines):
 
     for t in tags:
         if t[0] != '@':
-            raise ValueError('Invalid tag ')
+            raise ValueError('Invalid tag %s' % t)
         if debug:
             print(u'Found tag: %s' % t)
 
@@ -276,6 +276,8 @@ class Question:
                 tmp = self.options[pos]
                 self.options[pos] = o
                 self.options[idx] = tmp
+
+        return Question(self.header, self.options, self.number, self.tags)
 
     def convert(self):
         order = [self.options_id[o] for o in self.options]
@@ -360,7 +362,7 @@ def generate_quiz(args):
             base.pop(tag)
 
         if not args.dont_shuffle_options:
-            q.shuffle()
+            q = q.shuffle()
 
         if debug > 1:
             print(u'Selection question:\n%s' % str(q))

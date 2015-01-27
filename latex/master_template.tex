@@ -1,4 +1,4 @@
-\documentclass[a4paper,10pt]{article}
+\documentclass[twocolumn]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{geometry}
 \usepackage{graphicx}
@@ -18,21 +18,21 @@ ejem-plos se-pa-ra-dor co-rri-das do-cu-men-tos con-si-de-ra ope-ran co-rrec-ta
 eva-luar te-ner-se si-mi-la-res pre-fe-ren-cias pre-fe-ren-cia
 co-rres-pon-de}
 
-\title{}
+\title{ {{ header}} (Master) }
 \date{}
 
 %opening
 \begin{document}
 
-%\maketitle
+% \maketitle
 
 \begin{center}
- \Large{ {{ header}} (Master) }
+ \Large{ {{ header }} (Master) }
 \end{center}
 
 %\begin{small}
 
-\begin{multicols}{2}
+% \begin{multicols}{2}
 
 \begin{enumerate}
  %\setlength{\itemsep}{-0.1cm}
@@ -46,14 +46,14 @@ co-rres-pon-de}
    {% for right, fixed, text in q.options %}
    % Right: {{ right }}
    % Fixed: {{ fixed }}
-   \item {{ text }}
+   \item {% if right %}$\times${% endif %}{% if fixed %}\textbf{*}{% endif %} {{ text }}
    {% endfor %}
   \end{enumerate}
 
 {% endfor %}
 \end{enumerate}
 
-\end{multicols}
+% \end{multicols}
 
 %\end{small}
 
