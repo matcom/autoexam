@@ -20,4 +20,13 @@ class Examan < ActiveRecord::Base
     end
     return 0
   end
+
+  def preguntas_por_tema_hash
+    hash = {}
+    preguntas_por_tema.split("|").each do |pair|
+      tag, count = pair.split(":")
+      hash[tag] = count.to_i
+    end
+    hash
+  end
 end

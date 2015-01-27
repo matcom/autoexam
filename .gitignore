@@ -42,6 +42,7 @@ nosetests.xml
 .*
 !.gitignore
 *~
+*.orig
 
 ###PyCharm###
 
@@ -59,5 +60,4 @@ nosetests.xml
 #Stuff in davids workspace
 generated/*
 bd_test_result.json
-generador viejo/*
 using_json_loader.py

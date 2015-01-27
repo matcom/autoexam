@@ -4,19 +4,30 @@
 
 <h1>Asignaturas</h1>
 
-<ul class="thumbnails">
+<table class="table">
+  <tr>
+    <th>Nombre</th>
+    <th>Etiquetas</th>
+    <th>Preguntas</th>
+    <th>Examenes</th>
+    <th>Estudiantes</th>
+    <th>Acciones</th>
+  </tr>
 <% @asignaturas.each do |asignatura| %>
-  <li class="span4">
-    <div class="thumbnail">
-      <h4> <%= link_to asignatura.nombre_compuesto, asignatura, :class => 'link' %> </h4>
-      <%= etiquetas_de(asignatura) %> <br>
-      Preguntas: <%= asignatura.pregunta.count %> <br>
-      Examenes: <%= asignatura.examen.count %> <br>
-      Estudiantes: <%= asignatura.listado.estudiantes.split.length rescue 0 %>
-      <p> <%= asignatura.descripcion %> </p>
-      <%= link_to 'Editar', edit_asignatura_path(asignatura), :class => 'btn btn-mini btn-primary' %>
+  <tr>
+    <td>
+      <%= link_to asignatura.nombre_compuesto, asignatura, :class => 'link' %> <br>
+      <%= asignatura.descripcion %>
+    </td>
+    <td> <%= etiquetas_de(asignatura) %> </td>
+    <td> <%= asignatura.pregunta.count %> </td>
+    <td> <%= asignatura.examen.count %> </td>
+    <td> <%= asignatura.listado.estudiantes.split.length rescue 0 %> </td>
+    <td>
+      <%= link_to 'Detalles', asignatura, :class => 'btn btn-mini btn-info' %>
+      <%= link_to 'Editar', edit_asignatura_path(asignatura), :class => 'btn btn-mini btn-success' %>
       <%= link_to 'Eliminar', asignatura, method: :delete, data: { confirm: 'Are you sure?' }, :class => 'btn btn-mini btn-danger'%>
-    </div>
-  </li>
+    </td>
+  </tr>
 <% end %>
-</ul>
+</table>

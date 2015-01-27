@@ -12,6 +12,7 @@ Examui::Application.routes.draw do
   get 'nueva_opcion/:id' => 'opcions#nueva_opcion', :as => :nueva_opcion
   get 'nuevo_examen/:id' => 'examen#new', :as => :nuevo_examen
   get 'clave/:id' => 'examen#clave', :as => :clave
+  get 'generate/latex/master/:id' => 'latex#latex_master', :as => :latex_master
 
   post 'update_clave' => 'examen#update_clave', :as => :update_clave
 
