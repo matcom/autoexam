@@ -4,7 +4,8 @@ import json
 def enum(**enums):
     return type('Enum', (), enums)
 
-WarningTypes = enum(MULT_SELECTION = "Multiple Selection",UNCERTANTY = "Uncertainty");
+WarningTypes = enum(MULT_SELECTION = "Multiple Selection", UNCERTANTY = "Uncertainty", EMPTY_SELECTION = "Empty Selection");
+QRCodeErrorTypes = enum(FORMAT = "Wrong Format",  AMOUNT = "Wrong Amount");
 
 class Report(object):
     """Class to represent the scan report"""
@@ -32,9 +33,11 @@ class Warning(object):
             if self.selected:
                 return "In the question %d the answer %s was recognized as marked but this decision must be verified"%(self.question, self.selection,)
             else:
-                return "In the question %d the answer %s was recognized as unmarked but it's possible that the user selected it"%(self.question, self.selection)            
+                return "In the question %d the answer %s was recognized as unmarked but it's possible that the user selected it"%(self.question, self.selection)
         elif self.wtype == WarningTypes.MULT_SELECTION:
-            return "The question %d is single selection and is possible that it has additional answers marked. Possible values %s"%(self.question, self.selection)
+            return "The question %d is single selection and it seems to have additional answers marked. The selection is %s"%(self.question, self.selection)
+        elif self.wtype == WarningTypes.EMPTY_SELECTION:
+            return "The question %d is single selection and the scan reported no selection at all."%(self.question)
 
     def to_dict(self):
         return {'type': self.wtype, 'question': self.question, 'selection': self.selection, 'selected': self.selected, 'message': self.__str__() }
@@ -45,8 +48,11 @@ class Warning(object):
 
 class QrcodeError(object):
     """QRCode error class"""
+    def __init__(self, err_type = QRCodeErrorTypes.AMOUNT, msg = "There was an error with the detection of the QRCode"):
+        self.msg = msg
+        self.err_type = err_type
     def __str__(self):
-        return "There was an error with the detection of the QRCode"
+        return self.msg
 
 class MarkersError(object):
     """Marker error class"""
@@ -64,22 +70,36 @@ class QuestionError(object):
 
 class Question:
     """Question Class"""
-    def __init__(self, id, total_answers, multiple, answers = [], order = []):
-        self.answers = answers
+    def __init__(self, id, total_answers, multiple, answers = [], order = [], visual_answers = []):
         self.total_answers = total_answers
+        self.visual_answers = visual_answers
         self.multiple = multiple
+        self.answers = answers
         self.order = order
         self.id = id
 
     def __eq__(self,other):
-        return self.total_answers == other.total_answers and self.multiple == other.multiple and self.answers==other.answers
+        return self.total_answers == other.total_answers and self.multiple == other.multiple and set(self.answers)==set(other.answers)
 
     def __ne__(self,other):
         return not self.__eq__(other)
 
+    #get the answers base on the order of the test and not the master exam.
+    def get_local_selection(self):
+        return [self.order.index(a)+1 for a in self.answers]
+
+    def __str__(self):
+        return "%s (%d%s. %s)"%(self.get_local_selection(), self.id,"m" if self.multiple else "s", self.answers)
+
     @classmethod
     def load_from_json(cls,json):
-        return Question(id = json["id"],total_answers = json["total_answers"],multiple = json["multiple"],answers = json["answers"], order = json["order"])
+        q = Question(id = json["id"],
+                        total_answers = json["total_answers"],
+                        multiple = json["multiple"],
+                        answers = json["answers"],
+                        order = json["order"])
+        q.visual_answers = q.get_local_selection()
+        return q
 
     def to_dict(self):
         result = {}
@@ -88,6 +108,7 @@ class Question:
         result["answers"] = self.answers
         result["total_answers"] = self.total_answers
         result["multiple"] = self.multiple
+        result["visual_answers"] = self.get_local_selection()
         return result
 
 class Test(object):
@@ -115,7 +136,12 @@ class Test(object):
         return result
 
     def __eq__(self,other):
-        return self.warnings == other.warnings and self.questions == other.questions and self.exam_id == other.exam_id and self.id==other.id
+        w =  self.warnings == other.warnings
+        q = self.questions == other.questions
+        tst_id = self.id == other.id
+        ex_id = self.exam_id == other.exam_id
+
+        return q and tst_id and ex_id #and w
 
     def __ne__(self,other):
         return not self.__eq__(other)

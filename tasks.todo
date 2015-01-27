@@ -1,0 +1,9 @@
+things to improve:
+  ☐ cuando un cuadradito no marcado  tiene ademas borrado casi todo el borde y el contorno resultante es una esquinita, esta esquinita se selecciona como si fuera todo el cuadrado y al buscar en su interior, queda como si estuviera marcado. Solucion, verificar el size del cuadrado
+  ☐ para mejorar la decision de si un cuadrado esta marcado o no, verificar los thresholds
+  ☐ decirle a piad que ponga circulos
+  ☐ ver lo de las distancias entre los cuadrados que fallo con marcas en X
+  ☐ hacer la camara IP android
+  ☐ verificar que la resolucion de la cámara sea acepable????
+  ☐ poner el warning cuando es single selection y el scaneo reporta conjunto vacio o mas de uno
+  ☐ poner double check error and test scanned error

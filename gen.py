@@ -11,10 +11,12 @@ import sys
 import pprint
 import json
 import scanresults
+import argparse
 
 
 database = collections.defaultdict(lambda: [])
 restrictions = {}
+restrictions_order = {}
 test_id = 1
 debug = sys.argv.count('-d')
 count = 0
@@ -60,6 +62,7 @@ def parser():
             tag = tag.strip()
             value = int(value.strip())
             restrictions[tag] = value
+            restrictions_order[tag] = len(restrictions_order)
 
             if debug:
                 print('Adding restriction: %s: %i' % (tag, value))
@@ -89,7 +92,7 @@ def parse_question(i, lines):
     i, answers = parse_answers(i, lines)
 
     count += 1
-    question = Question(header, answers, count)
+    question = Question(header, answers, count, tags)
 
     # Add answers to given tags
     for t in tags:
@@ -229,17 +232,18 @@ def parse_id(i, lines):
 
 
 class Question:
-    """las preguntas tienen un header que es el enunciado,
+    """Las preguntas tienen un campo `header` que es el enunciado,
     y opciones. Algunas de estas opciones pueden considerarse
-    respuestas correctas"""
+    respuestas correctas."""
 
-    def __init__(self, header, options, number):
+    def __init__(self, header, options, number, tags):
         if (not header or not options):
             raise ValueError(u'Invalid question %s' % number)
 
         self.options = options
         self.header = header
         self.number = number
+        self.tags = tags
         self.fixed = {}
         self.options_id = {}
 
@@ -247,6 +251,14 @@ class Question:
             self.options_id[o] = i
             if o[1]:
                 self.fixed[o] = i
+
+    @property
+    def correct_answers(self):
+        return len([None for r, f, o in self.options if r])
+
+    @property
+    def answers_count(self):
+        return len(self.options)
 
     def shuffle(self):
         """
@@ -322,7 +334,7 @@ def generate_qrcode(i, test):
     f.close()
 
 
-def generate_quiz():
+def generate_quiz(args):
     total = restrictions['total']
     res = dict(restrictions)
     res.pop('total')
@@ -370,10 +382,13 @@ def generate_quiz():
     test = list(test)
     random.shuffle(test)
 
+    if args.dont_shuffle_tags:
+        test.sort(key=lambda q: restrictions_order[q.tags[0]])
+
     return test
 
 
-def generate(n, header):
+def generate(n, args):
     text_template = jinja2.Template(open('latex/text_template.tex').
                                     read().decode('utf8'))
     answer_template = jinja2.Template(open('latex/answer_template.tex').
@@ -393,21 +408,23 @@ def generate(n, header):
     questions = sorted(questions, key=lambda q: q.number)
 
     master_file.write(master_template.render(test=questions,
-                      header=header).encode('utf8'))
+                      header=args.title).encode('utf8'))
     master_file.close()
 
     sol_file = open('generated/v{0}/Solution.txt'.format(test_id), 'w')
     sol_file.write(sol_template.render(test=questions,
-                   test_id=test_id).encode('utf8'))
+                   test_id=test_id, questions_value=args.questions_value).encode('utf8'))
     sol_file.close()
 
     order = {}
+
+    answers = []
 
     for i in range(n):
         if debug:
             print('Generating quiz number %i' % i)
 
-        test = generate_quiz()
+        test = generate_quiz(args)
         order[i] = scanresults.Test(test_id, i, [q.convert() for q in test])
 
         text_file = open('generated/v{0}/Test-{1}.tex'.format(test_id, i), 'w')
@@ -415,19 +432,31 @@ def generate(n, header):
         generate_qrcode(i, test)
 
         text_file.write(text_template.render(
-                        test=test, number=i).encode('utf8'))
+                        test=test, number=i, header=args.title).encode('utf8'))
         text_file.close()
 
-        answer_file = open('generated/v{0}/Answer-{1}.tex'.format(test_id, i), 'w')
-        answer_file.write(answer_template.render(test=enumerate(test), number=i,
-                          max=max(len(q.options) for q in test)).
-                          encode('utf8'))
-        answer_file.close()
+        answers.append(dict(test=enumerate(test), number=i, max=max(len(q.options) for q in test)))
+
+        if len(answers) == args.answers_per_page or i == n - 1:
+            answer_file = open('generated/v{0}/Answer-{1}.tex'.format(test_id, i / args.answers_per_page), 'w')
+            answer_file.write(answer_template.render(answers=answers).encode('utf8'))
+            answer_file.close()
+            answers = []
 
     scanresults.dump(order, 'generated/v{0}/Order.txt'.format(test_id))
 
 
 if __name__ == '__main__':
+    args_parser = argparse.ArgumentParser(description="Parses a master file and generates tests.")
+    args_parser.add_argument('master-file', metavar="PATH", help="Path to the master file that contains the test description.")
+    args_parser.add_argument('-c', '--tests-count', metavar='N', help="Number of actual tests to generate. If not supplied, only the master file will be generated.", type=int, default=0)
+    args_parser.add_argument('-a', '--answers-per-page', help="Number of answer sections to generate per page. By default is 1. It is up to you to ensure all them fit right in your template.", metavar='N', type=int, default=1)
+    args_parser.add_argument('-t', '--title', help="Title of the test.", default="")
+    args_parser.add_argument('-v', '--questions-value', help="Default value for each question.", metavar='N', type=float, default=1.)
+    args_parser.add_argument('--dont-shuffle-tags', help="Disallow shuffling of tags.", action='store_true')
+
+    args = args_parser.parse_args()
+
     if not os.path.exists('generated'):
         os.mkdir('generated')
 
@@ -439,6 +468,6 @@ if __name__ == '__main__':
     os.mkdir('generated/v{0}'.format(test_id))
 
     parser()
-    generate(10, "Sample Test")
+    generate(args.tests_count, args)
 
     print('Generated v{0}'.format(test_id))
