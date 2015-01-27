@@ -26,17 +26,17 @@ doc_parameters = {
     #---------------------------------------------REMOVE ALL OF THIS---------------------------------------------
     "poll": False, #if we are scanning a poll or not
 
-    "p_answer_cols": 2, ##the number of questions per column, this value is fixed
+    "p_answer_cols": 1, ##the number of questions per column, this value is fixed
 
     #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
-    "p_up_margin": 0.17,
-    "p_down_margin": 0.08,
-    "p_left_margin": 0.65,
+    "p_up_margin": 0.10,
+    "p_down_margin": 0.05,
+    "p_left_margin": 0.85,
     "p_right_margin": 0.00,
 
     #padding between the rectangle with the selection cells and the inner cell area (used to rectify any misalignment within the answer selection rectangle)
-    "p_cell_up_margin": 0.03,
-    "p_cell_down_margin": 0.05,
+    "p_cell_up_margin": 0.01,
+    "p_cell_down_margin": 0.01,
     "p_cell_left_margin": 0.33,
     "p_cell_right_margin": 0.33,
     #-----------------------------------------------------------------------------------------------------------
