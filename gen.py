@@ -15,6 +15,7 @@ import argparse
 
 
 database = collections.defaultdict(lambda: [])
+questions_by_id = {}
 restrictions = {}
 restrictions_order = {}
 test_id = 1
@@ -97,6 +98,8 @@ def parse_question(i, lines):
     # Add answers to given tags
     for t in tags:
         database[t].append(question)
+
+    questions_by_id[count] = question
 
     return i
 
