@@ -80,6 +80,8 @@ def parse_grader_sheet(grader_sheet_file):
 			blank_line = True
 			options = [(float(i.split(":")[0]),float(i.split(":")[1])) for i in line.strip().split(" ")]
 			grader.addQuestionGrader(QuestionGrader(id_question,multiple,total,options,min_v,max_v))
+			min_v = None
+			max_v = None
 		if total_line:
 			total_line = False
 			options_line = True
