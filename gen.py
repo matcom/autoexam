@@ -15,6 +15,7 @@ import argparse
 
 
 database = collections.defaultdict(lambda: [])
+questions_by_id = {}
 restrictions = {}
 restrictions_order = {}
 test_id = 1
@@ -97,6 +98,8 @@ def parse_question(i, lines):
     # Add answers to given tags
     for t in tags:
         database[t].append(question)
+
+    questions_by_id[count] = question
 
     return i
 
@@ -475,7 +478,9 @@ if __name__ == '__main__':
     args = args_parser.parse_args()
 
     if args.election:
-        args.answer_template = 'latex/election_template.tex'
+        if not args.answer_template:
+            args.answer_template = 'latex/election_template.tex'
+
         args.sort_questions = True
         args.dont_shuffle_options = True
         args.dont_generate_text = True
