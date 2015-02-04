@@ -32,7 +32,7 @@ def parse_and_check_args():
                         help='debug mode enabled')
     #TODO: PLEASE REMOVE THIS AS SOON AS POSIBLE
     parser.add_argument('-p', '--poll', action='store_true', default=False,
-                        help='if present the margins of the polls are used (REMOVE THIS OPTION).')
+                        help='if present the margins of the polls are used (REMOVE THIS OPTION PLZ).')
     args = parser.parse_args()
 
     args.outfile = abspath(args.outfile)
