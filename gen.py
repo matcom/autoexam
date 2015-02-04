@@ -478,7 +478,9 @@ if __name__ == '__main__':
     args = args_parser.parse_args()
 
     if args.election:
-        args.answer_template = 'latex/election_template.tex'
+        if not args.answer_template:
+            args.answer_template = 'latex/election_template.tex'
+
         args.sort_questions = True
         args.dont_shuffle_options = True
         args.dont_generate_text = True
