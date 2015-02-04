@@ -53,13 +53,13 @@ doc_parameters = {
     "cell_left_margin": 0.69,
     "cell_right_margin": 0.02,
 
-    "distance_threshold": 0.6, #threshold of the allowed distance between the selection boxes over the mean distance
+    "distance_threshold": 0.8, #threshold of the allowed distance between the selection boxes over the mean distance
     "aligned_threshold": 0.5, #threshold of the alignment allowed between the selection boxes over the mean displacement
     "selection_box_padding":0.5, #padding used to select the inner area of the selection boxes
     "selection_threshold": 130, #threshold that is used to decide if the answer is selected based on the mean intensity range:[0,255]
     "selection_error": 30, #threshold around the selection_threshold that marks the uncertainty range:[0,255]
     "merge_size_factor": 1.8, #Size factor to decide if a merge is needed in the scattered squares
-    "adaptative_threshold_size": 10, #size of the kernel in the adaptive threshold to highlight the square
+    "adaptative_threshold_size": 15, #size of the kernel in the adaptive threshold to highlight the square
     "version": 1 #version control to reject invalid qrcodes
 }
 
