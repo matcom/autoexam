@@ -14,29 +14,32 @@ def src(p):
 		return os.path.join(autoexam_source, p)
 
 
-def is_project_folder():
-	try:
-		open('.autoexam')
+def check_project_folder():
+	if is_project_folder():
 		return True
-	except:
-		return False
+
+	error("You need to be in the root of an Autoexam project folder to do this.")
+	return False
 
 
-def project_name():
-	return open('.autoexam').readline().strip()
+def is_project_folder():
+	return os.path.exists('.autoexam')
 
 
 def generate(args):
-	if not is_project_folder():
-		error("You need to be in the root of an Autoexam project folder to do this.")
+	if not check_project_folder():
 		return
 
-	name = project_name()
+	name = get_project_option('name')
 
 	print("Generating project `{0}`".format(name))
 
 
 def init(args):
+	if is_project_folder():
+		error("This project is already initialized.\nPlease run this outside this folder.")
+		return
+
 	folder = args.folder or args.name
 
 	if os.path.exists(folder):
@@ -52,16 +55,48 @@ def init(args):
 	os.mkdir(folder)
 
 	print("Creating project skeleton.")
+	open(dst('.gitkeep'), 'w').close()
+
 	shutil.copytree(src('latex'), dst('templates'))
 	shutil.copy(src('example-master.txt'), dst('master.txt'))
 	shutil.copy(src('example-config.conf'), dst('config.conf'))
+
 	os.mkdir(dst('generated'))
 	open(dst('generated/.gitkeep'), 'w').close()
-	open(dst('.gitkeep'), 'w').close()
 
-	f = open(dst('.autoexam'), 'w')
-	f.write(args.name)
+	os.mkdir(dst('.autoexam'))
+	os.chdir(folder)
+
+	set_project_option('name', args.name)
+	set_project_option('next_version', '1')
+
+
+def set_project_option(option, value):
+	f = open(os.path.join('.autoexam', option), 'w')
+	f.write(value)
+	f.write('\n')
 	f.close()
+
+
+def get_project_option(option):
+	try:
+		with open(os.path.join('.autoexam', option), 'r') as fp:
+			return fp.readline().strip()
+	except:
+		return None
+
+
+def status(args):
+	if not check_project_folder():
+		return
+
+	name = get_project_option('name')
+	print("General project status:")
+	print("  Name: {0}".format(name))
+
+	if (args.generation):
+		print('\nGeneration status:')
+		print('  Next automatic version: {0}'.format(get_project_option('next_version')))
 
 
 def error(msg):
@@ -90,6 +125,10 @@ def main():
 	gen_parser = commands.add_parser('gen', help='Generates a new version of the current project.')
 	gen_parser.add_argument('-s', '--seed', type=int, help='A custom seed for the random generator.')
 	gen_parser.set_defaults(func=generate)
+
+	status_parser = commands.add_parser('status', help='Reports various details about the project.')
+	status_parser.add_argument('-g', '--generation', help='Add report info about the generation status.', action='store_true')
+	status_parser.set_defaults(func=status)
 
 	args = parser.parse_args()
 	args.func(args)
