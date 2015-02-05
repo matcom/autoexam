@@ -103,7 +103,7 @@ def error(msg):
 	print('')
 
 	for line in msg.split('\n'):
-		print("(!) " + line)
+		print(" (!) ERROR: " + line)
 
 	print('')
 
