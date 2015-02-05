@@ -24,8 +24,10 @@
      \hspace{1cm}
      \\
      \includegraphics[width=0.5cm]{../../marker.png}
+     \pdfsavepos\write-1{[UPPER-LEFT] ({{i}}-{{n}}) (\the\pdflastxpos,\the\pdflastypos)}
      \hspace{13.5cm}
      \includegraphics[width=0.5cm]{../../marker.png}
+     \pdfsavepos\write-1{[UPPER-RIGHT] ({{i}}-{{n}}) (\the\pdflastxpos,\the\pdflastypos)}
   %\end{figure}
 
   \hspace{0.01cm}
@@ -38,7 +40,7 @@
 
       {% for t, n in q.options_text(i+1, answer.max) %}
         {% if n %}
-        {{ t }} & {{ n }} & \fbox{} \\
+        {{ t }} & {{ n }} & \fbox{\pdfsavepos\write-1{[TICK-POSITION] ({{i}}-{{n}}) (\the\pdflastxpos,\the\pdflastypos)} } \\
         {% else %}
           & & \phantom{\fbox{}} \\
         {% endif %}
@@ -59,8 +61,10 @@
   \end{tabular}
 
   \includegraphics[width=0.5cm]{../../marker.png}
+  \pdfsavepos\write-1{[BOTTOM-LEFT] ({{i}}-{{n}}) (\the\pdflastxpos,\the\pdflastypos)}
   \hspace{13.5cm}
   \includegraphics[width=0.5cm]{../../marker.png}
+  \pdfsavepos\write-1{[BOTTOM-RIGHT] ({{i}}-{{n}}) (\the\pdflastxpos,\the\pdflastypos)}
   \vspace{2cm}
 
   {% endfor %}
