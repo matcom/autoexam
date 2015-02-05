@@ -423,7 +423,7 @@ def generate(n, args):
                       header=args.title).encode('utf8'))
     master_file.close()
 
-    sol_file = open('generated/v{0}/Solution.txt'.format(test_id), 'w')
+    sol_file = open('generated/v{0}/grader.txt'.format(test_id), 'w')
     sol_file.write(sol_template.render(test=questions,
                    test_id=test_id, questions_value=args.questions_value).encode('utf8'))
     sol_file.close()
@@ -456,7 +456,7 @@ def generate(n, args):
             answer_file.close()
             answers = []
 
-    scanresults.dump(order, 'generated/v{0}/Order.txt'.format(test_id))
+    scanresults.dump(order, 'generated/v{0}/order.json'.format(test_id))
 
 
 if __name__ == '__main__':

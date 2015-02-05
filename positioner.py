@@ -10,18 +10,19 @@ def main():
 	args = parser.parse_args()
 
 	base_path = os.path.join('generated', args.version)
+	log_path = os.path.join(base_path, 'log')
 
-	with open(os.path.join(base_path, 'Order.txt')) as fp:
+	with open(os.path.join(base_path, 'order.json')) as fp:
 		orders = json.load(fp)
 
-	for f in os.listdir(base_path):
+	for f in os.listdir(log_path):
 		if f.startswith('Answer-') and f.endswith('.log'):
 			test_id = f.strip('Answer-').strip('.log')
-			with open(os.path.join(base_path, f)) as fp:
+			with open(os.path.join(log_path, f)) as fp:
 				positions = parse(fp, orders)
 				orders[test_id]['positions'] = positions
 
-	with open(os.path.join(base_path, 'Order.txt'), 'w') as fp:
+	with open(os.path.join(base_path, 'order.json'), 'w') as fp:
 		json.dump(orders, fp, indent=4)
 
 
@@ -34,6 +35,10 @@ def get_position(line):
 	line = line.split()
 	x, y = line[2].strip('()').split(',')
 	return (int(x), int(y))
+
+
+def get_rel_pos(x, min, max):
+	return (x - min) * 1.0 / (max - min)
 
 
 def parse(fp, orders):
@@ -53,11 +58,16 @@ def parse(fp, orders):
 		elif line.startswith('[TICK-POSITION]'):
 			ticks.append(dict(description=get_description(line), position=get_position(line)))
 
-	return dict(upper_left=upper_left,
-				upper_right=upper_right,
-				bottom_left=bottom_left,
-				bottom_right=bottom_right,
-				ticks=ticks)
+	result = dict()
+
+	for tick in ticks:
+		x, y = tick['position']
+		x = get_rel_pos(x, upper_left[0], upper_right[0])
+		y = get_rel_pos(y, upper_left[1], bottom_left[1])
+
+		result[tick['description']] = (x, y)
+
+	return result
 
 if __name__ == '__main__':
 	main()
