@@ -410,8 +410,6 @@ def generate(n, args):
     master_template = jinja2.Template(open(args.master_template).
                                       read().decode('utf8'))
 
-    master_file = open('generated/v{0}/Master.tex'.format(test_id), 'w')
-
     questions = set()
     for qs in database.values():
         for q in qs:
@@ -419,9 +417,11 @@ def generate(n, args):
 
     questions = sorted(questions, key=lambda q: q.number)
 
-    master_file.write(master_template.render(test=questions,
-                      header=args.title).encode('utf8'))
-    master_file.close()
+    if not args.dont_generate_master:
+        master_file = open('generated/v{0}/Master.tex'.format(test_id), 'w')
+        master_file.write(master_template.render(test=questions,
+                          header=args.title).encode('utf8'))
+        master_file.close()
 
     sol_file = open('generated/v{0}/grader.txt'.format(test_id), 'w')
     sol_file.write(sol_template.render(test=questions,
@@ -474,16 +474,24 @@ if __name__ == '__main__':
     args_parser.add_argument('--dont-shuffle-options', help="Do not shuffle the options in the questions.", action='store_true')
     args_parser.add_argument('--dont-generate-text', help="Do not generate text sheets, only answers.", action='store_true')
     args_parser.add_argument('--election', help="Toggle all options for election mode.", action='store_true')
+    args_parser.add_argument('--questionnaire', help="Toggle all options for questionnaire mode.", action='store_true')
+    args_parser.add_argument('--dont-generate-master', help="Do not generate a master file.", action='store_true')
 
     args = args_parser.parse_args()
 
     if args.election:
-        if not args.answer_template:
-            args.answer_template = 'latex/election_template.tex'
-
+        args.answer_template = 'latex/election_template.tex'
         args.sort_questions = True
         args.dont_shuffle_options = True
         args.dont_generate_text = True
+        args.dont_generate_master = True
+
+    if args.questionnaire:
+        args.answer_template = 'latex/questionnaire_template.tex'
+        args.sort_questions = True
+        args.dont_shuffle_options = True
+        args.dont_generate_text = True
+        args.dont_generate_master = True
 
     if not os.path.exists('generated'):
         os.mkdir('generated')
