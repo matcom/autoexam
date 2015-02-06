@@ -83,7 +83,7 @@ class TestScanner:
             doc_parameters["cell_down_margin"] = doc_parameters["p_cell_down_margin"]
             doc_parameters["cell_left_margin"] = doc_parameters["p_cell_left_margin"]
             doc_parameters["cell_right_margin"] = doc_parameters["p_cell_right_margin"]
-            
+
             doc_parameters["answer_cols"] = doc_parameters["p_answer_cols"]
         #---------------------------------------------------------
 
