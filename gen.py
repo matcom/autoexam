@@ -437,7 +437,7 @@ def generate(n, args):
             print('Generating quiz number %i' % i)
 
         test = generate_quiz(args)
-        order[i] = scanresults.Test(test_id, i, [q.convert() for q in test])
+        order[i] = dict(exam_id=test_id, id=i, options=[])
 
         generate_qrcode(i, test)
 
@@ -456,7 +456,7 @@ def generate(n, args):
             answer_file.close()
             answers = []
 
-    scanresults.dump(order, 'generated/v{0}/order.json'.format(test_id))
+    json.dump(order, 'generated/v{0}/order.json'.format(test_id))
 
 
 if __name__ == '__main__':
