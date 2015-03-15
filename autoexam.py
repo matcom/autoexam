@@ -14,7 +14,7 @@ autoexam_source = os.path.dirname(os.path.realpath(__file__))
 
 
 def src(p):
-        return os.path.join(autoexam_source, p)
+    return os.path.join(autoexam_source, p)
 
 
 def check_project_folder():
@@ -32,6 +32,20 @@ def is_project_folder():
 def generate(args):
     if not check_project_folder():
         return
+
+    if args.election or get_project_option('election', bool):
+        args.answer_template = 'templates/election_template.tex'
+        args.sort_questions = True
+        # args.dont_shuffle_options = True
+        args.dont_generate_text = True
+        args.dont_generate_master = True
+
+    if args.questionnaire or get_project_option('questionnaire', bool):
+        args.answer_template = 'templates/questionnaire_template.tex'
+        args.sort_questions = True
+        args.dont_shuffle_options = True
+        args.dont_generate_text = True
+        args.dont_generate_master = True
 
     name = get_project_option('name')
     test_id = int(get_project_option('next_version'))
@@ -73,6 +87,13 @@ def generate(args):
         elif f.endswith('.aux'):
             os.remove(f)
 
+    os.chdir('..')
+
+    if os.path.exists('last'):
+        os.remove('last')
+
+    os.symlink('v' + str(test_id), 'last')
+
 
 def init(args):
     if is_project_folder():
@@ -97,8 +118,12 @@ def init(args):
     open(dst('.gitkeep'), 'w').close()
 
     shutil.copytree(src('latex'), dst('templates'))
-    shutil.copy(src('example-master.txt'), dst('master.txt'))
     shutil.copy(src('example-config.conf'), dst('config.conf'))
+
+    if args.election:
+        shutil.copy(src('example-election.txt'), dst('master.txt'))
+    else:
+        shutil.copy(src('example-master.txt'), dst('master.txt'))
 
     os.mkdir(dst('generated'))
     open(dst('generated/.gitkeep'), 'w').close()
@@ -109,6 +134,12 @@ def init(args):
     set_project_option('name', args.name)
     set_project_option('next_version', '1')
 
+    if args.election:
+        set_project_option('election', True)
+
+    if args.questionnaire:
+        set_project_option('questionnaire', True)
+
 
 def set_project_option(option, value):
     f = open(os.path.join('.autoexam', option), 'w')
@@ -117,10 +148,10 @@ def set_project_option(option, value):
     f.close()
 
 
-def get_project_option(option):
+def get_project_option(option, type_builder=str):
     try:
         with open(os.path.join('.autoexam', option), 'r') as fp:
-            return fp.readline().strip()
+            return type_builder(fp.readline().strip())
     except:
         return None
 
@@ -139,6 +170,9 @@ def status(args):
 
 
 def edit(args):
+    if not check_project_folder():
+        return
+
     if args.file == "master":
         os.system("edit master.txt")
 
@@ -171,6 +205,8 @@ def main():
     init_parser = commands.add_parser('init', help='Creates a new Autoexam project.')
     init_parser.add_argument('name', help='Name for the project.')
     init_parser.add_argument('-f', '--folder', help='Override the folder create for the project.')
+    init_parser.add_argument('--election', help='Makes the project an election template instead of the standard test template.', action='store_true')
+    init_parser.add_argument('--questionnaire', help='Makes the project a questionaire template instead of the standard test template.', action='store_true')
     init_parser.set_defaults(func=init)
 
     gen_parser = commands.add_parser('gen', help='Generates a new version of the current project.')
@@ -206,23 +242,8 @@ def main():
     stats_parser.set_defaults(func=stats)
 
     args = parser.parse_args()
-
-    if hasattr(args, 'title'):
-        if args.election:
-            args.answer_template = 'latex/election_template.tex'
-            args.sort_questions = True
-            args.dont_shuffle_options = True
-            args.dont_generate_text = True
-            args.dont_generate_master = True
-
-        if args.questionnaire:
-            args.answer_template = 'latex/questionnaire_template.tex'
-            args.sort_questions = True
-            args.dont_shuffle_options = True
-            args.dont_generate_text = True
-            args.dont_generate_master = True
-
     args.func(args)
+
 
 if __name__ == '__main__':
     main()
