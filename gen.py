@@ -41,13 +41,12 @@ def preprocess_line(line, remove_comments=True):
     return line
 
 
-def parser(args):
+def parser():
     """
     Lee el archivo master y se parsea cada una de las preguntas.
     """
-    master_path = args.master
-    master = open(os.path.join(os.path.abspath(
-                  os.path.dirname(__file__)), master_path))
+    master_path = 'master.txt'
+    master = open(master_path)
     lines = master.readlines()
     master.close()
 
@@ -342,7 +341,7 @@ def generate_qrcode(i, test):
     f.close()
 
 
-def generate_quiz(args):
+def generate_quiz(args=None):
     total = restrictions['total']
     res = dict(restrictions)
     res.pop('total')
@@ -364,7 +363,7 @@ def generate_quiz(args):
         if not base[tag]:
             base.pop(tag)
 
-        if not args.dont_shuffle_options:
+        if args and not args.dont_shuffle_options:
             q = q.shuffle()
 
         if debug > 1:
@@ -391,10 +390,10 @@ def generate_quiz(args):
     test = list(test)
     random.shuffle(test)
 
-    if args.dont_shuffle_tags:
+    if args and args.dont_shuffle_tags:
         test.sort(key=lambda q: restrictions_order[q.tags[0]])
 
-    if args.sort_questions:
+    if args and args.sort_questions:
         test.sort(key=lambda q: q.number)
 
     return test
@@ -405,7 +404,7 @@ def generate(n, args):
                                     read().decode('utf8'))
     answer_template = jinja2.Template(open(args.answer_template).
                                       read().decode('utf8'))
-    sol_template = jinja2.Template(open('latex/solution_template.txt').
+    sol_template = jinja2.Template(open('templates/solution_template.txt').
                                    read().decode('utf8'))
     master_template = jinja2.Template(open(args.master_template).
                                       read().decode('utf8'))
@@ -456,7 +455,8 @@ def generate(n, args):
             answer_file.close()
             answers = []
 
-    json.dump(order, 'generated/v{0}/order.json'.format(test_id))
+    with open('generated/v{0}/order.json'.format(test_id), 'w') as fp:
+        json.dump(order, fp)
 
 
 if __name__ == '__main__':
@@ -503,7 +503,7 @@ if __name__ == '__main__':
 
     os.mkdir('generated/v{0}'.format(test_id))
 
-    parser(args)
+    parser()
     generate(args.tests_count, args)
 
     print('Generated v{0}'.format(test_id))
