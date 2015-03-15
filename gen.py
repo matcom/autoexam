@@ -238,7 +238,7 @@ class Question:
     y opciones. Algunas de estas opciones pueden considerarse
     respuestas correctas."""
 
-    def __init__(self, header, options, number, tags):
+    def __init__(self, header, options, number, tags, options_id=None, fixed=None):
         if (not header or not options):
             raise ValueError(u'Invalid question %s' % number)
 
@@ -246,13 +246,16 @@ class Question:
         self.header = header
         self.number = number
         self.tags = tags
-        self.fixed = {}
-        self.options_id = {}
+        self.fixed = fixed or {}
+        self.options_id = options_id
 
-        for i, o in enumerate(self.options):
-            self.options_id[o] = i
-            if o[1]:
-                self.fixed[o] = i
+        if self.options_id is None:
+            self.options_id = {}
+
+            for i, o in enumerate(self.options):
+                self.options_id[o] = i
+                if o[1]:
+                    self.fixed[o] = i
 
     @property
     def correct_answers(self):
@@ -269,20 +272,24 @@ class Question:
         """
         Devuelve las opciones desordenadas.
         """
-        random.shuffle(self.options)
+        options = list(self.options)
+        random.shuffle(options)
 
-        for o in self.options:
+        for o in list(options):
             if o in self.fixed:
                 pos = self.fixed[o]
-                idx = self.options.index(o)
-                tmp = self.options[pos]
-                self.options[pos] = o
-                self.options[idx] = tmp
+                idx = options.index(o)
+                tmp = options[pos]
+                options[pos] = o
+                options[idx] = tmp
 
-        return Question(self.header, self.options, self.number, self.tags)
+        return Question(self.header, options, self.number, self.tags, self.options_id, self.fixed)
 
     def convert(self):
         order = [self.options_id[o] for o in self.options]
+
+        print(order)
+
         return scanresults.Question(self.number, len(self.options),
                                     self.multiple, order=order)
 
@@ -436,8 +443,8 @@ def generate(n, args):
             print('Generating quiz number %i' % i)
 
         test = generate_quiz(args)
-        order[i] = dict(exam_id=test_id, id=i, options=[])
-
+        # order[i] = dict(exam_id=test_id, id=i, options=[])
+        order[i] = scanresults.Test(test_id, i, [q.convert() for q in test])
         generate_qrcode(i, test)
 
         if not args.dont_generate_text:
@@ -455,8 +462,10 @@ def generate(n, args):
             answer_file.close()
             answers = []
 
-    with open('generated/v{0}/order.json'.format(test_id), 'w') as fp:
-        json.dump(order, fp)
+    scanresults.dump(order, 'generated/v{0}/order.json'.format(test_id))
+
+    # with open('generated/v{0}/order.json'.format(test_id), 'w') as fp:
+        # json.dump(order, fp)
 
 
 if __name__ == '__main__':
