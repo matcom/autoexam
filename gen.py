@@ -41,13 +41,12 @@ def preprocess_line(line, remove_comments=True):
     return line
 
 
-def parser(args):
+def parser():
     """
     Lee el archivo master y se parsea cada una de las preguntas.
     """
-    master_path = args.master
-    master = open(os.path.join(os.path.abspath(
-                  os.path.dirname(__file__)), master_path))
+    master_path = 'master.txt'
+    master = open(master_path)
     lines = master.readlines()
     master.close()
 
@@ -239,7 +238,7 @@ class Question:
     y opciones. Algunas de estas opciones pueden considerarse
     respuestas correctas."""
 
-    def __init__(self, header, options, number, tags):
+    def __init__(self, header, options, number, tags, options_id=None, fixed=None):
         if (not header or not options):
             raise ValueError(u'Invalid question %s' % number)
 
@@ -247,13 +246,16 @@ class Question:
         self.header = header
         self.number = number
         self.tags = tags
-        self.fixed = {}
-        self.options_id = {}
+        self.fixed = fixed or {}
+        self.options_id = options_id
 
-        for i, o in enumerate(self.options):
-            self.options_id[o] = i
-            if o[1]:
-                self.fixed[o] = i
+        if self.options_id is None:
+            self.options_id = {}
+
+            for i, o in enumerate(self.options):
+                self.options_id[o] = i
+                if o[1]:
+                    self.fixed[o] = i
 
     @property
     def correct_answers(self):
@@ -270,20 +272,24 @@ class Question:
         """
         Devuelve las opciones desordenadas.
         """
-        random.shuffle(self.options)
+        options = list(self.options)
+        random.shuffle(options)
 
-        for o in self.options:
+        for o in list(options):
             if o in self.fixed:
                 pos = self.fixed[o]
-                idx = self.options.index(o)
-                tmp = self.options[pos]
-                self.options[pos] = o
-                self.options[idx] = tmp
+                idx = options.index(o)
+                tmp = options[pos]
+                options[pos] = o
+                options[idx] = tmp
 
-        return Question(self.header, self.options, self.number, self.tags)
+        return Question(self.header, options, self.number, self.tags, self.options_id, self.fixed)
 
     def convert(self):
         order = [self.options_id[o] for o in self.options]
+
+        print(order)
+
         return scanresults.Question(self.number, len(self.options),
                                     self.multiple, order=order)
 
@@ -342,7 +348,7 @@ def generate_qrcode(i, test):
     f.close()
 
 
-def generate_quiz(args):
+def generate_quiz(args=None):
     total = restrictions['total']
     res = dict(restrictions)
     res.pop('total')
@@ -364,7 +370,7 @@ def generate_quiz(args):
         if not base[tag]:
             base.pop(tag)
 
-        if not args.dont_shuffle_options:
+        if args and not args.dont_shuffle_options:
             q = q.shuffle()
 
         if debug > 1:
@@ -391,10 +397,10 @@ def generate_quiz(args):
     test = list(test)
     random.shuffle(test)
 
-    if args.dont_shuffle_tags:
+    if args and args.dont_shuffle_tags:
         test.sort(key=lambda q: restrictions_order[q.tags[0]])
 
-    if args.sort_questions:
+    if args and args.sort_questions:
         test.sort(key=lambda q: q.number)
 
     return test
@@ -405,12 +411,10 @@ def generate(n, args):
                                     read().decode('utf8'))
     answer_template = jinja2.Template(open(args.answer_template).
                                       read().decode('utf8'))
-    sol_template = jinja2.Template(open('latex/solution_template.txt').
+    sol_template = jinja2.Template(open('templates/solution_template.txt').
                                    read().decode('utf8'))
     master_template = jinja2.Template(open(args.master_template).
                                       read().decode('utf8'))
-
-    master_file = open('generated/v{0}/Master.tex'.format(test_id), 'w')
 
     questions = set()
     for qs in database.values():
@@ -419,11 +423,13 @@ def generate(n, args):
 
     questions = sorted(questions, key=lambda q: q.number)
 
-    master_file.write(master_template.render(test=questions,
-                      header=args.title).encode('utf8'))
-    master_file.close()
+    if not args.dont_generate_master:
+        master_file = open('generated/v{0}/Master.tex'.format(test_id), 'w')
+        master_file.write(master_template.render(test=questions,
+                          header=args.title).encode('utf8'))
+        master_file.close()
 
-    sol_file = open('generated/v{0}/Solution.txt'.format(test_id), 'w')
+    sol_file = open('generated/v{0}/grader.txt'.format(test_id), 'w')
     sol_file.write(sol_template.render(test=questions,
                    test_id=test_id, questions_value=args.questions_value).encode('utf8'))
     sol_file.close()
@@ -437,8 +443,8 @@ def generate(n, args):
             print('Generating quiz number %i' % i)
 
         test = generate_quiz(args)
+        # order[i] = dict(exam_id=test_id, id=i, options=[])
         order[i] = scanresults.Test(test_id, i, [q.convert() for q in test])
-
         generate_qrcode(i, test)
 
         if not args.dont_generate_text:
@@ -456,7 +462,10 @@ def generate(n, args):
             answer_file.close()
             answers = []
 
-    scanresults.dump(order, 'generated/v{0}/Order.txt'.format(test_id))
+    scanresults.dump(order, 'generated/v{0}/order.json'.format(test_id))
+
+    # with open('generated/v{0}/order.json'.format(test_id), 'w') as fp:
+        # json.dump(order, fp)
 
 
 if __name__ == '__main__':
@@ -474,16 +483,24 @@ if __name__ == '__main__':
     args_parser.add_argument('--dont-shuffle-options', help="Do not shuffle the options in the questions.", action='store_true')
     args_parser.add_argument('--dont-generate-text', help="Do not generate text sheets, only answers.", action='store_true')
     args_parser.add_argument('--election', help="Toggle all options for election mode.", action='store_true')
+    args_parser.add_argument('--questionnaire', help="Toggle all options for questionnaire mode.", action='store_true')
+    args_parser.add_argument('--dont-generate-master', help="Do not generate a master file.", action='store_true')
 
     args = args_parser.parse_args()
 
     if args.election:
-        if not args.answer_template:
-            args.answer_template = 'latex/election_template.tex'
-
+        args.answer_template = 'latex/election_template.tex'
         args.sort_questions = True
         args.dont_shuffle_options = True
         args.dont_generate_text = True
+        args.dont_generate_master = True
+
+    if args.questionnaire:
+        args.answer_template = 'latex/questionnaire_template.tex'
+        args.sort_questions = True
+        args.dont_shuffle_options = True
+        args.dont_generate_text = True
+        args.dont_generate_master = True
 
     if not os.path.exists('generated'):
         os.mkdir('generated')
@@ -495,7 +512,7 @@ if __name__ == '__main__':
 
     os.mkdir('generated/v{0}'.format(test_id))
 
-    parser(args)
+    parser()
     generate(args.tests_count, args)
 
     print('Generated v{0}'.format(test_id))
