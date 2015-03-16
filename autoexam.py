@@ -248,6 +248,7 @@ def main():
 
     webpoll_parser = commands.add_parser('webpoll', help='Runs the web poll interface.')
     webpoll_parser.add_argument('data', help='The json file to watch.')
+    webpoll_parser.add_argument('names', help='The file with all the names.')
     webpoll_parser.add_argument('--host', help='The host interface to run in.', default='0.0.0.0')
     webpoll_parser.add_argument('--port', help='The port to run in.', type=int, default=5050)
     webpoll_parser.add_argument('-d', '--debug', help='Run in debug mode.', action='store_true')
