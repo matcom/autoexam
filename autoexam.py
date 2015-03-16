@@ -9,6 +9,7 @@ import shutil
 import gen
 
 from stats import build_stats
+import webpoll.webpoll as wp
 
 autoexam_source = os.path.dirname(os.path.realpath(__file__))
 
@@ -193,6 +194,10 @@ def stats(args):
     build_stats(args)
 
 
+def webpoll(args):
+    wp.run(args)
+
+
 def main():
     if 'autoexam.py' in os.listdir('.'):
         error("Please don't run this from inside the Autoexam source folder.\nThis is an evil thing to do that will break the program.")
@@ -240,6 +245,13 @@ def main():
     stats_parser.add_argument('-s', '--samples', help='Number of samples to take for simulation-based stats.', default=10000, type=int)
     stats_parser.add_argument('--grades-scale', help='Step of the grading scale to simulate.', default=0.1, type=float)
     stats_parser.set_defaults(func=stats)
+
+    webpoll_parser = commands.add_parser('webpoll', help='Runs the web poll interface.')
+    webpoll_parser.add_argument('data', help='The json file to watch.')
+    webpoll_parser.add_argument('--host', help='The host interface to run in.', default='0.0.0.0')
+    webpoll_parser.add_argument('--port', help='The port to run in.', type=int, default=5050)
+    webpoll_parser.add_argument('-d', '--debug', help='Run in debug mode.', action='store_true')
+    webpoll_parser.set_defaults(func=webpoll)
 
     args = parser.parse_args()
     args.func(args)
