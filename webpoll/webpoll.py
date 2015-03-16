@@ -14,13 +14,18 @@ def page():
 
 @app.route('/data/')
 def data():
-	with open(app.data_file) as fp:
-		data = json.load(fp)
-
 	people = []
+	data = None
+
+	if os.path.exists(app.data_file):
+		with open(app.data_file) as fp:
+			data = json.load(fp)
 
 	for i,n in enumerate(app.names):
-		people.append(dict(name=n, votes=data['1']['options'][str(i)]))
+		if data is not None:
+			people.append(dict(name=n, votes=data['1']['options'][str(i)]))
+		else:
+			people.append(dict(name=n, votes=0))
 
 	return jsonify(people=people)
 
