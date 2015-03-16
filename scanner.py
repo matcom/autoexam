@@ -1,6 +1,7 @@
 #coding: utf-8
 from autotest import TestScanner, ImageSource
 from scanresults import *
+from evaluator import get_stats
 import cv2
 import pprint
 import pickle
@@ -88,6 +89,11 @@ def main():
                 #this method appends the test results if the file exists...
                 if args.autowrite:
                     dump(tests, args.outfile, overwrite = False)
+                    stats = get_stats(args.outfile)
+                    stats_path = os.path.join(os.path.dirname(os.path.realpath(args.outfile)), "stats.json")
+                    with open(stats_path,"wb") as stats_file:
+                        json.dump(stats,stats_file,indent=4)
+
                     print "Exam file updated..."
             else:
                 print "The test '%d' was already scanned."%report.test.id

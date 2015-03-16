@@ -14,7 +14,7 @@ doc_parameters = {
     "debug": False, #Show images of all the recognition process
     "show_image": True, #if it is a camera it shows a window with the images, and if it is an image it shows the image
     "double_check": True, #Makes a double confirmation before to return a success report
-    "marker_image": "marker.png", #Image of the marker to use in the borders
+    "marker_image": "latex/marker.png", #Image of the marker to use in the borders
     "answer_cols": 5, ##the number of questions per column, this value is fixed
     "marker_match_min_quality": 0.6, #threshold level to apply to the template matching results
     "marker_size": 0.25, #size of the marker with respect to the qrcode width
@@ -29,14 +29,14 @@ doc_parameters = {
     "p_answer_cols": 1, ##the number of questions per column, this value is fixed
 
     #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
-    "p_up_margin": 0.10,
-    "p_down_margin": 0.05,
-    "p_left_margin": 0.85,
-    "p_right_margin": 0.00,
+    "p_up_margin": 0.17,
+    "p_down_margin": 0.08,
+    "p_left_margin": 0.54,
+    "p_right_margin": 0.29,
 
     #padding between the rectangle with the selection cells and the inner cell area (used to rectify any misalignment within the answer selection rectangle)
-    "p_cell_up_margin": 0.01,
-    "p_cell_down_margin": 0.01,
+    "p_cell_up_margin": 0.02,
+    "p_cell_down_margin": 0.02,
     "p_cell_left_margin": 0.33,
     "p_cell_right_margin": 0.33,
     #-----------------------------------------------------------------------------------------------------------

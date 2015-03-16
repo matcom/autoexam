@@ -170,7 +170,7 @@ def dump(tests, filename, overwrite = False):
         to_serialize[k]=v.to_dict();
     #dump in json format
     f = file(filename,'w')
-    json.dump(to_serialize, f)
+    json.dump(to_serialize, f, indent=4)
     f.close()
 
 def parse(filename):
