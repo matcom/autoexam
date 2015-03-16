@@ -30,6 +30,8 @@ def parse_and_check_args():
                         help='the index of the camera used to scan the tests.')
     parser.add_argument('-d', '--debug', action='store_true', default=False,
                         help='debug mode enabled')
+    parser.add_argument('-a', '--autowrite', action='store_true', default=False,
+                        help='update the scanner results file every time a document is scanned')
     #TODO: PLEASE REMOVE THIS AS SOON AS POSIBLE
     parser.add_argument('-p', '--poll', action='store_true', default=False,
                         help='if present the margins of the polls are used (REMOVE THIS OPTION PLZ).')
@@ -83,6 +85,10 @@ def main():
                     print "Warnings:"
                     for w in report.test.warnings:
                         print "\t", w
+                #this method appends the test results if the file exists...
+                if args.autowrite:
+                    dump(tests, args.outfile, overwrite = False)
+                    print "Exam file updated..."
             else:
                 print "The test '%d' was already scanned."%report.test.id
         #if recognition went wrong print the reasons
