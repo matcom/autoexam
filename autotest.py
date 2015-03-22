@@ -430,8 +430,7 @@ def get_selections(image, question, index):
 
     master_answers = []
     local_answers = []
-    #use always the multiple choice algorithm
-    #if question.multiple:
+
     a=0
     for data in contours:
         mean = data["mean_intensity"]
@@ -446,32 +445,14 @@ def get_selections(image, question, index):
             report.test.warnings.append(w)
         a += 1
 
-    #TODO: add here the warnings of multilple selection and single
-    if len(master_answers)>1 and not question.multiple:
-        w = Warning(index + 1, local_answers, WarningTypes.MULT_SELECTION, selected = False)
-        report.test.warnings.append(w)
+    if not question.multiple:
+        if len(master_answers)>1:
+            w = Warning(index + 1, local_answers, WarningTypes.MULT_SELECTION, selected = False)
+            report.test.warnings.append(w)
 
-    if len(master_answers)==0 and not question.multiple:
-        w = Warning(index + 1, local_answers, WarningTypes.EMPTY_SELECTION, selected = False)
-        report.test.warnings.append(w)
-    # else:
-    #     #sort contours using mean intensity values from high to low
-    #     contours.sort(key=lambda cont: cont["mean_intensity"], reverse=True)
-    #     best_contour = contours[0]
-    #     master_answers.append(question.order[best_contour["index"]])
-
-    #     max_mean =      contours[0]["mean_intensity"]
-    #     sec_max_mean =  contours[1]["mean_intensity"] if len(contours)>1 else thresh
-
-    #     if max_mean<thresh or abs(max_mean-sec_max_mean)<=error:
-    #         w = Warning(index, best_contour["index"], WarningTypes.UNCERTANTY, selected=True);
-    #         report.test.warnings.append(w)
-
-    #     posible_selected = [ c["index"] for c in contours if c["mean_intensity"]>thresh and c["index"]!=contours[0]["index"]]
-
-    #     if len(posible_selected)>0:
-    #         w = Warning(index, posible_selected, WarningTypes.MULT_SELECTION, selected = False)
-    #         report.test.warnings.append(w)
+        if len(master_answers)==0:
+            w = Warning(index + 1, local_answers, WarningTypes.EMPTY_SELECTION, selected = False)
+            report.test.warnings.append(w)
 
     return True, master_answers
 
@@ -492,16 +473,23 @@ def get_contours(image, total, question):
     contours = [c for c in contours if not c["empty"]]
     for i in range(len(contours)): contours[i]["index"]=i
 
+    #if there are more contours than expected try to merge some
     if len(contours)>total:
         while True:
             merged = try_merge_nearby_contours(contours,image)
+            #if a contour was merged fix the index parameter in the contour data
             if merged == 1:
                 for i in range(len(contours)): contours[i]["index"]=i
+            #if no merge was done or the amount of contours is not grater get out
             if merged == 0 or len(contours)<=total: break
 
+    #if there are still more contours than expected get the biggest ones
     if len(contours)> total:
+        #sort them by size
         list.sort(contours, key = lambda x: x["size"], reverse=True)
+        #discard the extra contours
         contours = contours[:total]
+        #fix the index field 
         list.sort(contours, key = lambda x: x["index"])
         for i in range(len(contours)): contours[i]["index"]=i
 
