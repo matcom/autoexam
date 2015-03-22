@@ -1,9 +1,11 @@
 #coding: utf-8
+import os
 import cv2
 import zbar
 import numpy as np
 import sys
 import copy
+import time
 from scanresults import *
 
 import math
@@ -53,6 +55,7 @@ doc_parameters = {
     "cell_left_margin": 0.69,
     "cell_right_margin": 0.02,
 
+    "squares": True, #if it is a square or a circle
     "distance_threshold": 0.8, #threshold of the allowed distance between the selection boxes over the mean distance
     "aligned_threshold": 0.5, #threshold of the alignment allowed between the selection boxes over the mean displacement
     "selection_box_padding":0.5, #padding used to select the inner area of the selection boxes
@@ -549,7 +552,16 @@ def get_contour_data(contour, image):
     fillarea = np.array([ [[x+b*w,y+b*h]] , [[x+b*w,y+h-b*h]] , [[x+w-b*w,y+h-b*h]] , [[x+w-b*w,y+b*h]] ], dtype=np.int32 )
     mask = np.zeros(image.shape,np.uint8)
     cv2.drawContours(mask,[fillarea],0,255,-1)
+    #improve the calculation of the intensity that decides if it is selected or not.
     data["mean_intensity"] = cv2.mean(image,mask = mask)[0]
+    #if the contours are circles instead of squares
+    if not doc_parameters["squares"]:
+        center, radius = cv2.minEnclosingCircle(contour)
+        mask = np.zeros(image.shape,np.uint8)
+        cv2.ellipse(mask,center,(b*radius,b*radius),0,0,360,255,-1)
+        data["mean_intensity"] = cv2.mean(image,mask = mask)[0]
+
+
     return data
 
 def are_squared(contours):
@@ -589,26 +601,45 @@ def nothing(x):pass
 
 class ImageSource(object):
     """Wrapper class to abstract the fact that the camera feed may come from a single image"""
-    def __init__(self,source):
+    def __init__(self, source, time=3):
+        self.time = time
         self.is_camera = type(source)==int
         if self.is_camera:
             self.source = cv2.VideoCapture(source)
             # self.source.set(3,1920)
             # self.source.set(4,1080)
         else:
-            self.source = cv2.imread(source,1)
+            self.source = self.load_file_list(source)
+            self.current_index = -1
+            self.update_current()
+
+    def load_file_list(self, path):
+        capture = [os.path.join(path,f) for f in os.listdir(path)]
+        if len(capture)==0:
+            print "Could not load pictures to simulate a camera."
+        return capture
+
 
     def get_size(self):
         if self.is_camera:
             return (int(self.source.get(3)),int(self.source.get(4)))
         else:
-            return (self.source.shape[1],self.source.shape[0])
+            return (self.current_image.shape[1],self.current_image.shape[0])
 
     def get_next(self):
         if self.is_camera:
             return self.source.read()[1]
         else:
-            return self.source
+            if time.time() - self.start_time > self.time:
+                self.update_current()
+            return self.current_image.copy()
+
+    def update_current(self):
+        self.current_index += 1
+        if self.current_index>=len(self.source):
+            self.current_index = 0
+        self.current_image = cv2.imread(self.source[self.current_index],1)
+        self.start_time = time.time()
 
     def release(self):
         if self.is_camera:

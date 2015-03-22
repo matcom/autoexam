@@ -29,6 +29,10 @@ def parse_and_check_args():
                         help='the file name to dump the scan results. If the file exists it will append the results.')
     parser.add_argument('-c','--camera', type=int, default = 0,
                         help='the index of the camera used to scan the tests.')
+    parser.add_argument('-f','--folder', type=str, default = "",
+                        help='the folder that includes all the images to scann.')
+    parser.add_argument('-t','--time', type=float, default = 3,
+                        help='time in seconds it takes to load the next image on the specified folder.')
     parser.add_argument('-d', '--debug', action='store_true', default=False,
                         help='debug mode enabled')
     parser.add_argument('-a', '--autowrite', action='store_true', default=False,
@@ -64,7 +68,7 @@ def main():
     if not args: return 1
 
     #Get system camera in index 0
-    source = ImageSource(args.camera)
+    source = ImageSource(args.camera if args.folder=="" else args.folder, args.time)
     w, h = source.get_size()
     #Set document processing parameters and initialize scanner
     scanner = TestScanner(w, h, args.exams_file, show_image=True, double_check=True, debug = args.debug, poll = args.poll)
