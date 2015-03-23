@@ -215,8 +215,7 @@ def main():
     init_parser.set_defaults(func=init)
 
     gen_parser = commands.add_parser('gen', help='Generates a new version of the current project.')
-    gen_parser.add_argument('-s', '--seed', type=int, help='A custom seed for the random generator.')
-
+    gen_parser.add_argument('-s', '--seed', type=int, default=None, help='A custom seed for the random generator.')
     gen_parser.add_argument('-c', '--tests-count', metavar='N', help="Number of actual tests to generate. If not supplied, only the master file will be generated.", type=int, default=0)
     gen_parser.add_argument('-a', '--answers-per-page', help="Number of answer sections to generate per page. By default is 1. It is up to you to ensure all them fit right in your template.", metavar='N', type=int, default=1)
     gen_parser.add_argument('-t', '--title', help="Title of the test.", default="")
@@ -249,6 +248,7 @@ def main():
     webpoll_parser = commands.add_parser('webpoll', help='Runs the web poll interface.')
     webpoll_parser.add_argument('data', help='The json file to watch.')
     webpoll_parser.add_argument('names', help='The file with all the names.')
+    webpoll_parser.add_argument('--all', help='Set this to a value to indicate that the given index is equal to vote for everyone.', default=None, type=int)
     webpoll_parser.add_argument('--host', help='The host interface to run in.', default='0.0.0.0')
     webpoll_parser.add_argument('--port', help='The port to run in.', type=int, default=5050)
     webpoll_parser.add_argument('-d', '--debug', help='Run in debug mode.', action='store_true')

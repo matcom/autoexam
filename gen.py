@@ -407,6 +407,10 @@ def generate_quiz(args=None):
 
 
 def generate(n, args):
+    # Guaranteeing reproducibility
+    seed = args.seed or random.randint(1, 2 ** 32)
+    random.seed(seed)
+
     text_template = jinja2.Template(open(args.text_template).
                                     read().decode('utf8'))
     answer_template = jinja2.Template(open(args.answer_template).
@@ -454,7 +458,7 @@ def generate(n, args):
                             test=test, number=i, header=args.title).encode('utf8'))
             text_file.close()
 
-        answers.append(dict(test=list(enumerate(test)), number=i, max=max(len(q.options) for q in test)))
+        answers.append(dict(test=list(enumerate(test)), number=i, seed=seed, max=max(len(q.options) for q in test)))
 
         if len(answers) == args.answers_per_page or i == n - 1:
             answer_file = open('generated/v{0}/Answer-{1}.tex'.format(test_id, i / args.answers_per_page), 'w')
@@ -464,8 +468,8 @@ def generate(n, args):
 
     scanresults.dump(order, 'generated/v{0}/order.json'.format(test_id))
 
-    # with open('generated/v{0}/order.json'.format(test_id), 'w') as fp:
-        # json.dump(order, fp)
+    with open('generated/v{0}/seed'.format(test_id), 'w') as fp:
+        fp.write(str(seed) + '\n')
 
 
 if __name__ == '__main__':
