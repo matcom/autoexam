@@ -43,13 +43,28 @@
 	span.votes-name, span.votes-value {
 		text-align: left;
 		font-size: 32pt;
-		width: 700px;
+		width: 500px;
 		display: table-cell;
 	}
 
 	span.votes-value {
 		text-align: right;
-		width: 200px;
+		width: 120px;
+	}
+
+	div.votes-bar {
+		width: 280px;
+		display: table-cell;
+	}
+
+	div.votes-bar-internal {
+		background-color: rgb(52, 190, 209);
+		height: 25px;
+		border-radius: 5px;
+	}
+
+	div.votes-item {
+		position: absolute;
 	}
 </style>
 
@@ -62,43 +77,79 @@
 
 </body>
 <script>
-$(function (){
+$(function () {
 	$list = $('#votes-list');
 
+	function sort_data() {
+		var top = 50;
+		$items = $('.votes-item');
+
+		var sorted_items = _.sortBy($items, function(item, i) {
+			return -$(item).find('.votes-value').data('votes');
+		});
+
+		top = 50;
+
+		_.each(sorted_items, function (item) {
+			$(item).animate({'top': top}, 500);
+			top += 50;
+		});
+	}
+
 	function update_data() {
+		$('.votes-item').attr('updated', 'false');
+
+		var top = 50;
+
 		$.getJSON('/data/', function(data) {
+			var max = _.max(_.pluck(data.people, 'votes'));
+
+			if (max == 0) {
+				max = 1;
+			}
+
 			for (var i = 0; i < data.people.length; i++) {
 				var p = data.people[i];
 
-				var $item = $('div[name="' + p.name + '"]');
+				var $item = $('div[name="' + p.name + '"]').attr('updated', 'true');
 
 				if ($item.length > 0) {
 					var votes_item = $item.find('.votes-value');
 					var votes = votes_item.text();
 					var votes_value = p.votes;
 
-					$(votes_item).data('votes', p.votes);
+					votes_item.data('votes', p.votes);
 
 					if (Number(votes) != p.votes) {
-						votes_item.animate({'opacity': 0}, 500, function (){
+						votes_item.animate({'opacity': 0}, 500, function () {
 							var $self = $(this);
 							$self.text($self.data('votes'));
 							$self.animate({'opacity': 1}, 500);
 						});
 					}
+
+
+					$item.find('.votes-bar-internal').animate({'width': p.votes * 280 / max}, 500);
 				}
 				else {
-					$item = $('<div></div>').addClass('votes-item').attr('name', p.name).css('opacity', 0);
+					$item = $('<div></div>').addClass('votes-item').attr('name', p.name).attr('updated', 'true').css({'opacity': 0, 'top': top});
 					$item.append($('<span></span>').addClass('votes-name').text(p.name));
-					$item.append($('<span></span>').addClass('votes-value').text(p.votes));
+					$item.append($('<div></div>').addClass('votes-bar').append($('<div></div>').addClass('votes-bar-internal').animate({'width': p.votes * 280 / max}, 500)));
+					$item.append($('<span></span>').addClass('votes-value').text(p.votes).data('votes', p.votes));
 
 					$list.append($item);
 
-					$item.animate({'opacity': 1}, 1000);
+					$item.animate({'opacity': 1}, 500);
 				}
 
-			};
+				top += 50;
+			}
 
+			$('.votes-item[updated=false]').animate({'opacity': 0}, 500, function() {
+				$(this).detach();
+			});
+
+			setTimeout(sort_data, 1000);
 			setTimeout(update_data, 2000);
 		}).fail(function (){
 			setTimeout(update_data, 2000);

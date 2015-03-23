@@ -32,11 +32,21 @@ def data():
 		else:
 			people.append(dict(name=n, votes=0))
 
+	if os.path.exists(app.extra):
+		with open(app.extra) as fp:
+			for l in fp:
+				l = l.strip().split()
+
+				if len(l) > 1:
+					name, votes = " ".join(l[:-1]), int(l[-1])
+					people.append(dict(name=name, votes=votes))
+
 	return jsonify(people=people)
 
 
 def run(args):
 	app.data_file = os.path.abspath(args.data)
 	app.all = args.all
+	app.extra = os.path.abspath(args.extra)
 	app.names = [s.strip() for s in open(args.names).readlines() if s.strip()]
 	app.run(host=args.host, port=args.port, debug=args.debug)
