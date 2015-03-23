@@ -32,7 +32,7 @@ doc_parameters = {
 
     #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
     "p_up_margin": 0.13,
-    "p_down_margin": 0.1,
+    "p_down_margin": 0.15,
     "p_left_margin": 0.2,
     "p_right_margin": 0.2,
 
