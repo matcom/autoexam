@@ -47,6 +47,6 @@ def data():
 def run(args):
 	app.data_file = os.path.abspath(args.data)
 	app.all = args.all
-	app.extra = os.path.abspath(args.extra)
+	app.extra = os.path.abspath(args.extra) if args.extra else ""
 	app.names = [s.strip() for s in open(args.names).readlines() if s.strip()]
 	app.run(host=args.host, port=args.port, debug=args.debug)
