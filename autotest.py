@@ -23,7 +23,7 @@ doc_parameters = {
     #TODO try to recode this to use percent and not pixel units as they are now
     "qrcode_width": 100, #qrcode final width in pixels after perspective transformation
     "margin" : 60, #margin used to crop image after the rotation rectification
-    "work_size": 500, #resolution of the smaller side of the image after rectification, like saying 1000p
+    "work_size": 300, #resolution of the smaller side of the image after rectification, like saying 1000p
 
     #---------------------------------------------REMOVE ALL OF THIS---------------------------------------------
     "poll": False, #if we are scanning a poll or not
@@ -31,16 +31,16 @@ doc_parameters = {
     "p_answer_cols": 1, ##the number of questions per column, this value is fixed
 
     #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
-    "p_up_margin": 0.17,
-    "p_down_margin": 0.08,
-    "p_left_margin": 0.54,
-    "p_right_margin": 0.29,
+    "p_up_margin": 0.13,
+    "p_down_margin": 0.1,
+    "p_left_margin": 0.2,
+    "p_right_margin": 0.2,
 
     #padding between the rectangle with the selection cells and the inner cell area (used to rectify any misalignment within the answer selection rectangle)
-    "p_cell_up_margin": 0.02,
-    "p_cell_down_margin": 0.02,
-    "p_cell_left_margin": 0.33,
-    "p_cell_right_margin": 0.33,
+    "p_cell_up_margin": 0.0,
+    "p_cell_down_margin": 0.0,
+    "p_cell_left_margin": 0.0,
+    "p_cell_right_margin": 0.0,
     #-----------------------------------------------------------------------------------------------------------
 
     #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
@@ -59,6 +59,7 @@ doc_parameters = {
     "distance_threshold": 0.8, #threshold of the allowed distance between the selection boxes over the mean distance
     "aligned_threshold": 0.5, #threshold of the alignment allowed between the selection boxes over the mean displacement
     "selection_box_padding":0.5, #padding used to select the inner area of the selection boxes
+    "selection_circle_padding":0.35, #padding used to select the inner area of the selection circles
     "selection_threshold": 130, #threshold that is used to decide if the answer is selected based on the mean intensity range:[0,255]
     "selection_error": 30, #threshold around the selection_threshold that marks the uncertainty range:[0,255]
     "merge_size_factor": 1.8, #Size factor to decide if a merge is needed in the scattered squares
@@ -166,7 +167,7 @@ def get_image_report(frame):
         show_debug_image(rotated,"After rotation.")
         show_debug_image(gray_image,"Gray after rotation")
         small_marker = cv2.resize(marker,(size,size))
-        markers =  get_marker_positions(rotated, small_marker, doc_parameters["marker_match_min_quality"])
+        markers = get_marker_positions(rotated, small_marker, doc_parameters["marker_match_min_quality"])
         if len(markers)==4 and rectangle_sort(markers,rotated):
             answer_area = perspective_transform(gray_image, markers)
             show_debug_image(answer_area,"All Answer area cropped.")
@@ -186,7 +187,7 @@ def get_image_report(frame):
                     bad_data = True
                 question+=1
             #TODO debug
-            show_debug_image(answer_area,"Answer area marked.",False)
+            show_debug_image(answer_area,"Answer area marked.", False)
 
             if not bad_data:
                 report.success = True
@@ -335,9 +336,11 @@ def fix_rotation(qr_rect, image, aux_image):
 def get_marker_positions(image, marker,threshold):
     """Finds the 4 markers that surround the answer area in the image. -> list of tuples"""
     res = cv2.matchTemplate(image,marker,cv2.TM_CCOEFF_NORMED)
+    if doc_parameters["debug"]: cv2.imshow("Template Matching",res)
     loc = np.where( res >= threshold)
     w, h = marker.shape[::-1]
     points = [ (pt[0]+w/2,pt[1]+h/2) for pt in zip(*loc[::-1]) ]
+
     if len(points)<=4: return points
     #do kmeans and separate the four corners
     # convert to np.float32
@@ -346,23 +349,42 @@ def get_marker_positions(image, marker,threshold):
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
     compactness,labels,centers=cv2.kmeans(points,4,criteria,10,cv2.KMEANS_RANDOM_CENTERS)
     if compactness/float(len(points)) > 10: return []
+    points = [(p[0],p[1]) for p in centers]
+    return points
 
-    return [(p[0],p[1]) for p in centers]
+def get_mean_point(points):
+    mean = (0,0)
+    for p in points:
+        mean = (mean[0]+p[0], mean[1]+p[1])    
+    return (mean[0]/len(points), mean[1]/len(points) )
+
 
 def rectangle_sort(markers,image):
     result = [0,0,0,0]
-    w, h = image.shape[::-1]
-    mid_x = w/2.0
-    mid_y = h/2.0
+    
+    mid_x, mid_y = get_mean_point(markers)
+
     for p in markers:
         if p[0]<mid_x:
-            if p[1]<mid_y: result.insert(0,p), result.pop(1)
-            else: result.insert(1,p), result.pop(2)
+            if p[1]<mid_y: result.insert(0,p), result.pop(1) #first quadrant
+            else: result.insert(1,p), result.pop(2) #third quadrant
         else:
-            if p[1]>mid_y: result.insert(2,p), result.pop(3)
-            else: result.insert(3,p), result.pop(4)
+            if p[1]>mid_y: result.insert(2,p), result.pop(3) #forth quadrant
+            else: result.insert(3,p), result.pop(4) #second quadrant
 
+    #result layout
+    # 0 | 3
+    #---|---
+    # 1 | 2
     if 0 in result: return False
+
+    #check with the dot product and the length of the sides
+    # print np.dot( np.subtract(result[1],result[0]), np.subtract(result[0],result[3]) )
+    # print np.dot( np.subtract(result[1],result[0]), np.subtract(result[1],result[2]) )
+    # print np.dot( np.subtract(result[3],result[2]), np.subtract(result[0],result[3]) )
+    # print np.dot( np.subtract(result[3],result[2]), np.subtract(result[1],result[2]) )
+
+
     #copy result to markers
     for n in range(0,4): markers.pop()
     markers.extend(result)
@@ -434,12 +456,18 @@ def get_selections(image, question, index):
     master_answers = []
     local_answers = []
 
+    vis = None
+    if doc_parameters["poll"]:
+        vis = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+
     a=0
     for data in contours:
         mean = data["mean_intensity"]
+        color = (0,0,255)# to visualize the default color is red
         if mean > thresh:
             master_answers.append(question.order[a])
             local_answers.append(a+1)
+            color = (0,255,0) #to visualize select the green color
             if mean-thresh <= error:
                 w = Warning(index + 1, a + 1, WarningTypes.UNCERTANTY, selected=True)
                 report.test.warnings.append(w)
@@ -447,6 +475,11 @@ def get_selections(image, question, index):
             w = Warning(index + 1, a + 1, WarningTypes.UNCERTANTY, selected=False)
             report.test.warnings.append(w)
         a += 1
+        if doc_parameters["poll"]: #if visualization
+            center = data["center"]
+            radius = data["radius"]
+            cv2.ellipse(vis, (int(center[0])+2*int(radius),int(center[1])), (int(radius), int(radius)), 0, 0, 360, color, -1)
+
 
     if not question.multiple:
         if len(master_answers)>1:
@@ -456,6 +489,10 @@ def get_selections(image, question, index):
         if len(master_answers)==0:
             w = Warning(index + 1, local_answers, WarningTypes.EMPTY_SELECTION, selected = False)
             report.test.warnings.append(w)
+    
+    #show the image
+    if doc_parameters["poll"]:
+        cv2.imshow("Result", vis)
 
     return True, master_answers
 
@@ -548,18 +585,33 @@ def get_contour_data(contour, image):
     data["points"] = [(x,y),(x,y+h),(x+w,y+h),(x+w,y)]
     M = cv2.moments(np.array([[p] for p in data["points"]],dtype=np.int32))
     data["center"] = (M['m10']/(M['m00']+0.00001), M['m01']/(M['m00']+0.00001))
-    b = doc_parameters["selection_box_padding"]/2.0
-    fillarea = np.array([ [[x+b*w,y+b*h]] , [[x+b*w,y+h-b*h]] , [[x+w-b*w,y+h-b*h]] , [[x+w-b*w,y+b*h]] ], dtype=np.int32 )
-    mask = np.zeros(image.shape,np.uint8)
-    cv2.drawContours(mask,[fillarea],0,255,-1)
-    #improve the calculation of the intensity that decides if it is selected or not.
-    data["mean_intensity"] = cv2.mean(image,mask = mask)[0]
     #if the contours are circles instead of squares
     if not doc_parameters["squares"]:
         center, radius = cv2.minEnclosingCircle(contour)
+        data["center"] = (int(center[0]),int(center[1]))
+        data["radius"] = int(radius)
+        new_radius = int((1-doc_parameters["selection_circle_padding"])*radius)
+
+        if doc_parameters["debug"]:
+            vis = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+            cv2.ellipse(vis, data["center"], (new_radius, new_radius), 0, 0, 360, (0,0,255), 1)
+            cv2.ellipse(vis, data["center"], (int(radius), int(radius)), 0, 0, 360, (0,255,0), 1)
+            cv2.imshow("Selection Area", vis)
+            cv2.waitKey(1000)
+
         mask = np.zeros(image.shape,np.uint8)
-        cv2.ellipse(mask,center,(b*radius,b*radius),0,0,360,255,-1)
+        cv2.ellipse(mask, (int(center[0]),int(center[1])), (new_radius, new_radius), 0, 0, 360, 255, -1)
         data["mean_intensity"] = cv2.mean(image,mask = mask)[0]
+
+    else:
+        b = doc_parameters["selection_box_padding"]/2.0
+        fillarea = np.array([ [[x+b*w,y+b*h]] , [[x+b*w,y+h-b*h]] , [[x+w-b*w,y+h-b*h]] , [[x+w-b*w,y+b*h]] ], dtype=np.int32 )
+        mask = np.zeros(image.shape,np.uint8)
+        cv2.drawContours(mask,[fillarea],0,255,-1)
+        #improve the calculation of the intensity that decides if it is selected or not.
+        data["mean_intensity"] = cv2.mean(image,mask = mask)[0]
+
+    if doc_parameters["debug"]: print data["mean_intensity"]
 
 
     return data

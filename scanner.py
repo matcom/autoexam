@@ -71,7 +71,7 @@ def main():
     source = ImageSource(args.camera if args.folder=="" else args.folder, args.time)
     w, h = source.get_size()
     #Set document processing parameters and initialize scanner
-    scanner = TestScanner(w, h, args.exams_file, show_image=True, double_check=True, debug = args.debug, poll = args.poll)
+    scanner = TestScanner(w, h, args.exams_file, show_image=True, double_check=True, debug = args.debug, poll = args.poll, squares = not args.poll )
 
     tests = {}
     #While user does not press the q key
@@ -107,7 +107,7 @@ def main():
             # errors in the format of the qrcodes
             for e in [x for x in report.errors
                         if isinstance(x, QuestionError) or
-                        (isinstance(x, QrcodeError) and x.err_type == QRCodeErrorTypes.FORMAT) ]:
+                        (isinstance(x, QrcodeError) and x.err_type == QRCodeErrorTypes.FORMAT) or args.debug ]:
                 print e
 
     scanner.finalize()
