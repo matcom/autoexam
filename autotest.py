@@ -14,7 +14,7 @@ import re
 report = None
 doc_parameters = {
     "debug": False, #Show images of all the recognition process
-    "show_image": True, #if it is a camera it shows a window with the images, and if it is an image it shows the image
+    "show_image": True, #if it is a camera it shows a window with the images, and if it is an image it shows the image #not in use
     "double_check": True, #Makes a double confirmation before to return a success report
     "marker_image": "latex/marker.png", #Image of the marker to use in the borders
     "answer_cols": 5, ##the number of questions per column, this value is fixed
@@ -102,11 +102,6 @@ class TestScanner:
         cv2.destroyAllWindows()
 
 def get_scan_report(source):
-    show = doc_parameters["show_image"]
-    if show:
-        window_name = "Input"
-        cv2.namedWindow(window_name)
-
     if not doc_parameters["init"]: return Report()
 
     global report
@@ -114,9 +109,6 @@ def get_scan_report(source):
     if not doc_parameters["double_check"]:
         report = Report()
         frame = source.get_next()
-        if show:
-            flipped = cv2.flip(frame, 1)
-            cv2.imshow(window_name,flipped)
         return get_image_report(frame)
     #if double check is enabled...
     first = None
@@ -124,18 +116,12 @@ def get_scan_report(source):
         if not first:
             report = Report()
             frame = source.get_next()
-            if show:
-                flipped = cv2.flip(frame, 1)
-                cv2.imshow(window_name,flipped)
             first = get_image_report(frame)
         if not first.success:
             return first
         else:
             report = Report()
             frame = source.get_next()
-            if show:
-                flipped = cv2.flip(frame, 1)
-                cv2.imshow(window_name,flipped)
             second = get_image_report(frame)
             if not second.success or second.test==first.test:
                 return second
@@ -655,15 +641,18 @@ class ImageSource(object):
     """Wrapper class to abstract the fact that the camera feed may come from a single image"""
     def __init__(self, source, time=3):
         self.time = time
-        self.is_camera = type(source)==int
+        self.is_camera = type(source)==list
         if self.is_camera:
-            self.source = cv2.VideoCapture(source)
-            # self.source.set(3,1920)
-            # self.source.set(4,1080)
+            print "Loading cameras "+str(source)
+            self.sources = [cv2.VideoCapture(cam) for cam in source]
+            for s in self.sources:
+                s.set(3,800)
+                s.set(4,600)
         else:
-            self.source = self.load_file_list(source)
-            self.current_index = -1
-            self.update_current()
+            self.sources = self.load_file_list(source)
+
+        self.current_index = -1
+        self.update_current()
 
     def load_file_list(self, path):
         capture = [os.path.join(path,f) for f in os.listdir(path)]
@@ -674,25 +663,32 @@ class ImageSource(object):
 
     def get_size(self):
         if self.is_camera:
-            return (int(self.source.get(3)),int(self.source.get(4)))
+            return (int(self.current_source.get(3)),int(self.current_source.get(4)))
         else:
-            return (self.current_image.shape[1],self.current_image.shape[0])
+            return (self.current_source.shape[1],self.current_source.shape[0])
 
     def get_next(self):
-        if self.is_camera:
-            return self.source.read()[1]
-        else:
-            if time.time() - self.start_time > self.time:
+        if time.time() - self.start_time > self.time:
                 self.update_current()
-            return self.current_image.copy()
+        if self.is_camera:
+            img = self.current_source.read()[1]
+            cv2.imshow("Camera "+str(self.current_index),cv2.flip(img, 1))
+            return img
+        else:
+            img = self.current_source.copy()
+            return img
 
     def update_current(self):
         self.current_index += 1
-        if self.current_index>=len(self.source):
+        if self.current_index>=len(self.sources):
             self.current_index = 0
-        self.current_image = cv2.imread(self.source[self.current_index],1)
+        if self.is_camera:
+            self.current_source = self.sources[self.current_index]
+        else:
+            self.current_source = cv2.imread(self.sources[self.current_index],1)
         self.start_time = time.time()
 
     def release(self):
         if self.is_camera:
-            self.source.release()
+            for s in self.sources:
+                s.release()
