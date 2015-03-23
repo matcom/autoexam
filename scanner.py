@@ -1,15 +1,15 @@
 #coding: utf-8
+from os.path import join, exists, dirname, abspath
 from autotest import TestScanner, ImageSource
-from scanresults import *
+from os import makedirs, access
 from evaluator import get_stats
-import cv2
+from scanresults import *
 import pprint
 import pickle
 import beep
 import json
+import cv2
 import os
-from os import makedirs, access
-from os.path import join, exists, dirname, abspath
 
 class Obj:
     def __init__(self, **kwargs):
@@ -27,11 +27,11 @@ def parse_and_check_args():
                         help='the json file that describes each test. It is created by the exam generator.')
     parser.add_argument('-o','--outfile', type=str, default = "tests_results.json",
                         help='the file name to dump the scan results. If the file exists it will append the results.')
-    parser.add_argument('-c','--camera', type=int, default = 0,
-                        help='the index of the camera used to scan the tests.')
+    parser.add_argument('-c','--cameras', type=int, nargs="+", default = [0],
+                        help='the list of index of the cameras to be used to scan the tests.')
     parser.add_argument('-f','--folder', type=str, default = "",
                         help='the folder that includes all the images to scann.')
-    parser.add_argument('-t','--time', type=float, default = 3,
+    parser.add_argument('-t','--time', type=float, default = 0.5,
                         help='time in seconds it takes to load the next image on the specified folder.')
     parser.add_argument('-d', '--debug', action='store_true', default=False,
                         help='debug mode enabled')
@@ -68,7 +68,7 @@ def main():
     if not args: return 1
 
     #Get system camera in index 0
-    source = ImageSource(args.camera if args.folder=="" else args.folder, args.time)
+    source = ImageSource(args.cameras if args.folder=="" else args.folder, args.time)
     w, h = source.get_size()
     #Set document processing parameters and initialize scanner
     scanner = TestScanner(w, h, args.exams_file, show_image=True, double_check=True, debug = args.debug, poll = args.poll, squares = not args.poll )
