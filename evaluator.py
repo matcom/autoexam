@@ -136,6 +136,11 @@ def get_stats(results_json_file):
 				stats[question.id]["count"]=0
 				stats[question.id]["options"]={}
 			stats[question.id]["count"]=stats[question.id]["count"]+1
+			#TODO DELETE THE NEXT THREE LINES PLEASE -------------------------
+			if answers[-1][1]:
+				stats[question.id]["options"][answers[-1][0]]=stats[question.id]["options"].get(answers[-1][0],0)+1
+				answers = [(i, False) for i in range(0,question.total_answers)]
+			#TODO DELETE THE PREVIOUS THREE LINES PLEASE -------------------------
 			for a in answers:
 				if not a[0] in stats[question.id]["options"]:
 					stats[question.id]["options"][a[0]]=0
