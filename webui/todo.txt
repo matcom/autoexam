@@ -1,0 +1,18 @@
+Leyenda
+=============
+[high]
+[medium]
+[low]
+[future]
+
+TODO
+=============
+* [future] poner etiquetas a nivel de examen (o asociada a la pregunta) y no solo en la asignatura
+* [high] a la hora de definir la pregunta no queda clara cual es la correcta
+* [high] cambiar la seleccion de pregutas por etiquetas en los examenes
+* [high] ver con suilan despues el tema del orden de las etiquetas y el examen master
+* [high] poder definir el orden de cada pregunta en el examen
+* [medium] poner botoncitos para agregar todas, quitar todas, etc. en la generacion del examen
+* [medium] cambiar examan => examen y preguntum por pregunta
+* [high] poder definir orden en los incisos de las preguntas (* en el master es que no se mueve)
+* [high] generar la clave.txt
