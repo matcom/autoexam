@@ -1,35 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>WizardPage</class>
+ <widget class="QWizardPage" name="WizardPage">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>637</width>
-    <height>346</height>
+    <width>607</width>
+    <height>408</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>WizardPage</string>
   </property>
-  <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="">
-    <property name="geometry">
-     <rect>
-      <x>50</x>
-      <y>140</y>
-      <width>196</width>
-      <height>108</height>
-     </rect>
-    </property>
+  <layout class="QFormLayout" name="formLayout">
+   <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <widget class="QCommandLinkButton" name="commandLinkButton_2">
        <property name="font">
         <font>
-         <family>Segoe UI</family>
          <pointsize>16</pointsize>
+         <italic>false</italic>
          <kerning>true</kerning>
         </font>
        </property>
@@ -48,7 +40,6 @@
       <widget class="QCommandLinkButton" name="commandLinkButton">
        <property name="font">
         <font>
-         <family>Segoe UI</family>
          <pointsize>16</pointsize>
          <kerning>true</kerning>
         </font>
@@ -59,19 +50,8 @@
       </widget>
      </item>
     </layout>
-   </widget>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>637</width>
-     <height>21</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>

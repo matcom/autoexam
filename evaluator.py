@@ -50,15 +50,15 @@ class QuestionGrader(object):
 
 class Grader(object):
 
-	def __init__(self,id_exam):
-		self.id_exam = id_exam
-		self.questions = {}
+    def __init__(self,id_exam):
+        self.id_exam = id_exam
+        self.questions = {}
 
-	def addQuestionGrader(self,question):
-		self.questions[question.getId()] = question
+    def addQuestionGrader(self,question):
+        self.questions[question.getId()] = question
 
-	def getQuestionGrader(self,id_question):
-		return self.questions[id_question]
+    def getQuestionGrader(self,id_question):
+        return self.questions[id_question]
 
 def parse_grader_sheet(grader_sheet_file):
 	gs_file = open(grader_sheet_file,"rb")
@@ -164,4 +164,4 @@ def main():
 	return 0
 
 if __name__ == '__main__':
-	main()
+    main()
