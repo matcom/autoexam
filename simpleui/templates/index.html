@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Autoexam</title>
+
+	<link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.css') }}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='font-awesome.css') }}">
+</head>
+<body>
+
+    <!-- Page Content -->
+    <div class="container">
+
+	{% block content %}
+
+        <div class="row">
+	        <div class="span12">
+				<h1 class="page-header">
+					Autoexam
+					<small>Generador y evaluador minimalista de cuestionarios</small>
+				</h1>
+		    </div>
+
+		    <p class="lead">
+		    	Autoexam es un generador y evaluador automático de cuestionarios
+		    	(exámenes, encuestas, votaciones, etc.). Para comenzar, elije
+		    	el tipo de proyecto que deseas:
+		    </p>
+
+		    <div class="span4">
+		    	<h3 class="page-header">Exámenes</h3>
+		    	<p class="lead">
+		    		Los exámenes se componen de un conjunto de preguntas con opciones
+		    		de selección, y una clave que determina el
+		    		valor de cada pregunta.
+		    	</p>
+				<div class="pull-right">
+					<a href="#" class="btn btn-primary btn-large">Crear Examen</a>
+				</div>
+		    </div>
+
+		    <div class="span4">
+		    	<h3 class="page-header">Encuestas</h3>
+		    	<p class="lead">
+		    		Las encuestas se componen de un conjunto de preguntas con opciones
+		    		de selección. A diferencia de los exámenes, no existe el concepto
+		    		de clave.
+		    	</p>
+				<div class="pull-right">
+					<a href="#" class="btn btn-success btn-large">Crear Encuesta</a>
+				</div>
+		    </div>
+
+		    <div class="span4">
+		    	<h3 class="page-header">Boletas</h3>
+		    	<p class="lead">
+		    		Las boletas consisten en una sola pregunta con un conjunto
+		    		de opciones de selección. Se puede elegir una, varias o todas
+		    		las opciones.
+		    	</p>
+				<div class="pull-right">
+					<a href="{{ url_for('create_vote') }}" class="btn btn-danger btn-large">Crear Boleta</a>
+				</div>
+		    </div>
+
+		    <div class="span12">
+				<h3 class="page-header">Abrir proyecto existente</h3>
+				<p class="lead">
+					Si tienes un proyecto de Autoexam, sube el archivo con
+					extensión <code class="lead">.apr</code> para editarlo.
+				</p>
+
+				<form action="" class="form-horizontal">
+					<input type="file">
+					<input class="btn btn-primary" type="submit" value="Abrir">
+				</form>
+		    </div>
+		</div>
+
+	{% endblock %}
+
+	</div>
+
+<script src="{{ url_for('static', filename='jquery.js') }}"></script>
+<script src="{{ url_for('static', filename='underscore.js') }}"></script>
+<script src="{{ url_for('static', filename='bootstrap.js') }}"></script>
+
+{% block scripts %}
+
+{% endblock %}
+</body>
+</html>
