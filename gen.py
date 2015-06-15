@@ -452,7 +452,7 @@ def generate(n, args):
         generate_qrcode(i, test)
 
         if not args.dont_generate_text:
-            text_file = open('generated/v{0}/Test-{1}.tex'.format(test_id, i), 'w')
+            text_file = open('generated/v{0}/Test-{1:04}.tex'.format(test_id, i), 'w')
 
             text_file.write(text_template.render(
                             test=test, number=i, header=args.title).encode('utf8'))
@@ -461,7 +461,7 @@ def generate(n, args):
         answers.append(dict(test=list(enumerate(test)), number=i, seed=seed, max=max(len(q.options) for q in test)))
 
         if len(answers) == args.answers_per_page or i == n - 1:
-            answer_file = open('generated/v{0}/Answer-{1}.tex'.format(test_id, i / args.answers_per_page), 'w')
+            answer_file = open('generated/v{0}/Answer-{1:04}.tex'.format(test_id, i / args.answers_per_page), 'w')
             answer_file.write(answer_template.render(answers=answers).encode('utf8'))
             answer_file.close()
             answers = []

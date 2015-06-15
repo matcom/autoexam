@@ -13,7 +13,7 @@ class QuestionGrader(object):
 		self.options_values = options_values
 		self.min_value = min_value
 		self.max_value = max_value
-		
+
 
 	def getId(self):
 		return self.id_question
@@ -31,13 +31,13 @@ class QuestionGrader(object):
 		return self.options_values[option]
 
 	def evaluate(self,answers):
-		value = 0
+		value = 0.0
 		count = 0
 		for a in answers:
 			if a[1]:
 				count += 1
 				if (not self.isMultiple) and (count>1):
-					return 0
+					return 0.0
 				value += self.getOptionValue(a[0])[0]
 			else:
 				value += self.getOptionValue(a[0])[1]
@@ -73,7 +73,7 @@ def parse_grader_sheet(grader_sheet_file):
 	options_line = False
 	options = None
 	max_v = None
-	min_v = None 
+	min_v = None
 	for line in gs_file:
 		if options_line:
 			options_line = False
@@ -93,9 +93,9 @@ def parse_grader_sheet(grader_sheet_file):
 			if len(elements) > 2:
 				for i in range(2,len(elements),2):
 					if elements[i].startswith("min:"):
-						min_v = int(elements[i+1])
+						min_v = float(elements[i+1])
 					elif elements[i].startswith("max:"):
-						max_v = int(elements[i+1])
+						max_v = float(elements[i+1])
 		if id_question_line:
 			id_question_line = False
 			total_line = True
@@ -113,7 +113,7 @@ def evaluate(grader_sheet_file,results_json_file):
 	grades = {}
 	for test_id, exam in tests_scans.items():
 		if str(grader.id_exam) == str(exam.exam_id):
-			total_grade = 0
+			total_grade = 0.0
 			q_grades = {}
 			for question in exam.questions:
 				answers = [(i, i in question.answers) for i in range(0,question.total_answers)]
@@ -124,11 +124,11 @@ def evaluate(grader_sheet_file,results_json_file):
 		else:
 			pass
 	return grades
-	
+
 def get_stats(results_json_file):
 	tests_scans = sr.parse(results_json_file)
 	stats = {}
-	for test_id, exam in tests_scans.items():		
+	for test_id, exam in tests_scans.items():
 		for question in exam.questions:
 			answers = [(i, i in question.answers) for i in range(0,question.total_answers)]
 			if not question.id in stats:
@@ -157,7 +157,7 @@ def main():
 	parser.add_argument("resultsjson", help="Results json file")
 	args = parser.parse_args()
 	grades = None
-	if args.gradersheet <> None:
+	if args.gradersheet is not None:
 		grades = evaluate(args.gradersheet,args.scansjson)
 	stats = get_stats(args.scansjson)
 	json.dump({"grades":grades,"stats":stats},open(args.resultsjson,"wb"))

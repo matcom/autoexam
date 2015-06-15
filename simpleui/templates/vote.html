@@ -1,0 +1,277 @@
+{% extends "index.html" %}
+
+{% block content %}
+
+	<style>
+		td.vote-column {
+			text-align: center;
+		}
+
+		th.vote-column {
+			text-align: center;
+		}
+	</style>
+
+	<div class="row">
+		<div class="span12">
+			<h1 class="page-header">Boleta</h1>
+
+			<p class="lead">
+				Una boleta se compone de un conjunto de opciones por las que varios
+				individuos votarán. Cada opción a su vez tiene varios campos de
+				texto o de selección. Los campos de texto simplemente almacenan información.
+				Los campos de selección son aquellos por los que se vota.
+			</p>
+		</div>
+
+		<div class="span12">
+			<table class="table">
+
+			</table>
+
+			<div class="pull-right">
+				<a id="add-data-item" href="#" class="btn btn-success"><i class="fa fa-plus"> Opción</i></a>
+				<a id="reset-poll" href="#" class="btn btn-danger"><i class="fa fa-refresh"> Reiniciar</i></a>
+			</div>
+		</div>
+	</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+	$(function() {
+		var dataColumns = ["Nombre"];
+		var voteColumns = ["Voto"];
+
+		var dataItems = [
+			["..."]
+		];
+
+		if (localStorage.hasOwnProperty("dataColumns")) {
+			dataColumns = JSON.parse(localStorage.dataColumns);
+		}
+		if (localStorage.hasOwnProperty("voteColumns")) {
+			voteColumns = JSON.parse(localStorage.voteColumns);
+		}
+		if (localStorage.hasOwnProperty("dataItems")) {
+			dataItems = JSON.parse(localStorage.dataItems);
+		}
+
+		var table = $("table");
+
+		$("#add-data-item").click(function () {
+			dataItem = [];
+
+			for (var i = 0; i < dataColumns.length; i++) {
+				dataItem.push("...");
+			};
+
+			dataItems.push(dataItem);
+
+			updateGui();
+		});
+
+		function updateGui() {
+			localStorage.dataColumns = JSON.stringify(dataColumns);
+			localStorage.voteColumns = JSON.stringify(voteColumns);
+			localStorage.dataItems = JSON.stringify(dataItems);
+
+			$("table").html("");
+
+			var trTitle = $("<tr></tr>").addClass("title");
+
+			for (var i = 0; i < dataColumns.length; i++) {
+				var th = $("<th></th>").addClass("data-column");
+				var item = $("<a></a>").attr("href", "#").addClass("btn-link").addClass("edit-data-column").attr('data-column', i).text(dataColumns[i] + " ");
+				th.append(item);
+				trTitle.append(th);
+
+				if (i > 0) {
+					th.append($('<a href="#" class="remove-data-column btn-link"><i class="fa fa-minus-circle"> </i></a></th>').attr("data-column", i));
+				}
+			};
+
+			trTitle.append($('<th style="width: 25px;"><div class="pull-right"><a id="add-data-column" href="#" class="btn-link"><i class="fa fa-plus"></i></a></div></th>'));
+
+			for (var i = 0; i < voteColumns.length; i++) {
+				var th = $("<th></th>").addClass("vote-column");
+				var item = $("<a></a>").attr("href", "#").addClass("btn-link").addClass("edit-vote-column").attr('data-column', i).text(voteColumns[i] + " ");
+				th.append(item);
+				trTitle.append(th);
+
+				if (i > 0) {
+					th.append($('<a href="#" class="remove-vote-column btn-link"><i class="fa fa-minus-circle"> </i></a></th>').attr("data-column", i));
+				}
+			};
+
+			trTitle.append($('<th style="width: 25px;"><div class="pull-right"><a id="add-vote-column" href="#" class="btn-link"><i class="fa fa-plus"></i></a></div></th>'));
+
+			table.append(trTitle);
+
+			for (var i = 0; i < dataItems.length; i++) {
+				var trItem = $('<tr></tr>').addClass("data-item");
+				var dataItem = dataItems[i];
+
+				for (var j = 0; j < dataItem.length; j++) {
+					var td = $("<td></td>").addClass("data-cell").append($("<a></a>").addClass("btn-link edit-data-item").attr('data-row', i).attr('data-column', j).text(dataItem[j]));
+					trItem.append(td);
+				};
+
+				trItem.append($("<td></td>"));
+
+				for (var j = 0; j < voteColumns.length; j++) {
+					var td = $("<td></td>").addClass("vote-column").append($("<i></ai").addClass("fa fa-square-o"));
+					trItem.append(td);
+				};
+
+				trItem.append($("<th></th>").append($('<a href="#" class="pull-right remove-data-item btn-link"><i class="fa fa-minus-circle"> </i></a></th>').attr("data-row", i)));
+
+				table.append(trItem);
+			};
+
+			$("#add-data-column").click(function () {
+				dataColumns.push("Columna");
+
+				for (var i = 0; i < dataItems.length; i++) {
+					dataItems[i].push("...");
+				};
+
+				updateGui();
+				return false;
+			});
+
+			$("#add-vote-column").click(function () {
+				voteColumns.push("Columna");
+				updateGui();
+				return false;
+			});
+
+			function dropIndex(array, index) {
+				var newArray = [];
+
+				for (var i = 0; i < array.length; i++) {
+					if (i == index) {
+						continue;
+					}
+
+					newArray.push(array[i]);
+				};
+
+				return newArray;
+			}
+
+			$(".remove-data-column").click(function () {
+				var index = Number($(this).attr("data-column"));
+				dataColumns = dropIndex(dataColumns, index);
+
+				for (var i = 0; i < dataItems.length; i++) {
+					dataItems[i] = dropIndex(dataItems[i], index);
+				};
+
+				updateGui();
+				return false;
+			});
+
+			$(".remove-vote-column").click(function () {
+				voteColumns = dropIndex(voteColumns, Number($(this).attr("data-column")));
+				updateGui();
+				return false;
+			});
+
+			$(".remove-data-item").click(function () {
+				dataItems = dropIndex(dataItems, Number($(this).attr("data-row")));
+				updateGui();
+				return false;
+			});
+
+			$("#reset-poll").click(function (){
+				dataColumns = ["Nombre"];
+				voteColumns = ["Voto"];
+
+				dataItems = [
+					["..."]
+				];
+
+				updateGui();
+				return false;
+			});
+
+			$(".edit-data-item").click(function () {
+				var $this = $(this);
+
+				if ($this.attr('data-editing') == "true") {
+					return false;
+				}
+
+				var text = $this.text();
+
+				$this.attr('data-editing', true);
+				$this.text("");
+				var edit = $('<input type="text">').val(text)
+				$this.append(edit);
+
+				edit.blur(function () {
+					$this.attr('data-editing', false);
+					dataItems[Number($this.attr('data-row'))][Number($this.attr('data-column'))] = edit.val();
+					updateGui();
+				});
+
+				edit.focus();
+				edit.select();
+			});
+
+			$(".edit-data-column").click(function () {
+				var $this = $(this);
+
+				if ($this.attr('data-editing') == "true") {
+					return false;
+				}
+
+				var text = $this.text();
+
+				$this.attr('data-editing', true);
+				$this.text("");
+				var edit = $('<input type="text">').val(text)
+				$this.append(edit);
+
+				edit.blur(function () {
+					$this.attr('data-editing', false);
+					dataColumns[Number($this.attr('data-column'))] = edit.val();
+					updateGui();
+				});
+
+				edit.focus();
+				edit.select();
+			});
+
+			$(".edit-vote-column").click(function () {
+				var $this = $(this);
+
+				if ($this.attr('data-editing') == "true") {
+					return false;
+				}
+
+				var text = $this.text();
+
+				$this.attr('data-editing', true);
+				$this.text("");
+				var edit = $('<input type="text">').val(text)
+				$this.append(edit);
+
+				edit.blur(function () {
+					$this.attr('data-editing', false);
+					voteColumns[Number($this.attr('data-column'))] = edit.val();
+					updateGui();
+				});
+
+				edit.focus();
+				edit.select();
+			});
+		}
+
+		updateGui();
+	});
+</script>
+{% endblock %}
