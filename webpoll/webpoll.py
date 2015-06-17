@@ -12,6 +12,11 @@ def page():
 	return send_file('webpoll.html')
 
 
+@app.route('/ujc.png')
+def img():
+	return send_file('ujc.png')
+
+
 @app.route('/data/')
 def data():
 	people = []

@@ -23,7 +23,7 @@ doc_parameters = {
     #TODO try to recode this to use percent and not pixel units as they are now
     "qrcode_width": 100, #qrcode final width in pixels after perspective transformation
     "margin" : 60, #margin used to crop image after the rotation rectification
-    "work_size": 300, #resolution of the smaller side of the image after rectification, like saying 1000p
+    "work_size": 800, #resolution of the smaller side of the image after rectification, like saying 1000p
 
     #---------------------------------------------REMOVE ALL OF THIS---------------------------------------------
     "poll": False, #if we are scanning a poll or not
@@ -52,18 +52,22 @@ doc_parameters = {
     #padding between the rectangle with the selection cells and the inner cell area (used to rectify any misalignment within the answer selection rectangle)
     "cell_up_margin": 0.05,
     "cell_down_margin": 0.05,
-    "cell_left_margin": 0.69,
-    "cell_right_margin": 0.02,
+    "cell_left_margin": 0.72,
+    "cell_right_margin": 0.05,
 
-    "squares": True, #if it is a square or a circle
+    "squares": False, #if it is a square or a circle
     "distance_threshold": 0.8, #threshold of the allowed distance between the selection boxes over the mean distance
     "aligned_threshold": 0.5, #threshold of the alignment allowed between the selection boxes over the mean displacement
+    "circle_ratio_threshold": 0.4, #a perfect circle is of ratio 1.0, this number the max deviation from 1.0, it is w/h
+    "circle_size_difference": 0.4, #the percent of the median size allowed
+    "circle_aligment_percent": 1.0, #the percent over the radius that is allowed as a displacement over the median x coodinate
     "selection_box_padding":0.5, #padding used to select the inner area of the selection boxes
     "selection_circle_padding":0.35, #padding used to select the inner area of the selection circles
     "selection_threshold": 130, #threshold that is used to decide if the answer is selected based on the mean intensity range:[0,255]
     "selection_error": 30, #threshold around the selection_threshold that marks the uncertainty range:[0,255]
-    "merge_size_factor": 1.8, #Size factor to decide if a merge is needed in the scattered squares
-    "adaptative_threshold_size": 15, #size of the kernel in the adaptive threshold to highlight the square
+    "merge_size_factor": 1.2, #Size factor to decide if a merge is needed in the scattered squares
+    #this is the parameter that cretaes most of the problems with the presision of the system
+    "adaptative_threshold_size": 12, #size of the kernel in the adaptive threshold to highlight the circle, smaller makes it more sensitive
     "version": 1 #version control to reject invalid qrcodes
 }
 
@@ -443,8 +447,8 @@ def get_selections(image, question, index):
     local_answers = []
 
     vis = None
-    if doc_parameters["poll"]:
-        vis = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+    # if doc_parameters["poll"]:
+    vis = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
 
     a=0
     for data in contours:
@@ -461,10 +465,10 @@ def get_selections(image, question, index):
             w = Warning(index + 1, a + 1, WarningTypes.UNCERTANTY, selected=False)
             report.test.warnings.append(w)
         a += 1
-        if doc_parameters["poll"]: #if visualization
-            center = data["center"]
-            radius = data["radius"]
-            cv2.ellipse(vis, (int(center[0])+2*int(radius),int(center[1])), (int(radius), int(radius)), 0, 0, 360, color, -1)
+        # if doc_parameters["poll"]: #if visualization
+        center = data["center"]
+        radius = data["radius"]
+        cv2.ellipse(vis, (int(center[0])+2*int(radius),int(center[1])), (int(radius), int(radius)), 0, 0, 360, color, -1)
 
 
     if not question.multiple:
@@ -477,8 +481,8 @@ def get_selections(image, question, index):
             report.test.warnings.append(w)
     
     #show the image
-    if doc_parameters["poll"]:
-        cv2.imshow("Result", vis)
+    # if doc_parameters["poll"]:
+    cv2.imshow("Result", vis)
 
     return True, master_answers
 
@@ -499,40 +503,73 @@ def get_contours(image, total, question):
     contours = [c for c in contours if not c["empty"]]
     for i in range(len(contours)): contours[i]["index"]=i
 
-    #if there are more contours than expected try to merge some
-    if len(contours)>total:
-        while True:
-            merged = try_merge_nearby_contours(contours,image)
-            #if a contour was merged fix the index parameter in the contour data
-            if merged == 1:
-                for i in range(len(contours)): contours[i]["index"]=i
-            #if no merge was done or the amount of contours is not grater get out
-            if merged == 0 or len(contours)<=total: break
+    if len(contours) < total:
+        return False,[]
 
-    #if there are still more contours than expected get the biggest ones
-    if len(contours)> total:
-        #sort them by size
-        list.sort(contours, key = lambda x: x["size"], reverse=True)
-        #discard the extra contours
-        contours = contours[:total]
-        #fix the index field 
-        list.sort(contours, key = lambda x: x["index"])
-        for i in range(len(contours)): contours[i]["index"]=i
+    #if there are more contours than expected try merge them
+    if len(contours)>total:
+        contours = merge_contours_kmeans(contours, total, image)
+
+    if len(contours)>1:
+        if not same_size(contours, image):
+            report.errors.append(QuestionError(question,"The circles don't have the same size or are too big"))
+        else:
+            mean_rad = 0
+            for c in contours:
+                mean_rad+=c["radius"]
+            mean_rad=mean_rad/float(len(contours))
+            for c in contours:
+                c["radius"] = mean_rad
+                recalculate_intensity(c,image)
 
     if len(contours)!= total:
-        report.errors.append(QuestionError(question,"The number of boxes do not match"))
-    if not are_squared(contours):
-        report.errors.append(QuestionError(question,"Not all the boxes are squared"))
+        report.errors.append(QuestionError(question,"The number of circles do not match"))
+    if not doc_parameters["squares"] and not are_circular(contours):
+        report.errors.append(QuestionError(question,"All the circles don't have the correct shape"))
+
     if len(contours)>1:
         if not same_distance(contours,doc_parameters["distance_threshold"]):
-            report.errors.append(QuestionError(question,"Not all the boxes are within the same distance"))
-        if not are_sorted(contours):
-            report.errors.append(QuestionError(question,"The boxes are not sorted"))
-        #if not are_aligned(contours,doc_parameters["aligned_threshold"]):
-        #    report.errors.append(QuestionError(question,"Not all the boxes are aligned"))
+            report.errors.append(QuestionError(question,"All the circles are not within the same distance"))
+
+        if not are_aligned(contours, doc_parameters["circle_aligment_percent"]):
+            report.errors.append(QuestionError(question,"All the boxes are not aligned"))
+
+    if doc_parameters["debug"]:
+        debug_contour_detection(contours, image)
+
+    if doc_parameters["debug"]:
+        errors = [e for e in report.errors if e.question == question]
+        if len(errors)==0: print "-----OK-----"
+        else: 
+            for e in errors:
+                print e.message
+            print "------------"
+        cv2.waitKey()
 
     if len(report.errors)>0: return False,[]
     return True, contours
+
+def merge_contours_kmeans(contours, centroids, image):
+    points = np.float32([p["center"] for p in contours])
+    # define criteria and apply kmeans()
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 1.0)
+    compactness, labels, centers = cv2.kmeans(points,centroids,criteria,20,cv2.KMEANS_PP_CENTERS)
+    groups = {}
+    for c in xrange(len(points)):
+        label = int(labels[c])
+        if label in groups:
+            groups[label] = get_contour_data(merge_contours(groups[label], contours[c]),image)
+        else:
+            groups[label] = contours[c]
+
+    merged = groups.values()
+    list.sort(merged, key = lambda x: x["center"][1], reverse = False)
+    # list.sort(merged, key = lambda x: x["center"][0], reverse = True)
+
+    for i, c in enumerate(merged):
+        c["index"] = i
+
+    return merged
 
 def try_merge_nearby_contours(contours,image):
     for c1 in contours:
@@ -556,56 +593,35 @@ def merge_contours(big,small):
             result.append(p)
     return np.array([[p] for p in result],dtype=np.int32)
 
-def are_sorted(contours):
-    for i in range(0,len(contours)-1):
-        if contours[i]["center"][1]>contours[i+1]["center"][1]: return False
-    return True
-
-def get_contour_data(contour, image):
-    data = {}
-    data["empty"] = cv2.contourArea(contour)==0
-    data["convex"] = cv2.isContourConvex(contour)
-    data["rect"] = cv2.boundingRect(contour)
-    x,y,w,h = data["rect"]
-    data["size"] = max(w,h)#float(w+h)/2
-    data["points"] = [(x,y),(x,y+h),(x+w,y+h),(x+w,y)]
-    M = cv2.moments(np.array([[p] for p in data["points"]],dtype=np.int32))
-    data["center"] = (M['m10']/(M['m00']+0.00001), M['m01']/(M['m00']+0.00001))
-    #if the contours are circles instead of squares
-    if not doc_parameters["squares"]:
-        center, radius = cv2.minEnclosingCircle(contour)
-        data["center"] = (int(center[0]),int(center[1]))
-        data["radius"] = int(radius)
-        new_radius = int((1-doc_parameters["selection_circle_padding"])*radius)
-
-        if doc_parameters["debug"]:
-            vis = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-            cv2.ellipse(vis, data["center"], (new_radius, new_radius), 0, 0, 360, (0,0,255), 1)
-            cv2.ellipse(vis, data["center"], (int(radius), int(radius)), 0, 0, 360, (0,255,0), 1)
-            cv2.imshow("Selection Area", vis)
-            cv2.waitKey(1000)
-
-        mask = np.zeros(image.shape,np.uint8)
-        cv2.ellipse(mask, (int(center[0]),int(center[1])), (new_radius, new_radius), 0, 0, 360, 255, -1)
-        data["mean_intensity"] = cv2.mean(image,mask = mask)[0]
-
-    else:
-        b = doc_parameters["selection_box_padding"]/2.0
-        fillarea = np.array([ [[x+b*w,y+b*h]] , [[x+b*w,y+h-b*h]] , [[x+w-b*w,y+h-b*h]] , [[x+w-b*w,y+b*h]] ], dtype=np.int32 )
-        mask = np.zeros(image.shape,np.uint8)
-        cv2.drawContours(mask,[fillarea],0,255,-1)
-        #improve the calculation of the intensity that decides if it is selected or not.
-        data["mean_intensity"] = cv2.mean(image,mask = mask)[0]
-
-    if doc_parameters["debug"]: print data["mean_intensity"]
-
-
-    return data
-
-def are_squared(contours):
+def same_size(contours, image):
+    sizes = [c["radius"]*2 for c in contours]
+    sizes.sort()
+    median_size = sizes[len(sizes)/2]
+    w, h = image.shape[::-1]
+    max_size = min(w,h)
+    for size in sizes:
+        if size >= max_size: 
+            return False
+        if abs(size/float(median_size) - 1.0) > doc_parameters["circle_size_difference"]: 
+            return False
     return True
 
 def are_aligned(contours, threshold):
+    centers = [c["center"][0] for c in contours]
+    centers.sort()
+    median_center = centers[len(centers)/2]
+
+    sizes = [c["radius"] for c in contours]
+    sizes.sort()
+    median_size = sizes[len(sizes)/2]
+
+    for center in centers:
+        difference = abs(median_center-center)
+        percent = difference/float(median_size)
+        if percent > threshold:
+            return False
+    return True
+
     all_points = []
     for c in contours:
         for p in c["points"]:
@@ -627,6 +643,79 @@ def same_distance(contours, threshold):
         if abs(dist(contours[i]["center"],contours[i+1]["center"])-mean)>threshold*mean: return False
 
     return True
+
+def are_circular(contours):
+    for c in contours:
+        x,y,w,h = c["rect"]
+        ratio = float(w)/float(h)
+        if abs(1-ratio) > doc_parameters["circle_ratio_threshold"]:
+            return False
+    return True
+
+
+def debug_contour_detection(contours, image):
+    vis = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+
+    for contour in contours:
+        new_radius = int((1-doc_parameters["selection_circle_padding"])*contour["radius"])
+        cv2.ellipse(vis, contour["center"], (new_radius, new_radius), 0, 0, 360, (0,0,255), 1)
+        cv2.ellipse(vis, contour["center"], (int(contour["radius"]), int(contour["radius"])), 0, 0, 360, (0,255,0), 1)
+
+    cv2.imshow("Selection Area", vis)
+
+def recalculate_intensity(contour, image):
+    if not doc_parameters["squares"]:
+        radius = contour["radius"]
+        center = contour["center"]
+        new_radius = int((1-doc_parameters["selection_circle_padding"])*radius)
+        mask = np.zeros(image.shape,np.uint8)
+        cv2.ellipse(mask, (int(center[0]),int(center[1])), (new_radius, new_radius), 0, 0, 360, 255, -1)
+        contour["mean_intensity"] = cv2.mean(image,mask = mask)[0]
+
+    else:
+        x,y,w,h = contour["rect"]
+        b = doc_parameters["selection_box_padding"]/2.0
+        fillarea = np.array([ [[x+b*w,y+b*h]] , [[x+b*w,y+h-b*h]] , [[x+w-b*w,y+h-b*h]] , [[x+w-b*w,y+b*h]] ], dtype=np.int32 )
+        mask = np.zeros(image.shape,np.uint8)
+        cv2.drawContours(mask,[fillarea],0,255,-1)
+        #improve the calculation of the intensity that decides if it is selected or not.
+        contour["mean_intensity"] = cv2.mean(image,mask = mask)[0]
+
+
+def get_contour_data(contour, image):
+    data = {}
+    data["empty"] = cv2.contourArea(contour)<=3
+    data["convex"] = cv2.isContourConvex(contour)
+    data["rect"] = cv2.boundingRect(contour)
+    x,y,w,h = data["rect"]
+    data["size"] = max(w,h)#float(w+h)/2
+    data["radius"] = math.sqrt(w**2+h**2)/2.0
+    data["points"] = [(x,y),(x,y+h),(x+w,y+h),(x+w,y)]
+    M = cv2.moments(np.array([[p] for p in data["points"]],dtype=np.int32))
+    data["center"] = (M['m10']/(M['m00']+0.00001), M['m01']/(M['m00']+0.00001))
+    #if the contours are circles instead of squares
+    if not doc_parameters["squares"]:
+        center, radius = cv2.minEnclosingCircle(contour)
+        data["center"] = (int(center[0]),int(center[1]))
+        data["radius"] = int(radius)
+        new_radius = int((1-doc_parameters["selection_circle_padding"])*radius)
+
+        mask = np.zeros(image.shape,np.uint8)
+        cv2.ellipse(mask, (int(center[0]),int(center[1])), (new_radius, new_radius), 0, 0, 360, 255, -1)
+        data["mean_intensity"] = cv2.mean(image,mask = mask)[0]
+
+    else:
+        b = doc_parameters["selection_box_padding"]/2.0
+        fillarea = np.array([ [[x+b*w,y+b*h]] , [[x+b*w,y+h-b*h]] , [[x+w-b*w,y+h-b*h]] , [[x+w-b*w,y+b*h]] ], dtype=np.int32 )
+        mask = np.zeros(image.shape,np.uint8)
+        cv2.drawContours(mask,[fillarea],0,255,-1)
+        #improve the calculation of the intensity that decides if it is selected or not.
+        data["mean_intensity"] = cv2.mean(image,mask = mask)[0]
+
+    # if doc_parameters["debug"]: print data["mean_intensity"]
+
+
+    return data
 
 def dist(x,y):
     return math.sqrt( (x[0] - y[0])**2 + (x[1] - y[1])**2 )

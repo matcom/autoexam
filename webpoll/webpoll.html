@@ -66,14 +66,33 @@
 	div.votes-item {
 		position: absolute;
 	}
+
+	div.title {
+		font-size: 36pt;
+		margin-bottom: 100px;
+		text-align: center;
+	}
+
+	div.subtitle {
+		position: absolute;
+		font-size: 24pt;
+		top: 700px;
+		text-align: center;
+		width: 100%;
+	}
 </style>
 
 </head>
 <body>
+<div class="title">
+<img src="/ujc.png" width="900px">
+</div>
 
 <div id="votes-container" style="width: 100%; text-align: center; margin-top: 50px;">
 	<div id="votes-list" style="width: 900px; margin: auto;"></div>
 </div>
+
+ <div class="subtitle">Síguenos en <a href="#">elecciones.uh.cu</a></div>
 
 </body>
 <script>
@@ -81,14 +100,14 @@ $(function () {
 	$list = $('#votes-list');
 
 	function sort_data() {
-		var top = 50;
+		var top = 250;
 		$items = $('.votes-item');
 
 		var sorted_items = _.sortBy($items, function(item, i) {
 			return -$(item).find('.votes-value').data('votes');
 		});
 
-		top = 50;
+		top = 250;
 
 		_.each(sorted_items, function (item) {
 			$(item).animate({'top': top}, 500);
@@ -99,7 +118,7 @@ $(function () {
 	function update_data() {
 		$('.votes-item').attr('updated', 'false');
 
-		var top = 50;
+		var top = 250;
 
 		$.getJSON('/data/', function(data) {
 			var max = _.max(_.pluck(data.people, 'votes'));
