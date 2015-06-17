@@ -35,7 +35,7 @@ class Warning(object):
             else:
                 return "In the question %d the answer %s was recognized as unmarked but it's possible that the user selected it"%(self.question, self.selection)
         elif self.wtype == WarningTypes.MULT_SELECTION:
-            return "The question %d is single selection and it seems to have additional answers marked. The selection is %s"%(self.question, self.selection)
+            return "The question %d is single selection and it has additional answers marked. The selection is %s"%(self.question, self.selection)
         elif self.wtype == WarningTypes.EMPTY_SELECTION:
             return "The question %d is single selection and the scan reported no selection at all."%(self.question)
 

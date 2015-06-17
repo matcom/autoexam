@@ -71,7 +71,7 @@ def main():
     source = ImageSource(args.cameras if args.folder=="" else args.folder, args.time)
     w, h = source.get_size()
     #Set document processing parameters and initialize scanner
-    scanner = TestScanner(w, h, args.exams_file, show_image=True, double_check=True, debug = args.debug, poll = args.poll, squares = not args.poll )
+    scanner = TestScanner(w, h, args.exams_file, show_image=True, double_check=True, debug = args.debug, poll = args.poll)
 
     tests = {}
     #While user does not press the q key
@@ -103,12 +103,15 @@ def main():
                 print "The test '%d' was already scanned."%report.test.id
         #if recognition went wrong print the reasons
         else:
-            # show only the question detection errors and the
-            # errors in the format of the qrcodes
-            for e in [x for x in report.errors
-                        if isinstance(x, QuestionError) or
-                        (isinstance(x, QrcodeError) and x.err_type == QRCodeErrorTypes.FORMAT) or args.debug ]:
-                print e
+            if report.test and report.test.id and report.test.id in tests:
+                print "The test '%d' was already scanned."%report.test.id
+            else:
+                # show only the question detection errors and the
+                # errors in the format of the qrcodes
+                for e in [x for x in report.errors
+                            if isinstance(x, QuestionError) or
+                            (isinstance(x, QrcodeError) and x.err_type == QRCodeErrorTypes.FORMAT) or args.debug ]:
+                    print e
 
     scanner.finalize()
     source.release()

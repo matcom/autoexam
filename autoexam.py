@@ -5,11 +5,14 @@ import os
 import sys
 import argparse
 import shutil
-
+import json
 import gen
-
-from stats import build_stats
+import evaluator as ev
 import webpoll.webpoll as wp
+import simpleui.app as sui
+
+from tabulate import tabulate
+from stats import build_stats
 
 autoexam_source = os.path.dirname(os.path.realpath(__file__))
 
@@ -187,6 +190,15 @@ def error(msg):
     print('')
 
 
+def warn(msg):
+    print('')
+
+    for line in msg.split('\n'):
+        print(" (!) WARNING: " + line)
+
+    print('')
+
+
 def stats(args):
     if not check_project_folder():
         return
@@ -196,6 +208,120 @@ def stats(args):
 
 def webpoll(args):
     wp.run(args)
+
+
+def simpleui(args):
+    sui.run(args)
+
+
+def report(args):
+    if not check_project_folder():
+        return
+
+    base_path = get_base_path(args)
+    result_path = os.path.join(base_path, 'results.json')
+    order_path = os.path.join(base_path, 'order.json')
+
+    columns = ['Id']
+
+    if not os.path.exists(result_path):
+        error("No `results.json` file found. Maybe the test hasn't been graded yet?")
+        return
+
+    with open(result_path) as fp:
+        results = json.load(fp)
+
+    if not 'grades' in results:
+        error("The file `results.json` contains no grading data. Was the test evaluated with a valid `grader.txt` sheet?")
+        return
+
+    if not os.path.exists(order_path):
+        error("No `order.json` file found. Is this a correctly generated test?")
+        return
+
+    with open(order_path) as fp:
+        orders = json.load(fp)
+
+    question_ids = set()
+
+    for _, exam in orders.items():
+        for q in exam['questions']:
+            question_ids.add(q['id'])
+
+    if 'grades' in args.data:
+        columns.append('Grade')
+
+    if 'partials' in args.data:
+        for i in question_ids:
+            columns.append('P{0}'.format(i))
+
+    if 'selection' in args.data:
+        for i in question_ids:
+            columns.append('S{0}'.format(i))
+
+    rows = []
+
+    for i, d in sorted(results['grades'].items(), key=lambda x: int(x[0])):
+        data = [i]
+
+        if 'grades' in args.data:
+            data.append(d['total_grade'])
+
+        if 'partials' in args.data:
+            for qid in question_ids:
+                if str(qid) in d['questions_grades']:
+                    data.append(d['questions_grades'][str(qid)])
+                else:
+                    data.append(None)
+
+        if 'selection' in args.data:
+            questions = {q['id']: q for q in orders[i]['questions']}
+
+            for qid in question_ids:
+                if qid in questions:
+                    data.append(", ".join(str(i+1) for i in sorted(questions[qid]['answers'])))
+                else:
+                    data.append(None)
+
+        rows.append(data)
+
+    print(tabulate(rows, headers=columns, tablefmt=args.format))
+
+
+def get_base_path(args):
+    if args.version:
+        return os.path.join('generated', str(args.version))
+    else:
+        return os.path.join('generated', 'last')
+
+
+def grade(args):
+    if not check_project_folder():
+        return
+
+    base_path = get_base_path(args)
+    grader_path = os.path.join(base_path, 'grader.txt')
+    order_path = os.path.join(base_path, 'order.json')
+    result_path = os.path.join(base_path, 'results.json')
+
+    if os.path.exists(result_path) and not args.force:
+        error('Test already evaluated. Pass --force to ovewrite.')
+        return
+
+    if not os.path.exists(order_path):
+        error('No order.json file found. Cannot evaluate.')
+        return
+
+    if os.path.exists(grader_path):
+        grades = ev.evaluate(grader_path, order_path)
+    else:
+        warn('No grader.txt sheet was found. Will only generate stats.')
+        grades = None
+
+    stats = ev.get_stats(order_path)
+
+    with open(result_path, 'w') as fp:
+        json.dump({"grades": grades, "stats": stats}, fp, indent=4)
 
 
 def main():
@@ -254,6 +380,24 @@ def main():
     webpoll_parser.add_argument('--port', help='The port to run in.', type=int, default=5050)
     webpoll_parser.add_argument('-d', '--debug', help='Run in debug mode.', action='store_true')
     webpoll_parser.set_defaults(func=webpoll)
+
+    simpleui_parser = commands.add_parser('ui', help="Runs the simple web interface.")
+    simpleui_parser.add_argument('--host', help='The host interface to run in.', default='0.0.0.0')
+    simpleui_parser.add_argument('--port', help='The port to run in.', type=int, default=5000)
+    simpleui_parser.add_argument('-d', '--debug', help='Run in debug mode.', action='store_true')
+    simpleui_parser.set_defaults(func=simpleui)
+
+    report_parser = commands.add_parser('report', help="Generates several reports for an evaluated test.")
+    report_parser.add_argument('data', help='The specific report(s) to generate.', nargs='+', choices=['grades', 'selection', 'partials'])
+    report_parser.add_argument('-v', '--version', help='The specific version to report. If not provided then the `last` version is reported.')
+    report_parser.add_argument('-f', '--format', help='The format to print results.', choices=['plain', 'simple', 'grid', 'fancy_grid', 'pipe', 'orgtbl', 'rst', 'mediawiki', 'html', 'latex', 'latex_booktabs', 'tsv'])
+
+    report_parser.set_defaults(func=report)
+
+    grade_parser = commands.add_parser('grade', help="Runs the scanned test through the evaluator.")
+    grade_parser.add_argument('-v', '--version', help="Specific version to grade. If not provided, then the `last` version is graded.")
+    grade_parser.add_argument('-f', '--force', help="Force re-evaluation even if the evaluation already exists. WARNING: This will delete the previous evaluation.", action='store_true')
+    grade_parser.set_defaults(func=grade)
 
     args = parser.parse_args()
     args.func(args)
