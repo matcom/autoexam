@@ -59,5 +59,3 @@ def build_stats(args):
 	for i,v in tags_distribution.items():
 		m, s = mean_and_stdev(v)
 		print("%s\t%.2f" % (i, m))
-
-
