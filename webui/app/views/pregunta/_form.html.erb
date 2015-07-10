@@ -1,7 +1,7 @@
 <%= form_for(@preguntum, :html => {:class => 'form-horizontal'}) do |f| %>
   <% if @preguntum.errors.any? %>
     <div id="error_explanation">
-      <h2><%= pluralize(@preguntum.errors.count, "error") %> prohibited this preguntum from being saved:</h2>
+      <h2><%= pluralize(@preguntum.errors.count, 'error') %> prohibited this preguntum from being saved:</h2>
 
       <ul>
       <% @preguntum.errors.full_messages.each do |msg| %>

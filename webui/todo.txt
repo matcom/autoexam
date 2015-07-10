@@ -16,3 +16,11 @@ TODO
 * [medium] cambiar examan => examen y preguntum por pregunta
 * [high] poder definir orden en los incisos de las preguntas (* en el master es que no se mueve)
 * [high] generar la clave.txt
+
+Puestas por mi:
+* [high] el count de los estudiantes por asignaturas esta mal porque si pones nombre (espacio) grupo se cuenta como 2
+         estudiantes al hacer split
+* [high] te deja agregar una pregunta sin titulo
+* [high] ver el tema de que no este marcado multiple y haya mas de una respuesta marcada como correcta
+* [high] los flash notices
+* [high] no existe la accion update_clave
