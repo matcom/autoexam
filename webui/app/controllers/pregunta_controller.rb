@@ -39,6 +39,7 @@ class PreguntaController < ApplicationController
       opcion = Opcion.new
       opcion.preguntum_id = @preguntum.id
       opcion.right = params[:option_new_check]
+      opcion.fixed = params[:option_new_fixed]
       opcion.titulo = params[:option_new_text]
       opcion.save
       redirect_to @preguntum
@@ -47,6 +48,7 @@ class PreguntaController < ApplicationController
 
     for opcion in @preguntum.opcions
       opcion.right = params["option_#{opcion.id}_check"]
+      opcion.fixed = params["option_#{opcion.id}_fixed"]
       opcion.titulo = params["option_#{opcion.id}_text"]
       opcion.save
     end

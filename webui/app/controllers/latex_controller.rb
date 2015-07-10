@@ -49,6 +49,7 @@ class LatexController < ApplicationController
         #_x* We wouldn't get that far, but is possible.
         string  = "_"
         string += "x" if opcion.right?
+        string += "*" if opcion.fixed?
         string += " "
         string += opcion.titulo
         content << string

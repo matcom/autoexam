@@ -42,18 +42,31 @@
 
   <div class="field control-group">
     <label class="control-label">Opciones</label>
+    <br/>
     <div class="controls">
       <%# TODO: mostrar un warning si no es multiple y hay mas de uno seleccionado%>
-    <% @preguntum.opcions.each do |opcion| %>
-      <label class="checkbox">
-        <%= check_box_tag "option_#{opcion.id}_check", 1, opcion.right %>
-        <%= text_field_tag "option_#{opcion.id}_text", opcion.titulo, :class => :span5 %>
-        <%= link_to 'Destroy', opcion, method: :delete, data: { confirm: 'Are you sure?' }, :class => 'btn btn-mini btn-danger' %>
-      </label>
-    <% end %>
-      <%= check_box_tag :option_new_check, 1, false  %>
-      <%= text_field_tag :option_new_text, '', :class => :span5, :placeholder => 'Texto de la opción' %>
-      <%= f.submit 'Adicionar', :class => 'btn btn-mini btn-success', :name => 'add' %>
+        <table>
+            <tr>
+              <td style="padding-right: 20px">Correcta</td>
+              <td style="padding-right: 20px">Fija</td>
+              <td style="text-align: center">Texto</td>
+              <td></td>
+            </tr>
+          <% @preguntum.opcions.each do |opcion| %>
+            <tr>
+              <td style="text-align: center; padding-right: 20px"><%= check_box_tag "option_#{opcion.id}_check", 1, opcion.right %></td>
+              <td style="text-align: center; padding-right: 20px"><%= check_box_tag "option_#{opcion.id}_fixed", 1, opcion.fixed %></td>
+              <td><%= text_field_tag "option_#{opcion.id}_text", opcion.titulo, :class => :span5 %></td>
+              <td style="padding-left: 20px"><%= link_to 'Destroy', opcion, method: :delete, data: { confirm: 'Are you sure?' }, :class => 'btn btn-mini btn-danger' %></td>
+            </tr>
+          <% end %>
+            <tr>
+              <td style="text-align: center; padding-right: 20px"><%= check_box_tag :option_new_check, 1, false  %></td>
+              <td style="text-align: center; padding-right: 20px"><%= check_box_tag :option_new_fixed, 1, false  %></td>
+              <td><%= text_field_tag :option_new_text, '', :class => :span5, :placeholder => 'Texto de la opción' %></td>
+              <td style="padding-left: 20px"><%= f.submit 'Adicionar', :class => 'btn btn-mini btn-success', :name => 'add' %></td>
+            </tr>
+        </table>
     </div>
   </div>
 

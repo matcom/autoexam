@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140128215458) do
+ActiveRecord::Schema.define(version: 20150710180739) do
 
   create_table "asignaturas", force: true do |t|
     t.string   "nombre_corto"
@@ -72,6 +72,7 @@ ActiveRecord::Schema.define(version: 20140128215458) do
     t.boolean  "right"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.boolean  "fixed"
   end
 
   create_table "pregunta", force: true do |t|

@@ -8,19 +8,22 @@ Leyenda
 TODO
 =============
 * [future] poner etiquetas a nivel de examen (o asociada a la pregunta) y no solo en la asignatura
-* [high] a la hora de definir la pregunta no queda clara cual es la correcta
 * [high] cambiar la seleccion de pregutas por etiquetas en los examenes
 * [high] ver con suilan despues el tema del orden de las etiquetas y el examen master
 * [high] poder definir el orden de cada pregunta en el examen
 * [medium] poner botoncitos para agregar todas, quitar todas, etc. en la generacion del examen
 * [medium] cambiar examan => examen y preguntum por pregunta
-* [high] poder definir orden en los incisos de las preguntas (* en el master es que no se mueve)
 * [high] generar la clave.txt
 
 Puestas por mi:
 * [high] el count de los estudiantes por asignaturas esta mal porque si pones nombre (espacio) grupo se cuenta como 2
          estudiantes al hacer split
-* [high] te deja agregar una pregunta sin titulo
-* [high] ver el tema de que no este marcado multiple y haya mas de una respuesta marcada como correcta
-* [high] los flash notices
+* [medium] te deja agregar una pregunta sin titulo
+* [medium] ver el tema de que no este marcado multiple y haya mas de una respuesta marcada como correcta
+* [low] los flash notices
 * [high] no existe la accion update_clave
+* [low] no entiendo para que es la cantidad en los examenes
+
+HECHAS:
+* [high] a la hora de definir la pregunta no queda clara cual es la correcta
+* [high] poder definir orden en los incisos de las preguntas (* en el master es que no se mueve)
