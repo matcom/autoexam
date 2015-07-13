@@ -4,12 +4,13 @@ class LatexController < ApplicationController
     directory = Rails.root.to_s + "/../generated"
     Dir.mkdir(directory) unless File.exists?(directory)
     directory = directory + "/" + examen.directorio
-    Dir.mkdir(directory) unless File.exists?(directory)
+    system('autoexam init ' + directory) unless File.exists?(directory)
     filename = directory + "/" + filename
     File.open(filename, "w") do |file|
       file.write(content)
     end
     redirect_to edit_examan_path(examen), :notice => "#{filename} generated successfully"
+    return directory
   end
 
   def latex_master
@@ -57,18 +58,8 @@ class LatexController < ApplicationController
       content << ""
     end
 
-    string   = content.join("\n")
-    save_file(examen, "master.txt", string)
-    current_master = '../generated/' + examen.directorio + '/'
-    system('python ../gen.py -c ' + examen.variantes.to_s + ' ' + current_master)
-    versions = Dir.entries(current_master + 'generated/')
-    current_tests = current_master + 'generated/' + versions.sort[-1] + '/'
-    files = Dir.entries(current_tests)
-    results = []
-    files.each do |f|
-      if f.end_with?('.tex')
-        system('cd ' + current_tests + ' && pdflatex ' + f)
-      end
-    end
+    string = content.join("\n")
+    directory = save_file(examen, "master.txt", string)
+    system('cd ' + directory + ' && autoexam gen -c ' + examen.variantes.to_s)
   end
 end
