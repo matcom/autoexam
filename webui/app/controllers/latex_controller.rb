@@ -21,7 +21,7 @@ class LatexController < ApplicationController
     content << "% Blank lines are ignored as well."
     content << ""
     content << "% the number of questions"
-    content << "total: #{examen.pregunta.count}"
+    content << "total: #{examen.cantidad}"
     content << ""
     content << "% the tags that will be used in the test"
     content << "% each tag comes with the minimun number of questions"
@@ -59,6 +59,16 @@ class LatexController < ApplicationController
 
     string   = content.join("\n")
     save_file(examen, "master.txt", string)
-    system('cd ../; python gen.py generated/' + examen.directorio)
+    current_master = '../generated/' + examen.directorio + '/'
+    system('python ../gen.py -c ' + examen.variantes.to_s + ' ' + current_master)
+    versions = Dir.entries(current_master + 'generated/')
+    current_tests = current_master + 'generated/' + versions.sort[-1] + '/'
+    files = Dir.entries(current_tests)
+    results = []
+    files.each do |f|
+      if f.end_with?('.tex')
+        system('cd ' + current_tests + ' && pdflatex ' + f)
+      end
+    end
   end
 end

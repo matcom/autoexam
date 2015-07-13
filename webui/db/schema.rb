@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150710180739) do
+ActiveRecord::Schema.define(version: 20150713040526) do
 
   create_table "asignaturas", force: true do |t|
     t.string   "nombre_corto"
@@ -52,6 +52,7 @@ ActiveRecord::Schema.define(version: 20150710180739) do
     t.datetime "updated_at"
     t.integer  "asignatura_id"
     t.string   "preguntas_por_tema"
+    t.integer  "variantes",          default: 1
   end
 
   create_table "examen_pregunta", force: true do |t|

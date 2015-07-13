@@ -97,6 +97,6 @@ class ExamenController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def examan_params
-      params.require(:examan).permit(:nombre, :etiquetas, :directorio, :cantidad, :asignatura_id)
+      params.require(:examan).permit(:nombre, :etiquetas, :directorio, :cantidad, :asignatura_id, :variantes)
     end
 end

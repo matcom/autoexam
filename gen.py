@@ -360,7 +360,7 @@ def generate_quiz(args=None):
 
     test = set()
     tries = 0
-
+    
     def get_question(tag):
         if tag not in base:
             raise ValueError('Could not fullfill a restriction '
@@ -419,7 +419,7 @@ def generate(n, args):
                                       read().decode('utf8'))
     #sol_template = jinja2.Template(open('templates/solution_template.txt').
     #                               read().decode('utf8'))
-    sol_template = jinja2.Template(open('latex/solution_template.txt').
+    sol_template = jinja2.Template(open('../latex/solution_template.txt').
                                    read().decode('utf8'))
     master_template = jinja2.Template(open(args.master_template).
                                       read().decode('utf8'))
@@ -482,9 +482,9 @@ if __name__ == '__main__':
     args_parser.add_argument('-c', '--tests-count', metavar='N', help="Number of actual tests to generate. If not supplied, only the master file will be generated.", type=int, default=0)
     args_parser.add_argument('-a', '--answers-per-page', help="Number of answer sections to generate per page. By default is 1. It is up to you to ensure all them fit right in your template.", metavar='N', type=int, default=1)
     args_parser.add_argument('-t', '--title', help="Title of the test.", default="")
-    args_parser.add_argument('--answer-template', help="Template for the answers sheets.", default="latex/answer_template.tex")
-    args_parser.add_argument('--master-template', help="Template for the master sheet.", default="latex/master_template.tex")
-    args_parser.add_argument('--text-template', help="Template for the text sheets.", default="latex/text_template.tex")
+    args_parser.add_argument('--answer-template', help="Template for the answers sheets.", default="../latex/answer_template.tex")
+    args_parser.add_argument('--master-template', help="Template for the master sheet.", default="../latex/master_template.tex")
+    args_parser.add_argument('--text-template', help="Template for the text sheets.", default="../latex/text_template.tex")
     args_parser.add_argument('-v', '--questions-value', help="Default value for each question.", metavar='N', type=float, default=1.)
     args_parser.add_argument('--dont-shuffle-tags', help="Disallow shuffling of tags.", action='store_true')
     args_parser.add_argument('--sort-questions', help="After selecting questions, put them in the same order as in the master.", action='store_true')
@@ -497,16 +497,17 @@ if __name__ == '__main__':
     args = args_parser.parse_args()
 
     master_path = args.master
+    print(master_path)
 
     if args.election:
-        args.answer_template = 'latex/election_template.tex'
+        args.answer_template = '../latex/election_template.tex'
         args.sort_questions = True
         args.dont_shuffle_options = True
         args.dont_generate_text = True
         args.dont_generate_master = True
 
     if args.questionnaire:
-        args.answer_template = 'latex/questionnaire_template.tex'
+        args.answer_template = '../latex/questionnaire_template.tex'
         args.sort_questions = True
         args.dont_shuffle_options = True
         args.dont_generate_text = True
