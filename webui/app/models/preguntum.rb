@@ -8,7 +8,13 @@ class Preguntum < ActiveRecord::Base
   end
 
   def self.from_etiqueta(etiqueta)
-    where('etiquetas like ?', '%' + etiqueta + '%')
+    preguntas = self.all
+    result = []
+    preguntas.each do |preg|
+      list = preg.etiquetas.split(',').map { |s| s.strip }
+      result << preg if !list.index(etiqueta).nil?
+    end
+    return result
   end
 
   def self.ordenadas

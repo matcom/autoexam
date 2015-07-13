@@ -21,6 +21,7 @@ restrictions_order = {}
 test_id = 1
 debug = sys.argv.count('-d')
 count = 0
+master_path = ""
 
 VERSION = 1
 
@@ -45,8 +46,8 @@ def parser():
     """
     Lee el archivo master y se parsea cada una de las preguntas.
     """
-    master_path = 'master.txt'
-    master = open(master_path)
+    #master_path = 'master.txt'
+    master = open(master_path + 'master.txt')
     lines = master.readlines()
     master.close()
 
@@ -330,7 +331,7 @@ def qrcode_data(test_id, i, test):
 
 
 def generate_qrcode(i, test):
-    filename = 'generated/v{0}/qrcode-{1}.png'.format(test_id, i)
+    filename = (master_path + 'generated/v{0}/qrcode-{1}.png').format(test_id, i)
 
     f = open(filename, 'w')
     qr = qrcode.QRCode(box_size=10, border=0)
@@ -408,14 +409,17 @@ def generate_quiz(args=None):
 
 def generate(n, args):
     # Guaranteeing reproducibility
-    seed = args.seed or random.randint(1, 2 ** 32)
+    #seed = args.seed or random.randint(1, 2 ** 32)
+    seed = random.randint(1, 2 ** 32)
     random.seed(seed)
 
     text_template = jinja2.Template(open(args.text_template).
                                     read().decode('utf8'))
     answer_template = jinja2.Template(open(args.answer_template).
                                       read().decode('utf8'))
-    sol_template = jinja2.Template(open('templates/solution_template.txt').
+    #sol_template = jinja2.Template(open('templates/solution_template.txt').
+    #                               read().decode('utf8'))
+    sol_template = jinja2.Template(open('latex/solution_template.txt').
                                    read().decode('utf8'))
     master_template = jinja2.Template(open(args.master_template).
                                       read().decode('utf8'))
@@ -428,12 +432,12 @@ def generate(n, args):
     questions = sorted(questions, key=lambda q: q.number)
 
     if not args.dont_generate_master:
-        master_file = open('generated/v{0}/Master.tex'.format(test_id), 'w')
+        master_file = open((master_path + 'generated/v{0}/Master.tex').format(test_id), 'w')
         master_file.write(master_template.render(test=questions,
                           header=args.title).encode('utf8'))
         master_file.close()
 
-    sol_file = open('generated/v{0}/grader.txt'.format(test_id), 'w')
+    sol_file = open((master_path + 'generated/v{0}/grader.txt').format(test_id), 'w')
     sol_file.write(sol_template.render(test=questions,
                    test_id=test_id, questions_value=args.questions_value).encode('utf8'))
     sol_file.close()
@@ -452,7 +456,7 @@ def generate(n, args):
         generate_qrcode(i, test)
 
         if not args.dont_generate_text:
-            text_file = open('generated/v{0}/Test-{1:04}.tex'.format(test_id, i), 'w')
+            text_file = open((master_path + 'generated/v{0}/Test-{1:04}.tex').format(test_id, i), 'w')
 
             text_file.write(text_template.render(
                             test=test, number=i, header=args.title).encode('utf8'))
@@ -461,20 +465,20 @@ def generate(n, args):
         answers.append(dict(test=list(enumerate(test)), number=i, seed=seed, max=max(len(q.options) for q in test)))
 
         if len(answers) == args.answers_per_page or i == n - 1:
-            answer_file = open('generated/v{0}/Answer-{1:04}.tex'.format(test_id, i / args.answers_per_page), 'w')
+            answer_file = open((master_path + 'generated/v{0}/Answer-{1:04}.tex').format(test_id, i / args.answers_per_page), 'w')
             answer_file.write(answer_template.render(answers=answers).encode('utf8'))
             answer_file.close()
             answers = []
 
-    scanresults.dump(order, 'generated/v{0}/order.json'.format(test_id))
+    scanresults.dump(order, (master_path + 'generated/v{0}/order.json').format(test_id))
 
-    with open('generated/v{0}/seed'.format(test_id), 'w') as fp:
+    with open((master_path + 'generated/v{0}/seed').format(test_id), 'w') as fp:
         fp.write(str(seed) + '\n')
 
 
 if __name__ == '__main__':
     args_parser = argparse.ArgumentParser(description="Parses a master file and generates tests.")
-    args_parser.add_argument('master', metavar="PATH", help="Path to the master file that contains the test description.")
+    args_parser.add_argument('master', metavar="PATH", help="Path to the folder where th master file that contains the test description is.")
     args_parser.add_argument('-c', '--tests-count', metavar='N', help="Number of actual tests to generate. If not supplied, only the master file will be generated.", type=int, default=0)
     args_parser.add_argument('-a', '--answers-per-page', help="Number of answer sections to generate per page. By default is 1. It is up to you to ensure all them fit right in your template.", metavar='N', type=int, default=1)
     args_parser.add_argument('-t', '--title', help="Title of the test.", default="")
@@ -492,6 +496,8 @@ if __name__ == '__main__':
 
     args = args_parser.parse_args()
 
+    master_path = args.master
+
     if args.election:
         args.answer_template = 'latex/election_template.tex'
         args.sort_questions = True
@@ -506,15 +512,15 @@ if __name__ == '__main__':
         args.dont_generate_text = True
         args.dont_generate_master = True
 
-    if not os.path.exists('generated'):
-        os.mkdir('generated')
+    if not os.path.exists(master_path + 'generated'):
+        os.mkdir(master_path + 'generated')
 
-    for d in os.listdir('generated'):
+    for d in os.listdir(master_path + 'generated'):
         num = int(d[1:])
         if num >= test_id:
             test_id = num + 1
 
-    os.mkdir('generated/v{0}'.format(test_id))
+    os.mkdir(master_path + 'generated/v{0}'.format(test_id))
 
     parser()
     generate(args.tests_count, args)

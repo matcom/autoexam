@@ -26,9 +26,9 @@
                   <%= check_box_tag "opcion_#{clave_opcion.id}_correcta", 1, clave_opcion.is_correct? %>
                   <%= opcion.titulo %>
                 </div>
-                <div class="span2">
-                  <%= number_field_tag "opcion_#{clave_opcion.id}_bien", clave_opcion.puntos_bien, :class => :span1 %>
-                  <%= number_field_tag "opcion_#{clave_opcion.id}_mal", clave_opcion.puntos_mal, :class => :span1 %>
+                <div class="span5">
+                  Correcta: <%= number_field_tag "opcion_#{clave_opcion.id}_bien", clave_opcion.puntos_bien, :class => :span1 %>
+                  Incorrecta: <%= number_field_tag "opcion_#{clave_opcion.id}_mal", clave_opcion.puntos_mal, :class => :span1 %>
                 </div>
               </div>
             </label>

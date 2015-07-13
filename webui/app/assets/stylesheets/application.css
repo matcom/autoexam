@@ -11,3 +11,5 @@
  *= require_self
  *= require_tree .
  */
+
+#notice { font-size: 20px }

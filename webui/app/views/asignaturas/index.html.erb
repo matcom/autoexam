@@ -22,7 +22,7 @@
     <td> <%= etiquetas_de(asignatura) %> </td>
     <td> <%= asignatura.pregunta.count %> </td>
     <td> <%= asignatura.examen.count %> </td>
-    <td> <%= asignatura.listado.estudiantes.split.length rescue 0 %> </td>
+    <td> <%= asignatura.listado.estudiantes.split(',').length rescue 0 %> </td>
     <td>
       <%= link_to 'Detalles', asignatura, :class => 'btn btn-mini btn-info' %>
       <%= link_to 'Editar', edit_asignatura_path(asignatura), :class => 'btn btn-mini btn-success' %>
