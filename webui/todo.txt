@@ -7,18 +7,27 @@ Leyenda
 
 TODO
 =============
-* [future] poner etiquetas a nivel de examen (o asociada a la pregunta) y no solo en la asignatura
 * [high] cambiar la seleccion de pregutas por etiquetas en los examenes
-* [high] ver con suilan despues el tema del orden de las etiquetas y el examen master
+* [high] ver con suilan despues el tema del orden de las etiquetas y el master
 * [high] poder definir el orden de cada pregunta en el examen
-* [medium] poner botoncitos para agregar todas, quitar todas, etc. en la generacion del examen
+* [high] validar (o preguntarle a suilan que hacer cuando) haya mas preguntas para poner que preguntas hechas 
+* [high] poner el video en la pagina web (usando websockets o lo que sea)
+* [high] que sea portable, estudiar todo lo que se puede portabilizar (pytho, ruby, rails, browser, etc.)
+* [high] que pinche portable en windows 
+* [high] hacer que autoexam no guarde datos ningunos. que trabaje con sessiones offline
+* [high] que los datos viajen encriptados (https)
 
-Puestas por mi:
+* [medium] poner botoncitos para agregar todas, quitar todas, etc. en la generacion del examen
 * [medium] ver el tema de que no este marcado multiple y haya mas de una respuesta marcada como correcta
+* [medium] dar un warning si no se puede satisfacer la cantidad minima de preguntas de un tag determinado 
+* [medium] ponerle versiones al master (dentro de los comentarios o no)
+
 * [low] los flash notices
-* [medium] dar un warning si no se puede satisfacer la cantidad minima de preguntas de un tag determinado
+
+* [future] poner etiquetas a nivel de examen (o asociada a la pregunta) y no solo en la asignatura
 
 HECHAS:
+=============
 * [high] a la hora de definir la pregunta no queda clara cual es la correcta
 * [high] poder definir orden en los incisos de las preguntas (* en el master es que no se mueve)
 * [high] el count de los estudiantes por asignaturas esta mal porque si pones nombre (espacio) grupo se cuenta como 2
@@ -29,3 +38,4 @@ HECHAS:
 * [high] crear la clave
 * [high] generar la clave.txt
 * [medium] cambiar examan => examen y preguntum por pregunta
+* [high] poder definir el orden de cada inciso 

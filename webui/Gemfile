@@ -1,4 +1,6 @@
-source 'file:///media/laila/MARIO_64/rubygems/'
+source 'https://rubygems.org/'
+#source 'file:///home/pqr/work/rubygems/'
+#source 'file:///media/laila/MARIO_64/rubygems/'
 
 gem 'rails', '4.1.8'
 gem 'sqlite3'
