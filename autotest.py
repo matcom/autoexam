@@ -23,7 +23,7 @@ doc_parameters = {
     #TODO try to recode this to use percent and not pixel units as they are now
     "qrcode_width": 100, #qrcode final width in pixels after perspective transformation
     "margin" : 60, #margin used to crop image after the rotation rectification
-    "work_size": 500, #resolution of the smaller side of the image after rectification, like saying 1000p
+    "work_size": 800, #resolution of the smaller side of the image after rectification, like saying 1000p
 
     #---------------------------------------------REMOVE ALL OF THIS---------------------------------------------
     "poll": False, #if we are scanning a poll or not
@@ -507,19 +507,29 @@ def get_contours(image, total, question):
         return False,[]
 
     #if there are more contours than expected try merge them
-    contours = merge_contours_kmeans(contours, total, image)
+    if len(contours)>total:
+        contours = merge_contours_kmeans(contours, total, image)
+
+    if len(contours)>1:
+        if not same_size(contours, image):
+            report.errors.append(QuestionError(question,"The circles don't have the same size or are too big"))
+        else:
+            mean_rad = 0
+            for c in contours:
+                mean_rad+=c["radius"]
+            mean_rad=mean_rad/float(len(contours))
+            for c in contours:
+                c["radius"] = mean_rad
+                recalculate_intensity(c,image)
 
     if len(contours)!= total:
         report.errors.append(QuestionError(question,"The number of circles do not match"))
-    if not are_circular(contours):
+    if not doc_parameters["squares"] and not are_circular(contours):
         report.errors.append(QuestionError(question,"All the circles don't have the correct shape"))
 
     if len(contours)>1:
         if not same_distance(contours,doc_parameters["distance_threshold"]):
             report.errors.append(QuestionError(question,"All the circles are not within the same distance"))
-
-        if not same_size(contours, image):
-            report.errors.append(QuestionError(question,"The circles don't have the same size or are too big"))
 
         if not are_aligned(contours, doc_parameters["circle_aligment_percent"]):
             report.errors.append(QuestionError(question,"All the boxes are not aligned"))
@@ -543,7 +553,7 @@ def merge_contours_kmeans(contours, centroids, image):
     points = np.float32([p["center"] for p in contours])
     # define criteria and apply kmeans()
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 1.0)
-    compactness, labels, centers = cv2.kmeans(points,centroids,criteria,10,cv2.KMEANS_RANDOM_CENTERS)
+    compactness, labels, centers = cv2.kmeans(points,centroids,criteria,20,cv2.KMEANS_PP_CENTERS)
     groups = {}
     for c in xrange(len(points)):
         label = int(labels[c])
@@ -653,13 +663,33 @@ def debug_contour_detection(contours, image):
 
     cv2.imshow("Selection Area", vis)
 
+def recalculate_intensity(contour, image):
+    if not doc_parameters["squares"]:
+        radius = contour["radius"]
+        center = contour["center"]
+        new_radius = int((1-doc_parameters["selection_circle_padding"])*radius)
+        mask = np.zeros(image.shape,np.uint8)
+        cv2.ellipse(mask, (int(center[0]),int(center[1])), (new_radius, new_radius), 0, 0, 360, 255, -1)
+        contour["mean_intensity"] = cv2.mean(image,mask = mask)[0]
+
+    else:
+        x,y,w,h = contour["rect"]
+        b = doc_parameters["selection_box_padding"]/2.0
+        fillarea = np.array([ [[x+b*w,y+b*h]] , [[x+b*w,y+h-b*h]] , [[x+w-b*w,y+h-b*h]] , [[x+w-b*w,y+b*h]] ], dtype=np.int32 )
+        mask = np.zeros(image.shape,np.uint8)
+        cv2.drawContours(mask,[fillarea],0,255,-1)
+        #improve the calculation of the intensity that decides if it is selected or not.
+        contour["mean_intensity"] = cv2.mean(image,mask = mask)[0]
+
+
 def get_contour_data(contour, image):
     data = {}
-    data["empty"] = cv2.contourArea(contour)==0
+    data["empty"] = cv2.contourArea(contour)<=3
     data["convex"] = cv2.isContourConvex(contour)
     data["rect"] = cv2.boundingRect(contour)
     x,y,w,h = data["rect"]
     data["size"] = max(w,h)#float(w+h)/2
+    data["radius"] = math.sqrt(w**2+h**2)/2.0
     data["points"] = [(x,y),(x,y+h),(x+w,y+h),(x+w,y)]
     M = cv2.moments(np.array([[p] for p in data["points"]],dtype=np.int32))
     data["center"] = (M['m10']/(M['m00']+0.00001), M['m01']/(M['m00']+0.00001))
