@@ -12,7 +12,6 @@ TODO
 * [high] ver con suilan despues el tema del orden de las etiquetas y el examen master
 * [high] poder definir el orden de cada pregunta en el examen
 * [medium] poner botoncitos para agregar todas, quitar todas, etc. en la generacion del examen
-* [medium] cambiar examan => examen y preguntum por pregunta
 
 Puestas por mi:
 * [medium] ver el tema de que no este marcado multiple y haya mas de una respuesta marcada como correcta
@@ -29,3 +28,4 @@ HECHAS:
 * [high] no existe la accion update_clave
 * [high] crear la clave
 * [high] generar la clave.txt
+* [medium] cambiar examan => examen y preguntum por pregunta
