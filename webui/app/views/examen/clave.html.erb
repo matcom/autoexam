@@ -4,11 +4,11 @@
 
 <h1> Definir clave </h1>
 
-<%= form_tag update_clave_path do  %>
+<%= form_tag update_clave_path(:examan => @examan) do  %>
 <div class="accordion" id="accordion">
   <% number = 0 %>
   <% for pregunta in @examan.pregunta.ordenadas %>
-    <% clave_pregunta = @examan.clave(pregunta)%>
+    <% clave_pregunta = @examan.clave(pregunta) %>
     <% number += 1%>
     <div class="accordion-group">
       <div class="accordion-heading">
@@ -23,12 +23,13 @@
             <label class="checkbox">
               <div class="row">
                 <div class="span7">
-                  <%= check_box_tag "opcion_#{clave_opcion.id}_correcta", 1, clave_opcion.is_correct? %>
+                  <%= check_box_tag "opcion_#{clave_opcion.id}_correcta", 1, clave_opcion.is_correct?, { 'disabled' => true } %>
                   <%= opcion.titulo %>
                 </div>
                 <div class="span5">
-                  Correcta: <%= number_field_tag "opcion_#{clave_opcion.id}_bien", clave_opcion.puntos_bien, :class => :span1 %>
-                  Incorrecta: <%= number_field_tag "opcion_#{clave_opcion.id}_mal", clave_opcion.puntos_mal, :class => :span1 %>
+                  Marcada: <%= number_field_tag "opcion_#{clave_opcion.id}_bien", clave_opcion.puntos_bien.round(2), :style => "width: 50px; margin-left: 20px" %>
+                  <br/>
+                  No Marcada: <%= number_field_tag "opcion_#{clave_opcion.id}_mal", clave_opcion.puntos_mal.round(2), :style => "width: 50px" %>
                 </div>
               </div>
             </label>

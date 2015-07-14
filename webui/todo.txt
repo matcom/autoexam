@@ -20,7 +20,6 @@ Puestas por mi:
 * [medium] ver el tema de que no este marcado multiple y haya mas de una respuesta marcada como correcta
 * [low] los flash notices
 * [high] no existe la accion update_clave
-* [low] no entiendo para que es la cantidad en los examenes
 * [high] crear la clave
 * [medium] dar un warning si no se puede satisfacer la cantidad minima de preguntas de un tag determinado
 
@@ -29,3 +28,4 @@ HECHAS:
 * [high] poder definir orden en los incisos de las preguntas (* en el master es que no se mueve)
 * [high] el count de los estudiantes por asignaturas esta mal porque si pones nombre (espacio) grupo se cuenta como 2
          estudiantes al hacer split
+* [low] no entiendo para que es la cantidad en los examenes

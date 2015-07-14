@@ -72,14 +72,14 @@
                   <% first = false %>
                   <% count = 0 %>
                   <% for pregunta in Preguntum.from_etiqueta(etiqueta)%>
-                    <% unless hash[pregunta.id] %>
+                    <% #unless hash[pregunta.id] %>
                       <% count += 1%>
                       <label class="checkbox">
                         <%= check_box_tag "pregunta_#{pregunta.id}", 1, @examan.pregunta.include?(pregunta) %> <%= pregunta.titulo %>
                       </label>
                     <% end %>
                     <% hash[pregunta.id] = true %>
-                  <% end %>
+                  <% #end %>
                   <% if count == 0 %>
                     <i>NO HAY PREGUNTAS DE ESTA ETIQUETA</i> <br>
                   <% end %>

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150713040526) do
+ActiveRecord::Schema.define(version: 20150713194601) do
 
   create_table "asignaturas", force: true do |t|
     t.string   "nombre_corto"
@@ -26,8 +26,8 @@ ActiveRecord::Schema.define(version: 20150713040526) do
     t.integer  "opcion_id"
     t.integer  "clave_preguntum_id"
     t.boolean  "correcta"
-    t.integer  "puntos_bien"
-    t.integer  "puntos_mal"
+    t.decimal  "puntos_bien"
+    t.decimal  "puntos_mal"
     t.datetime "created_at"
     t.datetime "updated_at"
   end

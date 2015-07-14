@@ -86,7 +86,52 @@ class ExamenController < ApplicationController
   end
 
   def update_clave
-    redirect_to root_path
+    examan = Examan.find(params[:examan])
+    preguntas = examan.pregunta.ordenadas
+    content = []
+    index = 1
+    preguntas.each do |pregunta|
+      number = index.to_s
+      number += '*' if pregunta.multiple  
+      content << number
+      index += 1
+      content << "total: #{pregunta.opcions.count}"
+      clave_pregunta = examan.clave(pregunta)
+      minimo = params["minimo_#{pregunta.id}"].to_i
+      clave_pregunta.minimo = minimo
+      maximo = params["maximo_#{pregunta.id}"].to_i
+      clave_pregunta.maximo = maximo
+      opciones = ""
+      pregunta.opcions.each do |opc|
+        clave_opcion = clave_pregunta.clave(opc)
+        clave_opcion.puntos_bien = params["opcion_#{clave_opcion.id}_bien"].to_f
+        clave_opcion.puntos_mal = params["opcion_#{clave_opcion.id}_mal"].to_f
+        opciones = opciones + clave_opcion.puntos_bien.to_s + ':' + 
+                   clave_opcion.puntos_mal.to_s + ' '
+        clave_opcion.save
+      end
+      content << opciones
+      content << ''
+      clave_pregunta.save
+    end
+    result = save_grader(examan, content)
+    redirect_to clave_path(examan, :notice => result)
+  end
+
+  def save_grader(examan, content)
+    directory = Rails.root.to_s + '/../generated/' + examan.directorio
+    return 'Debe crear primero el examen.' if !File.exists?(directory) 
+    directory += '/generated/last'
+    grader = File.open(directory + '/grader.txt', 'r')
+    version = grader.readline
+    grader.close
+    grader = File.open(directory + '/grader.txt', 'w')
+    content.insert(0, version)
+    content.insert(1, '')
+    content = content.join("\n")
+    grader.write(content)
+    grader.close
+    return 'La clave fue actualizada.'
   end
 
   private
