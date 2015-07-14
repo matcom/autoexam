@@ -21,7 +21,7 @@
   <div class="field control-group">
     <%= f.label :etiquetas, :class => 'control-label' %>
     <div class="controls">
-      <% for etiq in @asignatura.listado_de_etiquetas %>
+      <% @asignatura.listado_de_etiquetas.each do |etiq| %>
         <%= check_box_tag "etiqueta_#{etiq}", 1, @preguntum.listado_de_etiquetas.include?(etiq) %> <%= etiq %> &nbsp; &nbsp;
       <% end %>
     </div>
@@ -29,6 +29,6 @@
 
   <div class="form-actions">
     <%= f.hidden_field :asignatura_id %>
-    <%= f.submit %>
+    <%= f.submit 'Crear Pregunta' %>
   </div>
 <% end %>

@@ -1,5 +1,5 @@
 GEM
-  remote: file:/media/mario/MARIO_64/rubygems/
+  remote: file:/media/laila/MARIO_64/rubygems/
   specs:
     actionmailer (4.1.8)
       actionpack (= 4.1.8)
@@ -36,7 +36,7 @@ GEM
     binding_of_caller (0.7.2)
       debug_inspector (>= 0.0.1)
     builder (3.2.2)
-    coderay (1.1.0)
+    coderay (1.0.9)
     coffee-rails (4.0.1)
       coffee-script (>= 2.2.0)
       railties (>= 4.0.0, < 5.0)

@@ -13,14 +13,10 @@ TODO
 * [high] poder definir el orden de cada pregunta en el examen
 * [medium] poner botoncitos para agregar todas, quitar todas, etc. en la generacion del examen
 * [medium] cambiar examan => examen y preguntum por pregunta
-* [high] generar la clave.txt
 
 Puestas por mi:
-* [medium] te deja agregar una pregunta sin titulo
 * [medium] ver el tema de que no este marcado multiple y haya mas de una respuesta marcada como correcta
 * [low] los flash notices
-* [high] no existe la accion update_clave
-* [high] crear la clave
 * [medium] dar un warning si no se puede satisfacer la cantidad minima de preguntas de un tag determinado
 
 HECHAS:
@@ -29,3 +25,7 @@ HECHAS:
 * [high] el count de los estudiantes por asignaturas esta mal porque si pones nombre (espacio) grupo se cuenta como 2
          estudiantes al hacer split
 * [low] no entiendo para que es la cantidad en los examenes
+* [medium] te deja agregar una pregunta sin titulo
+* [high] no existe la accion update_clave
+* [high] crear la clave
+* [high] generar la clave.txt

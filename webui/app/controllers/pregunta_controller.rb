@@ -28,6 +28,7 @@ class PreguntaController < ApplicationController
         format.html { redirect_to @preguntum, notice: 'Preguntum was successfully created.' }
         format.json { render action: 'show', status: :created, location: @preguntum }
       else
+        @asignatura = @preguntum.asignatura
         format.html { render action: 'new' }
         format.json { render json: @preguntum.errors, status: :unprocessable_entity }
       end

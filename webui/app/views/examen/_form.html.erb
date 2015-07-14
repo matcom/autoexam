@@ -26,7 +26,7 @@
   </div>
 
   <div class="field control-group">
-    <%= f.label :cantidad, :class => 'control-label' %>
+    <%= f.label 'Cantidad de Preguntas', :class => 'control-label' %>
     <div class="controls">
       <%= f.number_field :cantidad %>
     </div>
@@ -95,7 +95,7 @@
 
   <div class="form-actions">
     <%= f.hidden_field :asignatura_id %>
-    <%= f.submit %>
+    <%= f.submit 'Crear Examen' %>
   </div>
 
 <% end %>

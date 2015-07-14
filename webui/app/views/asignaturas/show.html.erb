@@ -47,8 +47,9 @@
         <tr>
           <td>
             <b> <%= link_to examan.nombre, edit_examan_path(examan) %> </b> <br>
-            Preguntas: <span><%= examan.pregunta.count %></span>, &nbsp;
-            A Generar: <span><%= examan.cantidad %></span> <br>
+            Total de Preguntas: <span><%= examan.pregunta.count %></span>, &nbsp;
+            Preguntas por Examen: <span><%= examan.cantidad %></span>, <br>
+            Variantes a Generar: <span> <%= examan.variantes %> </span> &nbsp
             <%= etiquetas_de(examan) %>
           </td>
           <td>
