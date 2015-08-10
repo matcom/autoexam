@@ -40,22 +40,22 @@ def dump_project(proj, path):
 
 
 def load_project(path):
-    proj = json.load(path)
-    # loading project
-    proj = Project(*proj)
-    # loading tags
-    for i,t in enumerate(proj.tags):
-        proj.tags[i] = Tag(*t)
-    # loading questions
-    for i,q in enumerate(proj.tags):
-        question = Question(*q)
-        proj.questions[i] = question
-        # loading answers
-        for j,a in enumerate(question.answers):
-            question.answers[j] = Answer(*a)
-    return proj
+    with open(path, 'r') as fp:
+        proj = json.load(fp)
+        # loading project
+        proj = Project(*proj)            
 
-
+        # loading tags
+        for i,t in enumerate(proj.tags):
+            proj.tags[i] = Tag(*t)
+        # loading questions
+        for i,q in enumerate(proj.questions):
+            question = Question(*q)
+            proj.questions[i] = question
+            # loading answers
+            for j,a in enumerate(question.answers):
+                question.answers[j] = Answer(*a)
+        return proj
 
 def test():
     t1 = Tag('t1', 3)
@@ -81,7 +81,3 @@ def test():
 
 if __name__ == '__main__':
     test()
-
-
-
-

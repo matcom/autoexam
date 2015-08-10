@@ -7,7 +7,9 @@ autoexam api
 
 import os, subprocess, random
 
-autoexam = 'python autoexam.py'
+master = 'master.txt'
+autoexam = 'autoexam'
+project_path = None
 
 
 def get_flag(kwargs, flag):
@@ -19,11 +21,27 @@ def get_flag(kwargs, flag):
 def get_value(kwargs, field, default=None):
     value = kwargs.get(field, default)
     if value != None:
-        return '--' + flag.replace('_', '-') + ' ' + str(value)
+        return '--' + field.replace('_', '-') + ' ' + str(value)
     return ''
 
+def save_master(master_text):
+    path = os.path.join(project_path, master)
+    with open(path, 'w') as fp:
+        fp.write(master_text)
 
-def init(self, name, folder='.', template='', **kwargs):
+def run(command):
+    current_path = os.getcwd()
+    os.chdir(project_path)
+    value = os.system(command)
+    os.chdir(current_path)
+    return value
+
+def set_project_path(path):
+    global project_path
+    project_path = path
+
+
+def init(name, folder='.', template='', **kwargs):
     """
     kwargs:
     =======
@@ -32,21 +50,20 @@ def init(self, name, folder='.', template='', **kwargs):
     @questionnaire: (...)
     """
 
-    folder = get_value(kwargs, 'folder', '.')
+    folder = '-f "%s"'%folder
+    # folder = get_value(kwargs, 'folder', '.')    
 
-    election = s(kwargs, 'election')
+    election = get_flag(kwargs, 'election')
     questionnaire = get_flag(kwargs, 'questionnaire')
 
-    if not os.path.isdir(folder):
-        raise AttributeError('"%s" is not a directory')
-
-    params = [autoexam, 'init', folder, election, questionnaire, name]
+    # params = [autoexam, 'init', folder, election, questionnaire, '"%s"'%name]
+    params = [autoexam, 'init', folder, '"%s"'%name]
 
     cmd = ' '.join(params)
-    return subprocess.wait(cmd)
+    return os.system(cmd)
 
 
-def gen(self, **kwargs):
+def gen(**kwargs):
     """
     kwargs:
     =======
@@ -67,7 +84,7 @@ def gen(self, **kwargs):
     @dont_generate_master: (...)
     """
 
-    seed = get_value(kwargs, 'seed', random.random())
+    seed = get_value(kwargs, 'seed', random.randint(0, 2**64 - 1))
     tests_count = get_value(kwargs, 'tests_count', 1)
     answers_per_page = get_value(kwargs, 'answers_per_page', 1)
     title = get_value(kwargs, 'title')
@@ -76,13 +93,13 @@ def gen(self, **kwargs):
     text_template = get_value(kwargs, 'text_template')
     questions_value = get_value(kwargs, 'questions_value')
 
-    dont_shuffle_tags = get_flag(kwargs, dont_shuffle_tags)
-    sort_questions = get_flag(kwargs, sort_questions)
-    dont_shuffle_options = get_flag(kwargs, dont_shuffle_options)
-    dont_generate_text = get_flag(kwargs, dont_generate_text)
-    election = get_flag(kwargs, election)
-    questionnaire = get_flag(kwargs, questionnaire)
-    dont_generate_master = get_flag(kwargs, dont_generate_master)
+    dont_shuffle_tags = get_flag(kwargs, 'dont_shuffle_tags')
+    sort_questions = get_flag(kwargs, 'sort_questions')
+    dont_shuffle_options = get_flag(kwargs, 'dont_shuffle_options')
+    dont_generate_text = get_flag(kwargs, 'dont_generate_text')
+    election = get_flag(kwargs, 'election')
+    questionnaire = get_flag(kwargs, 'questionnaire')
+    dont_generate_master = get_flag(kwargs, 'dont_generate_master')
 
     params = [autoexam, 'gen', seed, tests_count, answers_per_page,
     title, answer_template, master_template, text_template,
@@ -90,4 +107,4 @@ def gen(self, **kwargs):
     dont_generate_text, election, questionnaire, dont_generate_master]
 
     cmd = ' '.join(params)
-    return subprocess.wait(cmd)
+    return run(cmd)

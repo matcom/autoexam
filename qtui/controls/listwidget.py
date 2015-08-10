@@ -1,10 +1,15 @@
-from __future__ import print_function
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
-DEL = 16777223
+
+REMOVE_KEYS = (Qt.Key_Backspace, Qt.Key_Delete)
+
 
 class ListWidget(QListWidget):
+    rowAdded = pyqtSignal([str]) # name
+    rowChanged = pyqtSignal([int, str]) # index, name
+    rowRemoved = pyqtSignal([int]) # index
+
     def __init__(self, parent=None):
         super(ListWidget, self).__init__(parent)
         self.doubleClicked.connect(self.itemDoubleClicked)
@@ -13,13 +18,16 @@ class ListWidget(QListWidget):
         self.setDragDropMode(QAbstractItemView.InternalMove)
         self.item_clicked = False
         self.num = 1
+        self.questions = []
 
     def addCustomItem(self):
         item = QListWidgetItem()
         item.setText("")
         item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsDragEnabled | Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
         self.insertItem(self.count(), item)
-        item.setText("Question %d" % self.num)
+        question_id = "Question %d" % self.num
+        self.rowAdded.emit(question_id)
+        item.setText(question_id)
         self.num += 1
         return item
 
@@ -29,17 +37,19 @@ class ListWidget(QListWidget):
     def verifyItem(self, item):
         text = item.text()
         row = self.row(item)
-        # print("editing", item.text(), "at", row)
         if not text:
             # item cannot be empty
             self.takeItem(row)
+            self.rowRemoved.emit(row)
             return
         for i in range(self.count()):
             other = self.item(i)
             if i != row and text == other.text():
                 # item names must be unique
                 self.takeItem(row)
+                self.rowRemoved.emit(row)
                 return
+        self.rowChanged.emit(row, text)
 
     def mouseDoubleClickEvent(self, event):
         super(ListWidget, self).mouseDoubleClickEvent(event)
@@ -50,10 +60,10 @@ class ListWidget(QListWidget):
 
     def keyPressEvent(self, event):
         super(ListWidget, self).keyPressEvent(event)
-        print(event.key(), QKeySequence.Delete)
-        if event.key() == DEL:
-            print("item %d will be deleted" % self.currentRow())
-            self.takeItem(self.currentRow())
+        if event.key() in REMOVE_KEYS:
+            index = self.currentRow()
+            self.takeItem(index)
+            self.rowRemoved.emit(index)
 
 
 if __name__ == '__main__':

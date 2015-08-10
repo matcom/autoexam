@@ -25,7 +25,7 @@ total: {{ project.total_questions }}
 
 {% for question in project.questions %}
 ({{ question.id }})
-{% for tag in question.tags %}{{ '@' + tag.name }} {% endfor %}
+{% for tag_name in question.tag_names %}{{ '@' + tag_name }} {% endfor %}
 {{ question.text }}
 {% for answer in question.answers %}
 {{ ('_x' if answer.valid else '_') + ('*' if answer.fixed_position else '') }} {{ answer.text }}

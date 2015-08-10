@@ -22,21 +22,21 @@
      <item>
       <layout class="QGridLayout" name="gridLayout">
        <item row="1" column="0">
-        <widget class="QCheckBox" name="checkBox_2">
+        <widget class="QCheckBox" name="sortQuestionCheck">
          <property name="text">
-          <string>Orden aleatorio entre preguntas</string>
+          <string>Ordenar preguntas segun etiquetas</string>
          </property>
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QCheckBox" name="checkBox_3">
+        <widget class="QCheckBox" name="randItemCheck">
          <property name="text">
           <string>Orden aleatorio entre incisos</string>
          </property>
         </widget>
        </item>
        <item row="0" column="0">
-        <widget class="QCheckBox" name="checkBox">
+        <widget class="QCheckBox" name="randTagCheck">
          <property name="text">
           <string>Orden aleatorio entre categorías</string>
          </property>
@@ -78,7 +78,7 @@
        <item>
         <layout class="QGridLayout" name="gridLayout_2">
          <item row="2" column="1">
-          <widget class="QPushButton" name="pushButton_2">
+          <widget class="QPushButton" name="generateBtn">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -106,28 +106,28 @@
          <item row="0" column="0" colspan="2">
           <layout class="QHBoxLayout" name="horizontalLayout2">
            <item>
-             <widget class="QLabel" name="label_2">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>Cantidad de temarios:</string>
-              </property>
-             </widget>
-          </item>
-          <item>
-           <widget class="QSpinBox" name="spinBox">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-           </widget>
-         </item>
+            <widget class="QLabel" name="label_2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Cantidad de temarios:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="spinBox">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
           </layout>
          </item>
          <item row="1" column="1">
@@ -182,16 +182,6 @@
     </spacer>
    </item>
   </layout>
-  <zorder>pushButton_2</zorder>
-  <zorder>spinBox</zorder>
-  <zorder>label_2</zorder>
-  <zorder>checkBox_3</zorder>
-  <zorder>checkBox_2</zorder>
-  <zorder>checkBox</zorder>
-  <zorder>checkBox</zorder>
-  <zorder>horizontalSpacer</zorder>
-  <zorder>verticalSpacer</zorder>
-  <zorder>horizontalSpacer_2</zorder>
   <zorder>verticalSpacer_2</zorder>
  </widget>
  <resources/>

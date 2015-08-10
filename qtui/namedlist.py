@@ -1,3 +1,6 @@
+#! /usr/bin/python
+#-*-coding: utf8-*-
+
 
 def namedlist(class_name, fields):
     class temp(list):
@@ -14,8 +17,7 @@ def namedlist(class_name, fields):
             self[self._indexes[name]] = value
 
         def __repr__(self):
-            return "%s(%s)" % (class_name, ', '.join('%s=%s'%(f,v) for f,v in zip(fields, self)))
+            return "%s(%s)" % (class_name, ', '.join('%s=%s'%(f,repr(v)) for f,v in zip(fields, self)))
 
     temp.__name__ = class_name
-    # temp.__doc__ = "%s(%s)" % (class_name, ', '.join(fields))
     return temp
