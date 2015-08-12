@@ -43,7 +43,7 @@ def load_project(path):
     with open(path, 'r') as fp:
         proj = json.load(fp)
         # loading project
-        proj = Project(*proj)            
+        proj = Project(*proj)
 
         # loading tags
         for i,t in enumerate(proj.tags):

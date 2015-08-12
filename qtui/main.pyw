@@ -1,16 +1,17 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
+
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4 import uic
 from exam_wizard import ExamWizard
-from os import mkdir, environ, chdir
-from os import system as run
+from os import mkdir, environ
 from os.path import join, exists, abspath
-import api, jinja2
+import api
 
 DEFAULT_PROJECT_FILENAME = '.autoexam_project'
 DEFAULT_PROJECT_PATH = join(environ['HOME'], 'autoexam_projects')
 DEFAULT_PROJECT_FOLDER_NAME = 'Project %d'
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -41,7 +42,6 @@ class MainWindow(QMainWindow):
         finish_button = page.button(QWizard.FinishButton)
         finish_button.clicked.connect(lambda: self.ui.tabWidget.removeTab(self.ui.tabWidget.currentIndex()))
 
-
     def newExam(self):
         directory = abspath(str(self.setExistingDirectory()))
         if directory:
@@ -49,10 +49,10 @@ class MainWindow(QMainWindow):
 
             project_count = 1
 
-            while exists(join(directory, DEFAULT_PROJECT_FOLDER_NAME%project_count)):
+            while exists(join(directory, DEFAULT_PROJECT_FOLDER_NAME % project_count)):
                 project_count += 1
 
-            name = DEFAULT_PROJECT_FOLDER_NAME%project_count
+            name = DEFAULT_PROJECT_FOLDER_NAME % project_count
 
             __project_path__ = join(directory, name)
 
@@ -63,13 +63,13 @@ class MainWindow(QMainWindow):
             api.set_project_path(__project_path__)
             api.init(name, __project_path__)
 
-            dump_project(self.project, '%s'%join(__project_path__, DEFAULT_PROJECT_FILENAME))
+            dump_project(self.project, '%s' % join(__project_path__, DEFAULT_PROJECT_FILENAME))
 
             self.startWizard()
 
     def loadExam(self):
         directory = str(self.setExistingDirectory())
-        
+
         if directory:
             __project_file_path__ = join(directory, DEFAULT_PROJECT_FILENAME)
             if not exists(__project_file_path__):
@@ -83,7 +83,8 @@ class MainWindow(QMainWindow):
             api.set_project_path(directory)
             self.startWizard()
 
-def getProject():    
+
+def getProject():
     t1 = Tag('t1', 3)
     a1 = Answer(True, False, 'anstxt')
     q1 = Question('a', ['t1'], 'qtxt', [a1, a1])
@@ -97,5 +98,5 @@ if __name__ == '__main__':
 
     from model import *
 
-    win.show() #Maximized
+    win.show()  # Maximized
     sys.exit(app.exec_())
