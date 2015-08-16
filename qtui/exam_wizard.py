@@ -1,7 +1,6 @@
 from PyQt4.QtGui import QWizard, QWizardPage, QMessageBox
 from PyQt4 import uic
 import api
-import jinja2
 
 TEMPLATE_PATH = 'master.jinja'
 
@@ -33,16 +32,19 @@ class MasterPage(QWizardPage):
             self.project.tags = tags
             self.project.questions = questions
 
-            master = jinja2.Template(open(TEMPLATE_PATH).read().decode('utf-8'))
+            api.validate_project(self.project)
 
-            for question in self.project.questions:
-                if not question.tag_names:
-                    # TODO: Tr (translator)
-                    raise Exception("Debe haber al menos una etiqueta por pregunta")
+            # TODO: Do at least one of the following:
 
-            master_data = master.render(project=self.project)
+            # 1. Set the project total_questions number before generating
+            #    the master here (with a dialog or a modified ui)
+            # 2. Get the total_questions number out of the master and into
+            #    gen.py as a parameter (just like test_count)
 
-            api.save_master(master_data)
+            # Uncomment when one of the above is done.
+
+            # master_data = api.render_master(self.project, TEMPLATE_PATH)
+            # api.save_master(master_data)
 
             return True
         except Exception as e:
