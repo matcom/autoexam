@@ -147,6 +147,96 @@ def init(args):
         set_project_option('questionnaire', True)
 
 
+def scan(args):
+    import beep
+    import cv2
+    from autotest import TestScanner, ImageSource
+    from evaluator import get_stats
+    import scanresults
+    import json
+
+    args.exams_file = 'generated/last/order.json'
+    if not os.path.exists(args.exams_file):
+        error('Not an Autoexam folder or exams not generated')
+        return
+
+    #Get system camera in index 0
+    source = ImageSource(args.cameras if args.folder == ""
+                         else args.folder, args.time)
+    w, h = source.get_size()
+
+    #Set document processing parameters and initialize scanner
+    scanner = TestScanner(w, h, args.exams_file, show_image=True,
+                          double_check=True, debug=args.debug,
+                          poll=args.poll, squares=not args.poll)
+
+    tests = {}
+
+    #While user does not press the q key
+    while cv2.waitKey(1) & 0xFF != ord('q'):
+        #Get the scan report of the source image
+        report = scanner.scan(source)
+        #if test recognized OK
+        if report.success:
+            if not report.test.id in tests:
+                beep.beep()
+                tests[report.test.id] = report.test
+                print "Test ID:", unicode(report.test.id).encode("utf8")
+                for i, q in enumerate(report.test.questions):
+                    print "%d. %s" % (i+1, q)
+                if len(report.test.warnings) > 0:
+                    print "Warnings:"
+                    for w in report.test.warnings:
+                        print "\t", w
+                on_scan(report)
+                #this method appends the test results if the file exists...
+                if args.autowrite:
+                    scanresults.dump(tests, args.outfile, overwrite=False)
+                    stats = get_stats(args.outfile)
+                    stats_path = os.path.join(os.path.dirname(os.path.realpath(args.outfile)), "stats.json")
+                    with open(stats_path, "wb") as stats_file:
+                        json.dump(stats, stats_file, indent=4)
+
+                    print "Exam file updated..."
+            else:
+                print "The test '%d' was already scanned." % report.test.id
+        #if recognition went wrong print the reasons
+        else:
+            # show only the question detection errors and the
+            # errors in the format of the qrcodes
+            for e in [x for x in report.errors
+                      if isinstance(x, scanresults.QuestionError) or
+                      (isinstance(x, scanresults.QrcodeError) and x.err_type == scanresults.QRCodeErrorTypes.FORMAT) or args.debug]:
+                print e
+            on_scan(report)
+
+    scanner.finalize()
+    source.release()
+
+    #this method appends the test results if the file exists...
+    scanresults.dump(tests, args.outfile, overwrite=False)
+
+    print "%d exams stored..." % len(tests)
+
+    cv2.waitKey()
+
+
+callables = []
+
+
+def on_scan(report):
+    for subscriber in callables:
+        subscriber.on_scan_event(report)
+
+
+def add_scan_subscriber(f):
+    callables.append(f)
+
+
+def remove_scan_subscriber(f):
+    callables.remove(f)
+
+
 def set_project_option(option, value):
     f = open(os.path.join('.autoexam', option), 'w')
     f.write(str(value))
@@ -456,6 +546,24 @@ def main():
     gen_parser.add_argument('--questionnaire', help="Toggle all options for questionnaire mode.", action='store_true')
     gen_parser.add_argument('--dont-generate-master', help="Do not generate a master file.", action='store_true')
     gen_parser.set_defaults(func=generate)
+
+    scanner_parser = commands.add_parser('scan', help='Runs the exam scanner')
+    scanner_parser.add_argument('-o', '--outfile', type=str, default="tests_results.json",
+                                help='the file name to dump the scan results. If the file exists it will append the results.')
+    scanner_parser.add_argument('-c', '--cameras', type=int, nargs="+", default=[0],
+                                help='the list of index of the cameras to be used to scan the tests.')
+    scanner_parser.add_argument('-f', '--folder', type=str, default="",
+                                help='the folder that includes all the images to scann.')
+    scanner_parser.add_argument('-t', '--time', type=float, default=0.5,
+                                help='time in seconds it takes to load the next image on the specified folder.')
+    scanner_parser.add_argument('-a', '--autowrite', action='store_true', default=False,
+                                help='update the scanner results file every time a document is scanned')
+    #TODO: PLEASE REMOVE THIS AS SOON AS POSIBLE
+    scanner_parser.add_argument('-p', '--poll', action='store_true', default=False,
+                                help='if present the margins of the polls are used (REMOVE THIS OPTION PLZ).')
+    scanner_parser.add_argument('-d', '--debug', action='store_true', default=False,
+                                help='debug mode enabled')
+    scanner_parser.set_defaults(func=scan)
 
     status_parser = commands.add_parser('status', help='Reports various details about the project.')
     status_parser.add_argument('-g', '--generation', help='Add report info about the generation status.', action='store_true')
