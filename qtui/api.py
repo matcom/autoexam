@@ -5,12 +5,14 @@
 autoexam api
 """
 
-import os, subprocess, random
+import os, subprocess, random, jinja2
 
 master = 'master.txt'
 autoexam = 'autoexam'
 project_path = None
 
+
+# region Helpers
 
 def get_flag(kwargs, flag):
     if kwargs.get(flag) == True:
@@ -24,10 +26,6 @@ def get_value(kwargs, field, default=None):
         return '--' + field.replace('_', '-') + ' ' + str(value)
     return ''
 
-def save_master(master_text):
-    path = os.path.join(project_path, master)
-    with open(path, 'w') as fp:
-        fp.write(master_text)
 
 def run(command):
     current_path = os.getcwd()
@@ -36,10 +34,19 @@ def run(command):
     os.chdir(current_path)
     return value
 
+
 def set_project_path(path):
     global project_path
     project_path = path
 
+
+def save_master(master_text):
+    path = os.path.join(project_path, master)
+    with open(path, 'w') as fp:
+        fp.write(master_text)
+# endregion Helpers
+
+# region Autoexam Methods
 
 def init(name, folder='.', template='', **kwargs):
     """
@@ -51,7 +58,7 @@ def init(name, folder='.', template='', **kwargs):
     """
 
     folder = '-f "%s"'%folder
-    # folder = get_value(kwargs, 'folder', '.')    
+    # folder = get_value(kwargs, 'folder', '.')
 
     election = get_flag(kwargs, 'election')
     questionnaire = get_flag(kwargs, 'questionnaire')
@@ -108,3 +115,16 @@ def gen(**kwargs):
 
     cmd = ' '.join(params)
     return run(cmd)
+
+# endregion Autoexam methods
+
+
+def validate_project(project):
+    for question in project.questions:
+        if not question.tag_names:
+            # TODO: Tr (translator)
+            raise Exception("Debe haber al menos una etiqueta por pregunta")
+
+
+def render_master(project, template_path):
+    return jinja2.Template(open(template_path).read().decode('utf-8')).render(project=project)
