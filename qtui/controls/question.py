@@ -66,7 +66,7 @@ class QuestionWidget(QWidget):
         tag_names = set()
         for question in self.questions:
             tag_names.update(set(question.tag_names))
-        return [Tag(tag_name, 1) for tag_name in tag_names]
+        return [Tag(tag_name, 0) for tag_name in tag_names]
 
     def dump(self):
         if 0 <= self.current < len(self.questions):
