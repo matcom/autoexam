@@ -54,12 +54,6 @@ class MasterPage(QWizardPage):
             return False
 
 
-    # def gen_master(self):
-    #     master = jinja2.Template(open(TEMPLATE_PATH).read().decode('utf-8'))
-    #     master_data = master.render(project = self.project)
-    #     print master_data
-
-
 class GeneratePage(QWizardPage):
     path = "./ui/page2_generate.ui"
 
@@ -71,6 +65,14 @@ class GeneratePage(QWizardPage):
         self.ui.generateBtn.clicked.connect(self.generate)
 
     def generate(self):
+        # Both master and exam generation are being done here temporally
+        self.project.total_questions = self.ui.questionCountSpin.value()
+
+        print "Project.total_questions", self.project.total_questions
+
+        master_data = api.render_master(self.project, TEMPLATE_PATH)
+        api.save_master(master_data)
+
         api.gen(**{"dont_shuffle_tags": not self.ui.randTagCheck.isChecked(),
                    "sort_questions": self.ui.sortQuestionCheck.isChecked(),
                    "dont_shuffle_options": not self.ui.randItemCheck.isChecked()
