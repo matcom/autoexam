@@ -14,7 +14,7 @@ total: {{ project.total_questions }}
 % @tag_name: minimum_number_of_questions (for each tag)
 
 {% for tag in project.tags %}
-{{ tag.name }}: {{ tag.min_questions }}
+@{{ tag.name }}: {{ tag.min_questions }}
 {% endfor %}
 
 ------------------------------------------------------------------------------
