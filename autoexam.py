@@ -98,6 +98,8 @@ def generate(args):
 
     os.symlink('v' + str(test_id), 'last')
 
+    print("Test generated successfully")
+
 
 def init(args):
     if is_project_folder():
