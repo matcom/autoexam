@@ -173,7 +173,7 @@ def scan(args):
     tests = {}
 
     #While user does not press the q key
-    while cv2.waitKey(1) & 0xFF != ord('q'):
+    while cv2.waitKey(100) & 0xFF != ord('q'):
         #Get the scan report of the source image
         report = scanner.scan(source)
         #if test recognized OK
