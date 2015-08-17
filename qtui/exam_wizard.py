@@ -1,5 +1,6 @@
 from PyQt4.QtGui import QWizard, QWizardPage, QMessageBox
 from PyQt4 import uic
+from threading import Thread
 import api
 
 TEMPLATE_PATH = 'master.jinja'
@@ -86,10 +87,32 @@ class ScanPage(QWizardPage):
         super(ScanPage, self).__init__()
         self.ui = uic.loadUi(self.path, self)
         self.project = project
+        self.scan_thread = None
+
+    def initializePage(self):
+        super(ScanPage, self).initializePage()
+
+        self.scan_thread = Thread(target=self.start_scan)
+        self.scan_thread.setDaemon(True)
+        self.scan_thread.start()
+
+        api.add_scan_event_subscriber(self)
+
+    def cleanupPage(self):
+        super(ScanPage, self).cleanupPage()
+        api.remove_scan_event_subscriber(self)
+
+        # TODO: Do proper shutdown
+        self.scan_thread.__stop()
 
     def on_scan_event(self, report):
-        pass
+        if report.success:
+            print 'successful report: ', report
+        else:
+            print 'failed report: ', report
 
+    def start_scan():
+        api.scan({}) # TODO: Fill dictionary properly
 
 
 
