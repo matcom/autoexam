@@ -6,11 +6,11 @@ autoexam api
 """
 
 import os, subprocess, random, jinja2
+import sys
 import autoexam
 
 master = 'master.txt'
-autoexam = 'autoexam'
-project_path = None
+# project_path = None
 
 
 # region Helpers
@@ -29,21 +29,20 @@ def get_value(kwargs, field, default=None):
 
 
 def run(command):
-    current_path = os.getcwd()
-    os.chdir(project_path)
+    # current_path = os.getcwd()
+    # os.chdir(project_path)
     value = os.system(command)
-    os.chdir(current_path)
+    # os.chdir(current_path)
     return value
 
 
-def set_project_path(path):
-    global project_path
-    project_path = path
+# def set_project_path(path):
+#     global project_path
+#     project_path = path
 
 
 def save_master(master_text):
-    path = os.path.join(project_path, master)
-    with open(path, 'w') as fp:
+    with open(master, 'w') as fp:
         fp.write(master_text)
 # endregion Helpers
 
@@ -65,7 +64,7 @@ def init(name, folder='.', template='', **kwargs):
     questionnaire = get_flag(kwargs, 'questionnaire')
 
     # params = [autoexam, 'init', folder, election, questionnaire, '"%s"'%name]
-    params = [autoexam, 'init', folder, '"%s"'%name]
+    params = ['autoexam', 'init', folder, '"%s"'%name]
 
     cmd = ' '.join(params)
     return os.system(cmd)
@@ -109,7 +108,7 @@ def gen(**kwargs):
     questionnaire = get_flag(kwargs, 'questionnaire')
     dont_generate_master = get_flag(kwargs, 'dont_generate_master')
 
-    params = [autoexam, 'gen', seed, tests_count, answers_per_page,
+    params = ['autoexam', 'gen', seed, tests_count, answers_per_page,
     title, answer_template, master_template, text_template,
     questions_value, dont_shuffle_tags, sort_questions, dont_shuffle_options,
     dont_generate_text, election, questionnaire, dont_generate_master]
@@ -139,5 +138,5 @@ def remove_scan_event_subscriber(obj):
     autoexam.remove_scan_subscriber(obj)
 
 
-def scan(args):
-    autoexam.scan(args)
+def scan(_args):
+    autoexam.scan(_args)

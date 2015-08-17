@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+import sys
+
+import os
+import os.path
+os.environ['AUTOEXAM_FOLDER'] = os.path.dirname(os.getcwd())
+sys.path.append(os.environ['AUTOEXAM_FOLDER'])
+
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4 import uic
@@ -60,11 +67,11 @@ class MainWindow(QMainWindow):
             self.project = Project(name, 0, [], [])
 
             # Invoke Autoexam
-            api.set_project_path(__project_path__)
             api.init(name, __project_path__)
 
             dump_project(self.project, '%s' % join(__project_path__, DEFAULT_PROJECT_FILENAME))
 
+            os.chdir(__project_path__)
             self.startWizard()
 
     def loadExam(self):
@@ -80,7 +87,7 @@ class MainWindow(QMainWindow):
             else:
                 self.project = load_project(__project_file_path__)
 
-            api.set_project_path(directory)
+            os.chdir(directory)
             self.startWizard()
 
 

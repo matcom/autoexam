@@ -4,13 +4,14 @@
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4 import uic
-from model import Answer
+from qtui.model import Answer
+import os, os.path
 
 
 class TabPage(QWidget):
     def __init__(self, content=None):
         super(TabPage, self).__init__()
-        self.ui = uic.loadUi("./ui/tabpage.ui", self)
+        self.ui = uic.loadUi(os.path.join(os.environ['AUTOEXAM_FOLDER'], "qtui/ui/tabpage.ui"), self)
         if content:
             self.addContent(content)
 

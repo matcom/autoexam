@@ -4,13 +4,14 @@
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4 import uic
-from model import *
+from qtui.model import *
+import os.path
 
 
 class QuestionWidget(QWidget):
     def __init__(self, parent=None):
         super(QuestionWidget, self).__init__(parent)
-        self.ui = uic.loadUi("./ui/question.ui", self)
+        self.ui = uic.loadUi(os.path.join(os.environ['AUTOEXAM_FOLDER'],"qtui/ui/question.ui"), self)
         self.questions = []
         self.current = -1
         self.connectSignals()

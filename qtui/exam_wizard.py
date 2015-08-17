@@ -1,9 +1,11 @@
 from PyQt4.QtGui import QWizard, QWizardPage, QMessageBox
 from PyQt4 import uic
 from threading import Thread
+import os
+from os.path import join
 import api
 
-TEMPLATE_PATH = 'master.jinja'
+TEMPLATE_PATH = 'qtui/master.jinja'
 
 
 class ExamWizard(QWizard):
@@ -18,11 +20,11 @@ class ExamWizard(QWizard):
 
 
 class MasterPage(QWizardPage):
-    path = "./ui/page1_master.ui"
+    path = "qtui/ui/page1_master.ui"
 
     def __init__(self, project):
         super(MasterPage, self).__init__()
-        self.ui = uic.loadUi(self.path, self)
+        self.ui = uic.loadUi( join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
         self.project = project
         # self.ui.masterGenBtn.clicked.connect(self.gen_master)
 
@@ -56,11 +58,11 @@ class MasterPage(QWizardPage):
 
 
 class GeneratePage(QWizardPage):
-    path = "./ui/page2_generate.ui"
+    path = "qtui/ui/page2_generate.ui"
 
     def __init__(self, project):
         super(GeneratePage, self).__init__()
-        self.ui = uic.loadUi(self.path, self)
+        self.ui = uic.loadUi( join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
         self.project = project
 
         self.ui.generateBtn.clicked.connect(self.generate)
@@ -71,7 +73,7 @@ class GeneratePage(QWizardPage):
 
         print "Project.total_questions", self.project.total_questions
 
-        master_data = api.render_master(self.project, TEMPLATE_PATH)
+        master_data = api.render_master(self.project, join(os.environ['AUTOEXAM_FOLDER'], TEMPLATE_PATH))
         api.save_master(master_data)
 
         api.gen(**{"dont_shuffle_tags": not self.ui.randTagCheck.isChecked(),
@@ -81,22 +83,24 @@ class GeneratePage(QWizardPage):
 
 
 class ScanPage(QWizardPage):
-    path = "./ui/page3_scan.ui"
+    path = "qtui/ui/page3_scan.ui"
 
     def __init__(self, project):
         super(ScanPage, self).__init__()
-        self.ui = uic.loadUi(self.path, self)
+        self.ui = uic.loadUi( join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
         self.project = project
         self.scan_thread = None
 
     def initializePage(self):
         super(ScanPage, self).initializePage()
+        api.add_scan_event_subscriber(self)
 
         self.scan_thread = Thread(target=self.start_scan)
-        self.scan_thread.setDaemon(True)
+        # self.scan_thread.setDaemon(True)
         self.scan_thread.start()
 
-        api.add_scan_event_subscriber(self)
+        # self.start_scan()
+
 
     def cleanupPage(self):
         super(ScanPage, self).cleanupPage()
@@ -111,24 +115,33 @@ class ScanPage(QWizardPage):
         else:
             print 'failed report: ', report
 
-    def start_scan():
-        api.scan({}) # TODO: Fill dictionary properly
+    def start_scan(self):
 
+        class _args:
+            outfile = None
+            cameras = [1]
+            folder = ""
+            time = None
+            autowrite = None
+            poll = None
+            debug = True
+
+        api.scan(_args()) # TODO: Fill dictionary properly
 
 
 class ScoresPage(QWizardPage):
-    path = "./ui/page4_scores.ui"
+    path = "qtui/ui/page4_scores.ui"
 
     def __init__(self, project):
         super(ScoresPage, self).__init__()
-        self.ui = uic.loadUi(self.path, self)
+        self.ui = uic.loadUi( join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
         self.project = project
 
 
 class ResultsPage(QWizardPage):
-    path = "./ui/page5_results.ui"
+    path = "qtui/ui/page5_results.ui"
 
     def __init__(self, project):
         super(ResultsPage, self).__init__()
-        self.ui = uic.loadUi(self.path, self)
+        self.ui = uic.loadUi( join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
         self.project = project

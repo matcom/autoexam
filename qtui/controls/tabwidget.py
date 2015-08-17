@@ -8,7 +8,7 @@ from PyQt4 import uic
 from tabbar import TabBar
 from tabpage import TabPage
 from closebutton import CloseButton
-from model import Answer
+from qtui.model import Answer
 
 DEBUG = True
 
