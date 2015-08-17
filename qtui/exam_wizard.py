@@ -87,6 +87,11 @@ class ScanPage(QWizardPage):
         self.ui = uic.loadUi(self.path, self)
         self.project = project
 
+    def on_scan_event(self, report):
+        pass
+
+
+
 
 class ScoresPage(QWizardPage):
     path = "./ui/page4_scores.ui"

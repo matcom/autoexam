@@ -6,6 +6,7 @@ autoexam api
 """
 
 import os, subprocess, random, jinja2
+import autoexam
 
 master = 'master.txt'
 autoexam = 'autoexam'
@@ -128,3 +129,15 @@ def validate_project(project):
 
 def render_master(project, template_path):
     return jinja2.Template(open(template_path).read().decode('utf-8')).render(project=project)
+
+
+def add_scan_event_subscriber(obj):
+    autoexam.add_scan_subscriber(obj)
+
+
+def remove_scan_event_subscriber(obj):
+    autoexam.remove_scan_subscriber(obj)
+
+
+def scan(args):
+    autoexam.scan(args)
