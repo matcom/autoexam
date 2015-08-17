@@ -8,7 +8,7 @@ Installing in Linux
 ===================
 
 ```bash
-sudo apt-get install texlive texlive-lang-spanish python-opencv python-jinja2 python-qrcode python-zbar python-alsaaudio
+sudo apt-get install texlive texlive-lang-spanish python-opencv python-jinja2 python-qrcode python-zbar python-alsaaudio python-flask
 ```
 
 How it works
