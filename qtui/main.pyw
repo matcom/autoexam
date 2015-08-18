@@ -4,7 +4,7 @@ import sys
 
 import os
 import os.path
-os.environ['AUTOEXAM_FOLDER'] = os.path.dirname(os.getcwd())
+os.environ['AUTOEXAM_FOLDER'] = os.path.dirname(os.path.dirname(__file__))
 sys.path.append(os.environ['AUTOEXAM_FOLDER'])
 
 from PyQt4.QtGui import *
