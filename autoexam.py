@@ -140,6 +140,9 @@ def init(args):
     os.mkdir(dst('generated'))
     open(dst('generated/.gitkeep'), 'w').close()
 
+    # temporary helper images folder for placing exams
+    os.mkdir(dst('images'))
+
     os.mkdir(dst('.autoexam'))
     os.chdir(folder)
 
