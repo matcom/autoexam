@@ -15,6 +15,7 @@ report = None
 doc_parameters = {
     "debug": False, #Show images of all the recognition process
     "show_image": True, #if it is a camera it shows a window with the images, and if it is an image it shows the image #not in use
+    "is_camera": False,
     "double_check": True, #Makes a double confirmation before to return a success report
     "marker_image": "latex/marker.png", #Image of the marker to use in the borders
     "answer_cols": 5, ##the number of questions per column, this value is fixed
@@ -76,7 +77,8 @@ class TestScanner:
         for (k,v) in kw.items():
             doc_parameters[k]=v
         doc_parameters["scanner"] = QRScanner(w,h);
-        doc_parameters["loaded_marker"] = cv2.imread(doc_parameters["marker_image"],0)
+        marker_path = os.path.join(os.environ['AUTOEXAM_FOLDER'], doc_parameters["marker_image"])
+        doc_parameters["loaded_marker"] = cv2.imread(marker_path,0)
         doc_parameters["init"] = True
         doc_parameters["tests"] = parse(testsfile)
 
@@ -109,8 +111,8 @@ def get_scan_report(source):
     if not doc_parameters["init"]: return Report()
 
     global report
-
-    if not doc_parameters["double_check"]:
+    # do always a single check if it is not a camera
+    if not doc_parameters["double_check"] or not doc_parameters['is_camera']:
         report = Report()
         frame = source.get_next()
         return get_image_report(frame)
@@ -731,6 +733,7 @@ class ImageSource(object):
     def __init__(self, source, time=3):
         self.time = time
         self.is_camera = type(source)==list
+        doc_parameters['is_camera'] = self.is_camera
         if self.is_camera:
             print "Loading cameras "+str(source)
             self.sources = [cv2.VideoCapture(cam) for cam in source]
@@ -740,6 +743,7 @@ class ImageSource(object):
         else:
             self.sources = self.load_file_list(source)
 
+        self.finished = False
         self.current_index = -1
         self.update_current()
 
@@ -755,6 +759,7 @@ class ImageSource(object):
             return (int(self.current_source.get(3)),int(self.current_source.get(4)))
         else:
             return (self.current_source.shape[1],self.current_source.shape[0])
+            #return (self.width, self.height)
 
     def get_next(self):
         if time.time() - self.start_time > self.time:
@@ -764,17 +769,20 @@ class ImageSource(object):
             cv2.imshow("Camera "+str(self.current_index),cv2.flip(img, 1))
             return img
         else:
-            img = self.current_source.copy()
-            return img
+            # img = self.current_source.copy()
+            return self.current_source
 
     def update_current(self):
         self.current_index += 1
         if self.current_index>=len(self.sources):
             self.current_index = 0
+            self.finished = True
         if self.is_camera:
             self.current_source = self.sources[self.current_index]
         else:
             self.current_source = cv2.imread(self.sources[self.current_index],1)
+            # self.current_source = Image.open(self.sources[self.current_index]).convert('L')
+            # self.width, self.height = self.current_source.size
         self.start_time = time.time()
 
     def release(self):

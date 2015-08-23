@@ -644,7 +644,7 @@ def main():
     # grade_parser.add_argument('-v', '--version', help="Specific version to grade. If not provided, then the `last` version is graded.")
     # grade_parser.add_argument('-f', '--force', help="Force re-evaluation even if the evaluation already exists. WARNING: This will delete the previous evaluation.", action='store_true')
     # grade_parser.set_defaults(func=grade)
-    
+
     grade_parser = commands.add_parser('grade', help='Runs the autoexam grader')
     grade_parser.add_argument("-g", "--gradersheet", help="Gradersheet file", default='generated/last/grader.txt')
     grade_parser.add_argument("-s", "--scans", help="Scans json file", default='tests_results.json')
