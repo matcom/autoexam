@@ -7,6 +7,13 @@ import argparse
 import shutil
 import json
 import gen
+import os.path
+
+if 'AUTOEXAM_FOLDER' not in os.environ:
+    path = os.path.dirname(os.path.realpath(__file__))
+    os.environ['AUTOEXAM_FOLDER'] = path
+    sys.path.append(path)
+
 import evaluator as ev
 import webpoll.webpoll as wp
 import simpleui.app as sui
@@ -251,6 +258,10 @@ def add_scan_subscriber(f):
 def remove_scan_subscriber(f):
     callables.remove(f)
 
+
+def qtui(args):
+    import qtui.main
+    qtui.main.main()
 
 def set_project_option(option, value):
     f = open(os.path.join('.autoexam', option), 'w')
@@ -620,6 +631,9 @@ def main():
     grade_parser.add_argument('-v', '--version', help="Specific version to grade. If not provided, then the `last` version is graded.")
     grade_parser.add_argument('-f', '--force', help="Force re-evaluation even if the evaluation already exists. WARNING: This will delete the previous evaluation.", action='store_true')
     grade_parser.set_defaults(func=grade)
+    
+    qtui_parser = commands.add_parser('qtui', help='Runs the Qt user interface')
+    qtui_parser.set_defaults(func=qtui)
 
     args = parser.parse_args()
     args.func(args)

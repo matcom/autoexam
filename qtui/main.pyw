@@ -15,17 +15,21 @@ from exam_wizard import ExamWizard
 from os import mkdir, environ
 from os.path import join, exists, abspath
 import api
+import model
 
 DEFAULT_PROJECT_FILENAME = '.autoexam_project'
 DEFAULT_PROJECT_PATH = join(environ['HOME'], 'autoexam_projects')
 DEFAULT_PROJECT_FOLDER_NAME = 'Project %d'
 
 
+def src(path):
+    return os.path.join(os.environ['AUTOEXAM_FOLDER'], path)
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-        self.ui = uic.loadUi("./ui/main_window.ui", self)
+        self.ui = uic.loadUi(src("qtui/ui/main_window.ui"), self)
         self.ui.clbNewExam.clicked.connect(self.newExam)
         self.ui.clbLoadExam.clicked.connect(self.loadExam)
         self.ui.tabWidget.tabCloseRequested.connect(self.ui.tabWidget.removeTab)
@@ -99,12 +103,14 @@ def getProject():
     p1 = Project('p1', 2, [t1], [q1, q1])
     return p1
 
-if __name__ == '__main__':
+def main():
     import sys
     app = QApplication(sys.argv)
     win = MainWindow()
 
-    import model
-
     win.show()  # Maximized
     sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    main()
