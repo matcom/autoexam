@@ -118,9 +118,9 @@ class ScanPage(QWizardPage):
     def start_scan(self):
 
         class _args:
-            outfile = None
+            outfile = 'tests_results.json'
             cameras = [1]
-            folder = ""
+            folder = "images"
             time = None
             autowrite = None
             poll = None
