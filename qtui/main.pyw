@@ -70,7 +70,7 @@ class MainWindow(QMainWindow):
             # Invoke Autoexam
             api.init(name, __project_path__)
 
-            dump_project(self.project, '%s' % join(__project_path__, DEFAULT_PROJECT_FILENAME))
+            model.dump_project(self.project, '%s' % join(__project_path__, DEFAULT_PROJECT_FILENAME))
 
             os.chdir(__project_path__)
             self.startWizard()
@@ -82,11 +82,11 @@ class MainWindow(QMainWindow):
             __project_file_path__ = join(directory, DEFAULT_PROJECT_FILENAME)
             if not exists(__project_file_path__):
                 self.project = None
-                # print("No project found!!")
+                print("No project found!!")
                 # TODO: QDialog
                 return
             else:
-                self.project = load_project(__project_file_path__)
+                self.project = model.load_project(__project_file_path__)
 
             os.chdir(directory)
             self.startWizard()
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     win = MainWindow()
 
-    from model import *
+    import model
 
     win.show()  # Maximized
     sys.exit(app.exec_())
