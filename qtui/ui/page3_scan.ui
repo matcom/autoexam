@@ -120,7 +120,7 @@
          <height>125</height>
         </rect>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout">
+       <layout class="QVBoxLayout" name="questionDataLayout">
         <item>
          <widget class="QLabel" name="label_2">
           <property name="text">
