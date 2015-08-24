@@ -169,8 +169,23 @@ class ScanPage(QWizardPage):
             elem.widget().deleteLater()
 
     def fill_question_panel(self):
-        # current_question = self.ui.treeWidget.selectedItem().question
-        pass
+        # TODO: Get the right order
+        self.current_question = self.ui.treeWidget.currentItem().question
+
+        question_text_label = QLabel(self.current_question.text)
+        self.ui.questionDataLayout.addWidget(question_text_label)
+
+        for answer in self.current_question.answers:
+            question_answer_check = QCheckBox(answer.text)
+            question_answer_check.stateChanged.connect(self.update_current_question_state)
+            self.ui.questionDataLayout.addWidget(question_answer_check)
+
+    def update_current_question_state(self, state):
+        for i, answer in enumerate(self.current_question.answers):
+            answer.checked = self.ui.questionDataLayout.itemAt(i + 1).widget().isChecked() # TODO? Right order
+            print(answer.checked)
+
+
 
     def start_scan(self):
 

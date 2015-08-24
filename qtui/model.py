@@ -31,7 +31,7 @@ from namedlist import namedlist
 Project = namedlist('Project', ['name', 'total_questions', 'total_exams', 'tags', 'questions'])
 Tag = namedlist('Tag', ['name', 'min_questions'])
 Question = namedlist('Question', ['id', 'tag_names', 'text', 'answers'])
-Answer = namedlist('Answer', ['valid', 'fixed_position', 'text'])
+Answer = namedlist('Answer', ['valid', 'fixed_position', 'text', 'checked'])
 
 
 def dump_project(proj, path):
@@ -57,13 +57,16 @@ def load_project(path):
                 question.answers[j] = Answer(*a)
         return proj
 
+
 def test():
-    t1 = Tag('t1', 3)
-    a1 = Answer(True, False, 'anstxt')
-    q1 = Question('a', ['t1'], 'qtxt', [a1, a1])
-    p1 = Project('p1', 2, 2, [t1], [q1, q1])
+    t1 = Tag('tag', 3)
+    a1 = Answer(True, False, 'This is an answer', False)
+    a2 = Answer(True, False, 'This is another answer', True)
+    q1 = Question('a', ['t1'], 'This is a question', [a1, a2])
+    q2 = Question('a', ['t1'], 'This is another question', [a1, a2])
+    p1 = Project('Project 1', 2, 2, [t1], [q1, q2])
     s = json.dumps(p1)
-    print("hello", s)
+    print(s)
     proj = json.loads(s)
     proj = Project(*proj)
     # loading tags
