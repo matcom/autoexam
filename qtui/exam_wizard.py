@@ -1,19 +1,22 @@
-from PyQt4.QtGui import QWizard, QWizardPage, QMessageBox
+from PyQt4.QtGui import QWizard, QWizardPage, QMessageBox, QTreeWidgetItem, QBrush, QColor
 from PyQt4 import uic
 from threading import Thread
 import os
 from os.path import join
 import api
 
-TEMPLATE_PATH = 'qtui/master.jinja'
 
+
+TEMPLATE_PATH = 'qtui/master.jinja'
+ok_color = QBrush(QColor(0, 128, 0))
+warn_color = QBrush(QColor(128, 128, 0))
 
 class ExamWizard(QWizard):
 
     def __init__(self, project):
         super(ExamWizard, self).__init__()
-        self.addPage(MasterPage(project))
-        self.addPage(GeneratePage(project))
+        # self.addPage(MasterPage(project))
+        # self.addPage(GeneratePage(project))
         self.addPage(ScanPage(project))
         self.addPage(ScoresPage(project))
         self.addPage(ResultsPage(project))
@@ -70,6 +73,7 @@ class GeneratePage(QWizardPage):
     def generate(self):
         # Both master and exam generation are being done here temporally
         self.project.total_questions = self.ui.questionCountSpin.value()
+        self.project.total_exams = self.ui.examCountSpin.value()
 
         print "Project.total_questions", self.project.total_questions
 
@@ -90,16 +94,26 @@ class ScanPage(QWizardPage):
         self.ui = uic.loadUi( join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
         self.project = project
         self.scan_thread = None
+        self.ui.treeWidget.clear()
+        self.ui.treeWidget.currentItemChanged.connect(self.change_exam)
+
+        self.exams = []
 
     def initializePage(self):
         super(ScanPage, self).initializePage()
         api.add_scan_event_subscriber(self)
 
-        self.scan_thread = Thread(target=self.start_scan)
+        # self.scan_thread = Thread(target=self.start_scan)
         # self.scan_thread.setDaemon(True)
-        self.scan_thread.start()
+        # self.scan_thread.start()
 
-        # self.start_scan()
+        for i in range(self.project.total_exams):
+            exam_item = QTreeWidgetItem(self.ui.treeWidget, ['Examen %d' % (i + 1)])
+
+        self.start_scan()
+
+
+
 
 
     def cleanupPage(self):
@@ -107,13 +121,53 @@ class ScanPage(QWizardPage):
         api.remove_scan_event_subscriber(self)
 
         # TODO: Do proper shutdown
-        self.scan_thread.__stop()
+        # self.scan_thread.__stop()
 
     def on_scan_event(self, report):
         if report.success:
             print 'successful report: ', report
+            self.process_report(report)
         else:
             print 'failed report: ', report
+
+    def process_report(self, report):
+        current = self.ui.treeWidget.topLevelItem(report.test.id)
+
+        if len(report.test.warnings) == 0:
+            current.setForeground(0, ok_color)
+        elif len(report.test.warnings) > 0:
+            current.setForeground(0, warn_color)
+
+        # exam_item = QTreeWidgetItem(self.ui.treeWidget, ['Test'])
+        # exam.ui = exam_item
+        # exam_item.exam = exam
+        # self.ui.treeWidget.setCurrentItem(exam_item)
+
+        # question1 = QTreeWidgetItem(exam_item, ['Question1'])
+
+    def change_exam(self):
+        currentItem = self.ui.treeWidget.currentItem()
+        if currentItem.parent() is not None:
+            print 'selected question'
+            # self.clear_question_panel()
+            # self.fill_question_panel()
+        else:
+            print 'selected exam'
+
+        # questions = self.ui.treeWidget.currentItem().exam.questions
+        # for question in questions:
+            # print(dir(question))
+
+    def clear_question_panel(self):
+        for i in reversed(range(self.ui.questionDataLayout.count())):
+            elem = self.ui.questionDataLayout.itemAt(i)
+            if not elem:
+                break
+            elem.widget().deleteLater()
+
+    def fill_question_panel(self):
+        # current_question = self.ui.treeWidget.selectedItem().question
+        pass
 
     def start_scan(self):
 
