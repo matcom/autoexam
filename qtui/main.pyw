@@ -25,6 +25,7 @@ DEFAULT_PROJECT_FOLDER_NAME = 'Project %d'
 def src(path):
     return os.path.join(os.environ['AUTOEXAM_FOLDER'], path)
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -33,6 +34,9 @@ class MainWindow(QMainWindow):
         self.ui.clbNewExam.clicked.connect(self.newExam)
         self.ui.clbLoadExam.clicked.connect(self.loadExam)
         self.ui.tabWidget.tabCloseRequested.connect(self.ui.tabWidget.removeTab)
+
+        if os.path.exists('.autoexam'):
+            self.loadExam(directory=os.getcwd())
 
     def setExistingDirectory(self):
         if not exists(DEFAULT_PROJECT_PATH):
@@ -79,8 +83,9 @@ class MainWindow(QMainWindow):
             os.chdir(__project_path__)
             self.startWizard()
 
-    def loadExam(self):
-        directory = str(self.setExistingDirectory())
+    def loadExam(self, directory=None):
+        if directory is None:
+            directory = str(self.setExistingDirectory())
 
         if directory:
             __project_file_path__ = join(directory, DEFAULT_PROJECT_FILENAME)
