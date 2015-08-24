@@ -103,18 +103,21 @@ class ScanPage(QWizardPage):
         super(ScanPage, self).initializePage()
         api.add_scan_event_subscriber(self)
 
+        with open(os.path.join('generated', 'last', 'order.json')) as fp:
+            self.orders = json.load(fp)
+
         # self.scan_thread = Thread(target=self.start_scan)
         # self.scan_thread.setDaemon(True)
         # self.scan_thread.start()
 
         for i in range(self.project.total_exams):
             exam_item = QTreeWidgetItem(self.ui.treeWidget, ['Examen %d' % (i + 1)])
+            for j in range(self.project.total_questions):
+                question_item = QTreeWidgetItem(exam_item, ['Pregunta %d' % (j + 1)])
+                question_item.question = self.project.questions[j] # TODO: Switch for order
+
 
         self.start_scan()
-
-
-
-
 
     def cleanupPage(self):
         super(ScanPage, self).cleanupPage()
@@ -149,8 +152,8 @@ class ScanPage(QWizardPage):
         currentItem = self.ui.treeWidget.currentItem()
         if currentItem.parent() is not None:
             print 'selected question'
-            # self.clear_question_panel()
-            # self.fill_question_panel()
+            self.clear_question_panel()
+            self.fill_question_panel()
         else:
             print 'selected exam'
 
