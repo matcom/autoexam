@@ -1,15 +1,15 @@
-from PyQt4.QtGui import QWizard, QWizardPage, QMessageBox, QTreeWidgetItem, QBrush, QColor
+from PyQt4.QtGui import *
 from PyQt4 import uic
 from threading import Thread
 import os
+import json
 from os.path import join
 import api
-
-
 
 TEMPLATE_PATH = 'qtui/master.jinja'
 ok_color = QBrush(QColor(0, 128, 0))
 warn_color = QBrush(QColor(128, 128, 0))
+
 
 class ExamWizard(QWizard):
 
