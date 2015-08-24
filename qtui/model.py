@@ -28,7 +28,7 @@ import json
 from namedlist import namedlist
 
 
-Project = namedlist('Project', ['name', 'total_questions', 'tags', 'questions'])
+Project = namedlist('Project', ['name', 'total_questions', 'total_exams', 'tags', 'questions'])
 Tag = namedlist('Tag', ['name', 'min_questions'])
 Question = namedlist('Question', ['id', 'tag_names', 'text', 'answers'])
 Answer = namedlist('Answer', ['valid', 'fixed_position', 'text'])
@@ -61,7 +61,7 @@ def test():
     t1 = Tag('t1', 3)
     a1 = Answer(True, False, 'anstxt')
     q1 = Question('a', ['t1'], 'qtxt', [a1, a1])
-    p1 = Project('p1', 2, [t1], [q1, q1])
+    p1 = Project('p1', 2, 2, [t1], [q1, q1])
     s = json.dumps(p1)
     print("hello", s)
     proj = json.loads(s)
@@ -78,6 +78,7 @@ def test():
         for j,a in enumerate(question.answers):
             question.answers[j] = Answer(*a)
             print("answer:", question.answers[j])
+
 
 if __name__ == '__main__':
     test()
