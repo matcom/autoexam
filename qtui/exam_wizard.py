@@ -5,6 +5,9 @@ import os
 import json
 from os.path import join
 import api
+from pprint import pprint
+import scanresults
+import main
 
 TEMPLATE_PATH = 'qtui/master.jinja'
 ok_color = QBrush(QColor(0, 128, 0))
@@ -95,7 +98,7 @@ class ScanPage(QWizardPage):
         self.project = project
         self.scan_thread = None
         self.ui.treeWidget.clear()
-        self.ui.treeWidget.currentItemChanged.connect(self.change_exam)
+        self.ui.treeWidget.currentItemChanged.connect(self.change_tree_item)
 
         self.exams = []
 
@@ -103,8 +106,16 @@ class ScanPage(QWizardPage):
         super(ScanPage, self).initializePage()
         api.add_scan_event_subscriber(self)
 
-        with open(os.path.join('generated', 'last', 'order.json')) as fp:
-            self.orders = json.load(fp)
+        # TODO: Remove symbolic link for multiplatforming
+        order_file_path = os.path.join('generated', 'last', 'order.json')
+        tests_results_file_path = 'test_results.json'
+
+        if os.path.exists(tests_results_file_path):
+            file_to_load = tests_results_file_path
+        else:
+            file_to_load = order_file_path
+
+        main.data['results'] = scanresults.parse(file_to_load)
 
         # self.scan_thread = Thread(target=self.start_scan)
         # self.scan_thread.setDaemon(True)
@@ -114,7 +125,7 @@ class ScanPage(QWizardPage):
             exam_item = QTreeWidgetItem(self.ui.treeWidget, ['Examen %d' % (i + 1)])
             for j in range(self.project.total_questions):
                 question_item = QTreeWidgetItem(exam_item, ['Pregunta %d' % (j + 1)])
-                question_item.question = self.project.questions[j] # TODO: Switch for order
+                question_item.question = self.project.questions[j] # TODO: Switch for real order
 
 
         self.start_scan()
@@ -148,12 +159,11 @@ class ScanPage(QWizardPage):
 
         # question1 = QTreeWidgetItem(exam_item, ['Question1'])
 
-    def change_exam(self):
+    def change_tree_item(self):
         currentItem = self.ui.treeWidget.currentItem()
-        if currentItem.parent() is not None:
+        if currentItem.parent() is not None:  # If it is a question
             print 'selected question'
-            self.clear_question_panel()
-            self.fill_question_panel()
+            self.update_question_panel()
         else:
             print 'selected exam'
 
@@ -161,36 +171,70 @@ class ScanPage(QWizardPage):
         # for question in questions:
             # print(dir(question))
 
-    def clear_question_panel(self):
+    def update_question_panel(self):
         for i in reversed(range(self.ui.questionDataLayout.count())):
             elem = self.ui.questionDataLayout.itemAt(i)
             if not elem:
                 break
             elem.widget().deleteLater()
 
-    def fill_question_panel(self):
         # TODO: Get the right order
-        self.current_question = self.ui.treeWidget.currentItem().question
+        current_question_item = self.ui.treeWidget.currentItem()
+        current_exam_item = current_question_item.parent()
 
-        question_text_label = QLabel(self.current_question.text)
+        exam_no = self.ui.treeWidget.indexOfTopLevelItem(current_exam_item)
+        question_no = current_exam_item.indexOfChild(current_question_item)
+
+        question_text_label = QLabel(current_question_item.question.text)
         self.ui.questionDataLayout.addWidget(question_text_label)
 
-        for answer in self.current_question.answers:
+        for answer_no, answer in enumerate(current_question_item.question.answers):
             question_answer_check = QCheckBox(answer.text)
+            question_answer_check.setChecked(self.is_answer_checked(exam_no, question_no, answer_no))
+
             question_answer_check.stateChanged.connect(self.update_current_question_state)
             self.ui.questionDataLayout.addWidget(question_answer_check)
 
+    def is_answer_checked(self, exam_no, question_no, answer_no):
+        print('is_answer_checked')
+        print(exam_no,question_no,answer_no)
+        results_data = main.data['results']
+        exam_data = results_data[exam_no]
+
+        question_data = exam_data.questions[question_no]
+        return answer_no in question_data.visual_answers
+
+    def set_answer_checked(self, exam_no, question_no, answer_no, value):
+        results_data = main.data['results']
+        exam_data = results_data[exam_no]
+        question_data = exam_data.questions[question_no]
+
+        if value and answer_no not in question_data.visual_answers:
+            question_data.visual_answers.append(answer_no)
+        elif not value and answer_no in question_data.visual_answers:
+            question_data.visual_answers.remove(answer_no)
+
     def update_current_question_state(self, state):
-        for i, answer in enumerate(self.current_question.answers):
-            answer.checked = self.ui.questionDataLayout.itemAt(i + 1).widget().isChecked() # TODO? Right order
-            print(answer.checked)
+        # TODO: Get the right order
+        current_question_item = self.ui.treeWidget.currentItem()
+        current_exam_item = current_question_item.parent()
 
+        exam_no = self.ui.treeWidget.indexOfTopLevelItem(current_exam_item)
+        question_no = current_exam_item.indexOfChild(current_question_item)
 
+        results_data = main.data['results']
+        exam_data = results_data[exam_no]
+        question_data = exam_data.questions[question_no]
+
+        for i, answer in enumerate(current_question_item.question.answers):
+            checked = self.ui.questionDataLayout.itemAt(i + 1).widget().isChecked() # TODO? Right order
+            if checked:
+                question_data.visual_answers.append(i)
 
     def start_scan(self):
 
         class _args:
-            outfile = 'tests_results.json'
+            outfile = 'test_results.json'
             cameras = [1]
             folder = "images"
             time = None

@@ -16,10 +16,13 @@ from os import mkdir, environ
 from os.path import join, exists, abspath
 import api
 import model
+import scanresults
 
 DEFAULT_PROJECT_FILENAME = '.autoexam_project'
 DEFAULT_PROJECT_PATH = join(environ['HOME'], 'autoexam_projects')
 DEFAULT_PROJECT_FOLDER_NAME = 'Project %d'
+
+data = {'test': 'test_data'}
 
 
 def src(path):
@@ -74,6 +77,7 @@ class MainWindow(QMainWindow):
 
             # TODO: Fix project creation
             self.project = Project(name, 0, [], [])
+            self.project_path = __project_path__
 
             # Invoke Autoexam
             api.init(name, __project_path__)
@@ -96,9 +100,25 @@ class MainWindow(QMainWindow):
                 return
             else:
                 self.project = model.load_project(__project_file_path__)
+                self.project_path = __project_file_path__
 
             os.chdir(directory)
             self.startWizard()
+
+    def closeEvent(self, event):
+        if self.saveOnClose():
+            model.dump_project(self.project, self.project_path)
+            try:
+                scanresults.dump(data['results'], 'test_results.json', overwrite=True)
+                print 'saved test results'
+            except AttributeError:
+                pass
+                print 'no tests results to save'
+            event.accept()
+
+    def saveOnClose(self):
+        return True
+
 
 
 def getProject():

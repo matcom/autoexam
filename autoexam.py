@@ -171,6 +171,7 @@ def scan(args):
     import scanresults
     import json
 
+    # TODO: Remove symlink for Windows
     args.exams_file = 'generated/last/order.json'
     if not os.path.exists(args.exams_file):
         error('Not an Autoexam folder or exams not generated')
