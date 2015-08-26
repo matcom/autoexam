@@ -155,12 +155,12 @@
   <customwidget>
    <class>ListWidget</class>
    <extends>QListWidget</extends>
-   <header>controls.listwidget</header>
+   <header>qtui.controls.listwidget</header>
   </customwidget>
   <customwidget>
    <class>TabWidget</class>
    <extends>QTabWidget</extends>
-   <header>controls.tabwidget</header>
+   <header>qtui.controls.tabwidget</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

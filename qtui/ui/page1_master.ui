@@ -23,7 +23,7 @@
   <customwidget>
    <class>QuestionWidget</class>
    <extends>QWidget</extends>
-   <header>controls.question</header>
+   <header>qtui.controls.question</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
