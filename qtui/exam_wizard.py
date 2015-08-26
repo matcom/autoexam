@@ -184,11 +184,12 @@ class ScanPage(QWizardPage):
 
     def change_tree_item(self):
         currentItem = self.ui.treeWidget.currentItem()
-        if currentItem.parent() is not None:  # If it is a question
-            print 'selected question'
-            self.update_question_panel()
-        else:
-            print 'selected exam'
+        if currentItem is not None:
+            if currentItem.parent() is not None:  # If it is a question
+                print 'selected question'
+                self.update_question_panel()
+            else:
+                print 'selected exam'
 
         # questions = self.ui.treeWidget.currentItem().exam.questions
         # for question in questions:
