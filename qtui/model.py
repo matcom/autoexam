@@ -27,8 +27,6 @@ Answer:
 import json
 from namedlist import namedlist
 
-data = {}
-
 Project = namedlist('Project', ['name', 'total_questions_per_exam', 'total_exams_to_generate', 'tags', 'questions'])
 Tag = namedlist('Tag', ['name', 'min_questions'])
 Question = namedlist('Question', ['id', 'tag_names', 'text', 'answers'])

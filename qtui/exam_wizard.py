@@ -11,6 +11,8 @@ class ExamWizard(QWizard):
     def __init__(self, project):
         super(ExamWizard, self).__init__()
         self.project = project
+        self.order = None # TODO: Implement order loading here?
+        self.results = None # TODO: Implement result loading here?
         self.addPage(MasterPage(project))
         self.addPage(GeneratePage(project))
         self.addPage(ScanPage(project))

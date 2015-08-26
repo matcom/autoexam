@@ -122,7 +122,7 @@ class MainWindow(QMainWindow):
                 print 'no tests results to save'
             except KeyError:
                 pass
-                print 'no model.data[results]'
+                # print 'no model.data[results]'
 
             event.accept()
 

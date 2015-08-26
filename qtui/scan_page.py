@@ -22,6 +22,8 @@ class ScanPage(QWizardPage):
         self.question_item_to_question = {}
 
         self.exams = []
+        self.order = None
+        self.results = None
 
     def initializePage(self):
         super(ScanPage, self).initializePage()
@@ -32,13 +34,16 @@ class ScanPage(QWizardPage):
         order_file_path = os.path.join('generated', 'last', 'order.json')
         tests_results_file_path = 'test_results.json'
 
+        if os.path.exists(order_file_path):
+            self.order = scanresults.parse(order_file_path)
         if os.path.exists(tests_results_file_path):
-            file_to_load = tests_results_file_path
-        else:
-            file_to_load = order_file_path
+            self.results = scanresults.parse(tests_results_file_path)
 
-        model.data['results'] = scanresults.parse(file_to_load)
-        print 'results', model.data['results']
+        # Propagate loaded info to parent
+        if self.order:
+            self.parent().order = self.order
+        if self.results:
+            self.parent().order = self.order
 
         # self.scan_thread = Thread(target=self.start_scan)
         # self.scan_thread.setDaemon(True)
@@ -119,16 +124,16 @@ class ScanPage(QWizardPage):
             self.ui.questionDataLayout.addWidget(question_answer_check)
 
     def is_answer_checked(self, exam_no, question_no, answer_no):
-        print('is_answer_checked')
+        print 'is_answer_checked'
         print(exam_no,question_no,answer_no)
-        results_data = model.data['results']
+        # results_data = model.data['results']
         exam_data = results_data[exam_no]
 
         question_data = exam_data.questions[question_no]
         return answer_no in question_data.visual_answers
 
     def set_answer_checked(self, exam_no, question_no, answer_no, value):
-        results_data = model.data['results']
+        # results_data = model.data['results']
         exam_data = results_data[exam_no]
         question_data = exam_data.questions[question_no]
 
