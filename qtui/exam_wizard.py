@@ -1,11 +1,9 @@
 from PyQt4.QtGui import *
 from PyQt4 import uic
-from threading import Thread
 import os
-import json
 from os.path import join
+from glob import glob
 import api
-from pprint import pprint
 import model
 import scanresults
 
@@ -70,17 +68,18 @@ class GeneratePage(QWizardPage):
 
     def __init__(self, project):
         super(GeneratePage, self).__init__()
-        self.ui = uic.loadUi( join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
+        self.ui = uic.loadUi(join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
         self.project = project
 
+        self.ui.questionCountSpin.setValue(self.project.total_questions_per_exam)
+        self.ui.examCountSpin.setValue(self.project.total_exams_to_generate)
+
         self.ui.generateBtn.clicked.connect(self.generate)
+        self.ui.questionCountSpin.valueChanged.connect(self.update_project)
+        self.ui.examCountSpin.valueChanged.connect(self.update_project)
 
     def generate(self):
         # Both master and exam generation are being done here temporally
-        self.project.total_questions_per_exam = self.ui.questionCountSpin.value()
-        self.project.total_exams_to_generate = self.ui.examCountSpin.value()
-
-        print "Project.total_questions_per_exam", self.project.total_questions_per_exam
 
         master_data = api.render_master(self.project, join(os.environ['AUTOEXAM_FOLDER'], TEMPLATE_PATH))
         api.save_master(master_data)
@@ -89,6 +88,20 @@ class GeneratePage(QWizardPage):
                    "sort_questions": self.ui.sortQuestionCheck.isChecked(),
                    "dont_shuffle_options": not self.ui.randItemCheck.isChecked()
                    })
+
+        # TODO: Remove this when scanning is working
+        print 'cwd', os.getcwd()
+        dst_image_dir = os.path.join('generated','last','images')
+        if not os.path.exists(dst_image_dir):
+            os.mkdir(dst_image_dir)
+            print 'created images directory'
+        file_list = ' '.join(glob('generated/last/pdf/Answer*'))
+        os.system('pdftocairo -jpeg {file_list} {dst_image_dir}/scan'
+            .format(file_list=file_list, dst_image_dir=dst_image_dir))
+
+    def update_project(self):
+        self.project.total_questions_per_exam = self.ui.questionCountSpin.value()
+        self.project.total_exams_to_generate = self.ui.examCountSpin.value()
 
 
 class ScanPage(QWizardPage):
@@ -99,7 +112,6 @@ class ScanPage(QWizardPage):
         self.ui = uic.loadUi(join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
         self.project = project
         self.scan_thread = None
-        self.ui.treeWidget.clear()
         self.ui.treeWidget.currentItemChanged.connect(self.change_tree_item)
         self.question_item_to_question = {}
 
@@ -107,6 +119,7 @@ class ScanPage(QWizardPage):
 
     def initializePage(self):
         super(ScanPage, self).initializePage()
+        self.ui.treeWidget.clear()
         api.add_scan_event_subscriber(self)
 
         # TODO: Remove symbolic link for multiplatforming
@@ -130,7 +143,6 @@ class ScanPage(QWizardPage):
             for j in range(self.project.total_questions_per_exam):
                 question_item = QTreeWidgetItem(exam_item, ['Pregunta %d' % (j + 1)])
                 question_item.question = self.project.questions[j] # TODO: Switch for real order
-
 
         self.start_scan()
 
@@ -240,7 +252,7 @@ class ScanPage(QWizardPage):
         class _args:
             outfile = 'test_results.json'
             cameras = [1]
-            folder = "images"
+            folder = "generated/last/images"
             time = None
             autowrite = None
             poll = None
@@ -254,7 +266,7 @@ class ScoresPage(QWizardPage):
 
     def __init__(self, project):
         super(ScoresPage, self).__init__()
-        self.ui = uic.loadUi( join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
+        self.ui = uic.loadUi(join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
         self.project = project
 
 
@@ -263,5 +275,5 @@ class ResultsPage(QWizardPage):
 
     def __init__(self, project):
         super(ResultsPage, self).__init__()
-        self.ui = uic.loadUi( join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
+        self.ui = uic.loadUi(join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
         self.project = project
