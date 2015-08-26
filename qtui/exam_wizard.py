@@ -99,6 +99,11 @@ class GeneratePage(QWizardPage):
         os.system('pdftocairo -jpeg {file_list} {dst_image_dir}/scan'
             .format(file_list=file_list, dst_image_dir=dst_image_dir))
 
+        msgBox = QMessageBox()
+        msgBox.setText("The exam has been successfully generated.")
+        msgBox.setModal(True)
+        msgBox.exec_()
+
     def update_project(self):
         self.project.total_questions_per_exam = self.ui.questionCountSpin.value()
         self.project.total_exams_to_generate = self.ui.examCountSpin.value()
