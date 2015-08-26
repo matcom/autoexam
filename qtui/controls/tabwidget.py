@@ -76,6 +76,7 @@ class TabWidget(QTabWidget):
         if content:
             self.initTabs()
             self.addContent(content)
+            self.setCurrentIndex(0)
         else:
             for i in xrange(self.count() - 1):
                 self.closeTabAt(0)
