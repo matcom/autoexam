@@ -36,8 +36,12 @@ Answer = namedlist('Answer', ['valid', 'fixed_position', 'text'])
 
 
 def dump_project(proj, path):
-    with open(path, 'w') as fp:
-        json.dump(proj, fp)
+    try:
+        s = json.dumps(proj)
+        with open(path, 'w') as fp:
+            fp.write(s)
+    except:
+        print 'Error saving Project'
 
 
 def load_project(path):

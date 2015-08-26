@@ -40,7 +40,7 @@ class QuestionWidget(QWidget):
 
     def addQuestion(self, question_id):
         # save question and answers
-        question = qtui.model.Question(question_id, '', '', [])
+        question = qtui.model.Question(str(question_id), '', '', [])
         if self.questions:
             self.saveQuestion(self.current)
         self.ui.questionEdit.clear()
