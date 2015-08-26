@@ -84,20 +84,22 @@ class GeneratePage(QWizardPage):
         master_data = api.render_master(self.project, join(os.environ['AUTOEXAM_FOLDER'], TEMPLATE_PATH))
         api.save_master(master_data)
 
-        api.gen(**{"dont_shuffle_tags": not self.ui.randTagCheck.isChecked(),
+        api.gen(**{"tests_count": self.project.total_exams_to_generate,
+                   "dont_shuffle_tags": not self.ui.randTagCheck.isChecked(),
                    "sort_questions": self.ui.sortQuestionCheck.isChecked(),
                    "dont_shuffle_options": not self.ui.randItemCheck.isChecked()
                    })
 
         # TODO: Remove this when scanning is working
         print 'cwd', os.getcwd()
-        dst_image_dir = os.path.join('generated','last','images')
+        dst_image_dir = os.path.join('generated', 'last', 'images')
         if not os.path.exists(dst_image_dir):
             os.mkdir(dst_image_dir)
             print 'created images directory'
-        file_list = ' '.join(glob('generated/last/pdf/Answer*'))
-        os.system('pdftocairo -jpeg {file_list} {dst_image_dir}/scan'
-            .format(file_list=file_list, dst_image_dir=dst_image_dir))
+        file_list = glob('generated/last/pdf/Answer*')
+        for i, filename in enumerate(file_list):
+            os.system('pdftocairo -jpeg {filename} {dst_image_dir}/{i}-scan'
+                .format(filename=filename, dst_image_dir=dst_image_dir, i=i))
 
         msgBox = QMessageBox()
         msgBox.setText("The exam has been successfully generated.")
