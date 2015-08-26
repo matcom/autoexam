@@ -130,17 +130,17 @@ class ScanPage(QWizardPage):
         exam_data = results_data[exam_no]
 
         question_data = exam_data.questions[question_no]
-        return answer_no in question_data.visual_answers
+        return answer_no in question_data.answers
 
     def set_answer_checked(self, exam_no, question_no, answer_no, value):
         # results_data = model.data['results']
         exam_data = results_data[exam_no]
         question_data = exam_data.questions[question_no]
 
-        if value and answer_no not in question_data.visual_answers:
-            question_data.visual_answers.append(answer_no)
-        elif not value and answer_no in question_data.visual_answers:
-            question_data.visual_answers.remove(answer_no)
+        if value and answer_no not in question_data.answers:
+            question_data.answers.append(answer_no)
+        elif not value and answer_no in question_data.answers:
+            question_data.answers.remove(answer_no)
 
     def update_current_question_state(self, state):
         # TODO: Get the right order
@@ -157,7 +157,7 @@ class ScanPage(QWizardPage):
         for i, answer in enumerate(current_question_item.question.answers):
             checked = self.ui.questionDataLayout.itemAt(i + 1).widget().isChecked() # TODO? Right order
             if checked:
-                question_data.visual_answers.append(i)
+                question_data.answers.append(i)
 
     def start_scan(self):
 
