@@ -17,14 +17,14 @@
    <item>
     <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>Question text</string>
+      <string>Answer text</string>
      </property>
     </widget>
    </item>
    <item>
     <widget class="QPlainTextEdit" name="questionEdit">
      <property name="plainText">
-      <string>question-text</string>
+      <string>This is a sample answer</string>
      </property>
     </widget>
    </item>
