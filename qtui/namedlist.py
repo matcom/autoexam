@@ -6,6 +6,7 @@ def namedlist(class_name, fields):
     class temp(list):
         _indexes = {f:i for (i, f) in enumerate(fields)}
         _fields = fields
+
         def __init__(self, *values):
             assert len(values) == len(fields)
             super(temp, self).__init__(values)
