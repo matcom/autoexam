@@ -4,19 +4,33 @@
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4 import uic
-from qtui.model import *
+import qtui.model
 import os.path
 
 
 class QuestionWidget(QWidget):
     def __init__(self, parent=None):
         super(QuestionWidget, self).__init__(parent)
-        self.ui = uic.loadUi(os.path.join(os.environ['AUTOEXAM_FOLDER'],"qtui/ui/question.ui"), self)
+        self.ui = uic.loadUi(os.path.join(os.environ['AUTOEXAM_FOLDER'], "qtui/ui/question.ui"), self)
         self.questions = []
         self.current = -1
         self.connectSignals()
-        item = self.ui.idsWidget.addCustomItem()
-        self.ui.idsWidget.editItem(item)
+        # item = self.ui.idsWidget.addCustomItem()
+        # self.ui.idsWidget.editItem(item)
+
+    def initializeProject(self, project):
+        self.project = project
+        self.questions = project.questions
+
+        self.ui.idsWidget.clear()
+
+        for question in self.questions:
+            self.ui.idsWidget.addItem(question.id)
+
+        if len(self.questions) > 0:
+            self.changeCurrentQuestion(0)
+
+        print 'project', project
 
     def connectSignals(self):
         self.ui.idsWidget.rowAdded.connect(self.addQuestion)
@@ -26,7 +40,7 @@ class QuestionWidget(QWidget):
 
     def addQuestion(self, question_id):
         # save question and answers
-        question = Question(question_id, '', '', [])
+        question = qtui.model.Question(question_id, '', '', [])
         if self.questions:
             self.saveQuestion(self.current)
         self.ui.questionEdit.clear()
@@ -53,11 +67,12 @@ class QuestionWidget(QWidget):
         tag_names = str(self.ui.tagsEdit.text()).split()
         text = str(self.questionEdit.toPlainText())
         answers = self.answersWidget.dump()
-        self.questions[index] = Question(q_id, tag_names, text, answers)
+        self.questions[index] = qtui.model.Question(q_id, tag_names, text, answers)
 
     def changeCurrentQuestion(self, index):
-        if index != -1:
+        if self.current != -1:
             self.saveQuestion(self.current)
+        if index != -1:
             self.ui.questionEdit.setPlainText(self.questions[index].text)
             self.ui.tagsEdit.setText(' '.join(self.questions[index].tag_names))
             self.ui.answersWidget.reset(self.questions[index].answers)
@@ -67,7 +82,7 @@ class QuestionWidget(QWidget):
         tag_names = set()
         for question in self.questions:
             tag_names.update(set(question.tag_names))
-        return [Tag(tag_name, 0) for tag_name in tag_names]
+        return [qtui.model.Tag(tag_name, 0) for tag_name in tag_names]
 
     def dump(self):
         if 0 <= self.current < len(self.questions):
@@ -75,9 +90,10 @@ class QuestionWidget(QWidget):
         return self.getTags(), self.questions
 
 
-if __name__ == '__main__':
-    import sys
-    app = QApplication(sys.argv)
-    win = QuestionWidget()
-    win.show()
-    sys.exit(app.exec_())
+# if __name__ == '__main__':
+#     import model
+#     import sys
+#     app = QApplication(sys.argv)
+#     win = QuestionWidget()
+#     win.show()
+#     sys.exit(app.exec_())

@@ -6,8 +6,8 @@ import json
 from os.path import join
 import api
 from pprint import pprint
+import model
 import scanresults
-import main
 
 TEMPLATE_PATH = 'qtui/master.jinja'
 ok_color = QBrush(QColor(0, 128, 0))
@@ -18,8 +18,9 @@ class ExamWizard(QWizard):
 
     def __init__(self, project):
         super(ExamWizard, self).__init__()
-        # self.addPage(MasterPage(project))
-        # self.addPage(GeneratePage(project))
+        self.project = project
+        self.addPage(MasterPage(project))
+        self.addPage(GeneratePage(project))
         self.addPage(ScanPage(project))
         self.addPage(ScoresPage(project))
         self.addPage(ResultsPage(project))
@@ -30,13 +31,14 @@ class MasterPage(QWizardPage):
 
     def __init__(self, project):
         super(MasterPage, self).__init__()
-        self.ui = uic.loadUi( join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
+        self.ui = uic.loadUi(join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
         self.project = project
+        self.ui.questionWidget.initializeProject(project)
         # self.ui.masterGenBtn.clicked.connect(self.gen_master)
 
     def validatePage(self):
         try:
-            tags, questions = self.ui.widget.dump()
+            tags, questions = self.ui.questionWidget.dump()
 
             self.project.tags = tags
             self.project.questions = questions
@@ -45,9 +47,9 @@ class MasterPage(QWizardPage):
 
             # TODO: Do at least one of the following:
 
-            # 1. Set the project total_questions number before generating
+            # 1. Set the project total_questions_per_exam number before generating
             #    the master here (with a dialog or a modified ui)
-            # 2. Get the total_questions number out of the master and into
+            # 2. Get the total_questions_per_exam number out of the master and into
             #    gen.py as a parameter (just like test_count)
 
             # Uncomment when one of the above is done.
@@ -75,10 +77,10 @@ class GeneratePage(QWizardPage):
 
     def generate(self):
         # Both master and exam generation are being done here temporally
-        self.project.total_questions = self.ui.questionCountSpin.value()
-        self.project.total_exams = self.ui.examCountSpin.value()
+        self.project.total_questions_per_exam = self.ui.questionCountSpin.value()
+        self.project.total_exams_to_generate = self.ui.examCountSpin.value()
 
-        print "Project.total_questions", self.project.total_questions
+        print "Project.total_questions_per_exam", self.project.total_questions_per_exam
 
         master_data = api.render_master(self.project, join(os.environ['AUTOEXAM_FOLDER'], TEMPLATE_PATH))
         api.save_master(master_data)
@@ -94,11 +96,12 @@ class ScanPage(QWizardPage):
 
     def __init__(self, project):
         super(ScanPage, self).__init__()
-        self.ui = uic.loadUi( join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
+        self.ui = uic.loadUi(join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
         self.project = project
         self.scan_thread = None
         self.ui.treeWidget.clear()
         self.ui.treeWidget.currentItemChanged.connect(self.change_tree_item)
+        self.question_item_to_question = {}
 
         self.exams = []
 
@@ -115,15 +118,16 @@ class ScanPage(QWizardPage):
         else:
             file_to_load = order_file_path
 
-        main.data['results'] = scanresults.parse(file_to_load)
+        model.data['results'] = scanresults.parse(file_to_load)
+        print 'results', model.data['results']
 
         # self.scan_thread = Thread(target=self.start_scan)
         # self.scan_thread.setDaemon(True)
         # self.scan_thread.start()
 
-        for i in range(self.project.total_exams):
+        for i in range(self.project.total_exams_to_generate):
             exam_item = QTreeWidgetItem(self.ui.treeWidget, ['Examen %d' % (i + 1)])
-            for j in range(self.project.total_questions):
+            for j in range(self.project.total_questions_per_exam):
                 question_item = QTreeWidgetItem(exam_item, ['Pregunta %d' % (j + 1)])
                 question_item.question = self.project.questions[j] # TODO: Switch for real order
 
@@ -198,14 +202,14 @@ class ScanPage(QWizardPage):
     def is_answer_checked(self, exam_no, question_no, answer_no):
         print('is_answer_checked')
         print(exam_no,question_no,answer_no)
-        results_data = main.data['results']
+        results_data = model.data['results']
         exam_data = results_data[exam_no]
 
         question_data = exam_data.questions[question_no]
         return answer_no in question_data.visual_answers
 
     def set_answer_checked(self, exam_no, question_no, answer_no, value):
-        results_data = main.data['results']
+        results_data = model.data['results']
         exam_data = results_data[exam_no]
         question_data = exam_data.questions[question_no]
 
@@ -222,7 +226,7 @@ class ScanPage(QWizardPage):
         exam_no = self.ui.treeWidget.indexOfTopLevelItem(current_exam_item)
         question_no = current_exam_item.indexOfChild(current_question_item)
 
-        results_data = main.data['results']
+        results_data = model.data['results']
         exam_data = results_data[exam_no]
         question_data = exam_data.questions[question_no]
 

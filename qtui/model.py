@@ -4,7 +4,7 @@
 """
 Project:
 - name
-- total_questions
+- total_questions_per_exam
 - tags
 - questions
 
@@ -28,7 +28,7 @@ import json
 from namedlist import namedlist
 
 
-Project = namedlist('Project', ['name', 'total_questions', 'total_exams', 'tags', 'questions'])
+Project = namedlist('Project', ['name', 'total_questions_per_exam', 'total_exams_to_generate', 'tags', 'questions'])
 Tag = namedlist('Tag', ['name', 'min_questions'])
 Question = namedlist('Question', ['id', 'tag_names', 'text', 'answers'])
 Answer = namedlist('Answer', ['valid', 'fixed_position', 'text'])
@@ -65,6 +65,7 @@ def test():
     q1 = Question('a', ['t1'], 'This is a question', [a1, a2])
     q2 = Question('a', ['t1'], 'This is another question', [a1, a2])
     p1 = Project('Project 1', 2, 2, [t1], [q1, q2])
+
     s = json.dumps(p1)
     print(s)
     proj = json.loads(s)

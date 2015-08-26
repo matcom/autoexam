@@ -11,9 +11,10 @@ if 'AUTOEXAM_FOLDER' not in os.environ:
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4 import uic
-from exam_wizard import ExamWizard
+import exam_wizard
 from os import mkdir, environ
 from os.path import join, exists, abspath
+
 import api
 import model
 import scanresults
@@ -21,8 +22,6 @@ import scanresults
 DEFAULT_PROJECT_FILENAME = '.autoexam_project'
 DEFAULT_PROJECT_PATH = join(environ['HOME'], 'autoexam_projects')
 DEFAULT_PROJECT_FOLDER_NAME = 'Project %d'
-
-data = {'test': 'test_data'}
 
 
 def src(path):
@@ -45,13 +44,14 @@ class MainWindow(QMainWindow):
         if not exists(DEFAULT_PROJECT_PATH):
             mkdir(DEFAULT_PROJECT_PATH)
 
+        # TOFIX: directory always returns a string even on cancel.
         options = QFileDialog.DontResolveSymlinks | QFileDialog.ShowDirsOnly
         directory = QFileDialog.getExistingDirectory(self,
-                "Project", DEFAULT_PROJECT_PATH, options)
+                "Select a folder for a new project...", DEFAULT_PROJECT_PATH, options)
         return directory
 
     def startWizard(self):
-        page = ExamWizard(self.project)
+        page = exam_wizard.ExamWizard(self.project)
 
         name = self.project.name
 
@@ -64,6 +64,7 @@ class MainWindow(QMainWindow):
     def newExam(self):
         directory = abspath(str(self.setExistingDirectory()))
         if directory:
+            print(directory)
             # Logic + UI
 
             project_count = 1
@@ -76,19 +77,22 @@ class MainWindow(QMainWindow):
             __project_path__ = join(directory, name)
 
             # TODO: Fix project creation
-            self.project = Project(name, 0, [], [])
-            self.project_path = __project_path__
+            self.project = model.Project(name, 1, 1, [], [])
+            self.project_path = join(__project_path__, DEFAULT_PROJECT_FILENAME)
 
             # Invoke Autoexam
             api.init(name, __project_path__)
 
-            model.dump_project(self.project, '%s' % join(__project_path__, DEFAULT_PROJECT_FILENAME))
+            try:
+                model.dump_project(self.project, '%s' % self.project_path)
+            except AttributeError:
+                pass  # No project loaded
 
             os.chdir(__project_path__)
             self.startWizard()
 
-    def loadExam(self, directory=None):
-        if directory is None:
+    def loadExam(self, directory=False):
+        if directory is False:
             directory = str(self.setExistingDirectory())
 
         if directory:
@@ -107,26 +111,23 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         if self.saveOnClose():
-            model.dump_project(self.project, self.project_path)
             try:
-                scanresults.dump(data['results'], 'test_results.json', overwrite=True)
+                # model.dump_project(self.project, self.project_path)
+                model.dump_project(self.project, '%s' % self.project_path)
+
+                scanresults.dump(model.data['results'], 'test_results.json', overwrite=True)
                 print 'saved test results'
             except AttributeError:
                 pass
                 print 'no tests results to save'
+            except KeyError:
+                pass
+                print 'no model.data[results]'
             event.accept()
 
     def saveOnClose(self):
         return True
 
-
-
-def getProject():
-    t1 = Tag('t1', 3)
-    a1 = Answer(True, False, 'anstxt')
-    q1 = Question('a', ['t1'], 'qtxt', [a1, a1])
-    p1 = Project('p1', 2, [t1], [q1, q1])
-    return p1
 
 def main():
     import sys
