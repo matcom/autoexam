@@ -8,6 +8,7 @@ autoexam api
 import os, subprocess, random, jinja2
 import sys
 import autoexam
+from os import system as run
 
 master = 'master.txt'
 # project_path = None
@@ -28,25 +29,13 @@ def get_value(kwargs, field, default=None):
     return ''
 
 
-def run(command):
-    # current_path = os.getcwd()
-    # os.chdir(project_path)
-    value = os.system(command)
-    # os.chdir(current_path)
-    return value
-
-
-# def set_project_path(path):
-#     global project_path
-#     project_path = path
-
-
 def save_master(master_text):
     with open(master, 'w') as fp:
         fp.write(master_text)
 # endregion Helpers
 
 # region Autoexam Methods
+
 
 def init(name, folder='.', template='', **kwargs):
     """
@@ -116,8 +105,15 @@ def gen(**kwargs):
     cmd = ' '.join(params)
     return run(cmd)
 
-# endregion Autoexam methods
 
+def grade(**kwargs):
+    """
+    TODO
+    """
+    run('autoexam grade')
+
+
+# endregion Autoexam methods
 
 def validate_project(project):
     for question in project.questions:
