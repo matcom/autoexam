@@ -33,7 +33,7 @@ class ScanPage(QWizardPage):
 
         # TODO: Remove symbolic link for multiplatforming
         order_file_path = os.path.join('generated', 'last', 'order.json')
-        tests_results_file_path = 'test_results.json'
+        tests_results_file_path = 'tests_results.json'
 
         if os.path.exists(order_file_path):
             self.order = scanresults.parse(order_file_path)
@@ -157,7 +157,7 @@ class ScanPage(QWizardPage):
     def start_scan(self):
 
         class _args:
-            outfile = 'test_results.json'
+            outfile = 'tests_results.json'
             cameras = [1]
             folder = "generated/last/images"
             time = None
