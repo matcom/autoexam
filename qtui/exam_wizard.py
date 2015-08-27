@@ -13,8 +13,9 @@ class ExamWizard(QWizard):
         self.project = project
         self.order = None # TODO: Implement order loading here?
         self.results = None # TODO: Implement result loading here?
+        self.setOption(QWizard.IndependentPages, False)
         self.addPage(MasterPage(project, self))
         self.addPage(GeneratePage(project, self))
         self.addPage(ScanPage(project, self))
-        self.addPage(ScoresPage(project, self))
+        # self.addPage(ScoresPage(project, self))
         self.addPage(ResultsPage(project, self))
