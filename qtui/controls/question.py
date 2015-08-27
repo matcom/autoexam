@@ -12,7 +12,6 @@ class QuestionWidget(QWidget):
     def __init__(self, parent=None):
         super(QuestionWidget, self).__init__(parent)
         self.ui = uic.loadUi(os.path.join(os.environ['AUTOEXAM_FOLDER'], "qtui/ui/question.ui"), self)
-        self.questions = []
         self.current = -1
         self.connectSignals()
         # item = self.ui.idsWidget.addCustomItem()
@@ -29,6 +28,7 @@ class QuestionWidget(QWidget):
 
         if len(self.questions) > 0:
             self.changeCurrentQuestion(0)
+            self.current = 0
 
         print 'project', project
 
@@ -42,6 +42,7 @@ class QuestionWidget(QWidget):
         # save question and answers
         question = qtui.model.Question(str(question_id), '', '', [])
         if self.questions:
+            # self.printStatus()
             self.saveQuestion(self.current)
         self.ui.questionEdit.clear()
         self.tagsEdit.clear()
@@ -67,16 +68,23 @@ class QuestionWidget(QWidget):
         tag_names = str(self.ui.tagsEdit.text()).split()
         text = str(self.questionEdit.toPlainText())
         answers = self.answersWidget.dump()
-        self.questions[index] = qtui.model.Question(q_id, tag_names, text, answers)
+
+        question = qtui.model.Question(q_id, tag_names, text, answers)
+        if index >= len(self.questions):
+            self.questions.append(question)
+        else:
+            self.questions[index] = qtui.model.Question(q_id, tag_names, text, answers)
 
     def changeCurrentQuestion(self, index):
         if self.current != -1:
+            # self.printStatus()
             self.saveQuestion(self.current)
         if index != -1:
             self.ui.questionEdit.setPlainText(self.questions[index].text)
             self.ui.tagsEdit.setText(' '.join(self.questions[index].tag_names))
             self.ui.answersWidget.reset(self.questions[index].answers)
             self.current = index
+            self.ui.idsWidget.setCurrentItem(self.ui.idsWidget.item(index))
 
     def getTags(self):
         tag_names = set()
