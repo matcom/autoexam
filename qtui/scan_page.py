@@ -127,6 +127,8 @@ class ScanPage(QWizardPage):
         exam_data = results_data[exam_no]
         question_data = exam_data.questions[question_no]
 
+        answer_no += 1
+
         if value and answer_no not in question_data.answers:
             question_data.answers.append(answer_no)
         elif not value and answer_no in question_data.answers:
@@ -144,6 +146,7 @@ class ScanPage(QWizardPage):
         question_data = exam_data.questions[question_no]
 
         for i, answer in enumerate(current_question_item.question.answers):
+            i += 1
             checked = self.ui.questionDataLayout.itemAt(i + 1).widget().isChecked()
             if checked and i not in question_data.answers:
                 question_data.answers.append(i)
