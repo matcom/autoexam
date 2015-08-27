@@ -18,6 +18,11 @@
     <widget class="QTreeWidget" name="treeWidget">
      <column>
       <property name="text">
+       <string>Temario</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
        <string>Nombre</string>
       </property>
      </column>
@@ -28,17 +33,7 @@
      </column>
      <column>
       <property name="text">
-       <string>Grupo</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
        <string>Puntuación</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>Temario</string>
       </property>
      </column>
     </widget>
