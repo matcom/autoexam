@@ -23,7 +23,7 @@ DEFAULT_PROJECT_FILENAME = '.autoexam_project'
 DEFAULT_PROJECT_PATH = join(environ['HOME'], 'autoexam_projects')
 DEFAULT_PROJECT_FOLDER_NAME = 'Project %d'
 
-Qt.QT_NO_DEBUG_OUTPUT = True
+# Qt.QT_NO_DEBUG_OUTPUT = True
 
 
 def src(path):
