@@ -28,8 +28,10 @@ class ScanPage(QWizardPage):
 
     def initializePage(self):
         super(ScanPage, self).initializePage()
-        self.ui.treeWidget.clear()
         api.add_scan_event_subscriber(self)
+
+        tree = self.ui.treeWidget
+        tree.clear()
 
         # TODO: Remove symbolic link for multiplatforming
         order_file_path = os.path.join('generated', 'last', 'order.json')
@@ -40,24 +42,34 @@ class ScanPage(QWizardPage):
         if os.path.exists(tests_results_file_path):
             self.results = scanresults.parse(tests_results_file_path)
 
-        # Propagate loaded info to parent
-        if self.order:
-            self.parentWizard.order = self.order
-        if self.results:
-            print 'storing results reference'
-            self.parentWizard.results = self.results
+        for i in range(self.project.total_exams_to_generate):
+            exam_item = QTreeWidgetItem(tree, ['Examen %d' % (i + 1)])
+            for j in range(self.project.total_questions_per_exam):
+                question_item = QTreeWidgetItem(exam_item, ['Pregunta %d' % (j + 1)])
+                question_item.question = self.project.questions[self.results[i].questions[j].id - 1]
 
         # self.scan_thread = Thread(target=self.start_scan)
         # self.scan_thread.setDaemon(True)
         # self.scan_thread.start()
 
-        for i in range(self.project.total_exams_to_generate):
-            exam_item = QTreeWidgetItem(self.ui.treeWidget, ['Examen %d' % (i + 1)])
-            for j in range(self.project.total_questions_per_exam):
-                question_item = QTreeWidgetItem(exam_item, ['Pregunta %d' % (j + 1)])
-                question_item.question = self.project.questions[j] # TODO: Switch for real order
-
+        # TODO: don't do this if self.results is set
         self.start_scan()
+
+        # TODO: Load this in parent wizard
+        if os.path.exists(tests_results_file_path):
+            self.results = scanresults.parse(tests_results_file_path)
+        if self.results:
+            print 'storing results reference'
+            self.parentWizard.results = self.results
+
+        first_exam_item = tree.topLevelItem(0)
+        first_exam_item.setExpanded(True)
+        tree.setCurrentItem(
+            tree.itemBelow(first_exam_item))
+
+    def validatePage(self):
+        scanresults.dump(self.results, 'tests_results.json', overwrite=True)
+        return True
 
     def cleanupPage(self):
         super(ScanPage, self).cleanupPage()
@@ -86,6 +98,7 @@ class ScanPage(QWizardPage):
         if currentItem is not None:
             if currentItem.parent() is not None:  # If it is a question
                 print 'selected question'
+                self.current_item = currentItem
                 self.update_question_panel()
             else:
                 print 'selected exam'
@@ -97,16 +110,15 @@ class ScanPage(QWizardPage):
                 break
             elem.widget().deleteLater()
 
-        current_question_item = self.ui.treeWidget.currentItem()
-        current_exam_item = current_question_item.parent()
+        current_exam_item = self.current_item.parent()
 
         exam_no = self.ui.treeWidget.indexOfTopLevelItem(current_exam_item)
-        question_no = current_exam_item.indexOfChild(current_question_item)
+        question_no = current_exam_item.indexOfChild(self.current_item)
 
-        question_text_label = QLabel(current_question_item.question.text)
+        question_text_label = QLabel(self.current_item.question.text)
         self.ui.questionDataLayout.addWidget(question_text_label)
 
-        for answer_no, answer in enumerate(current_question_item.question.answers):
+        for answer_no, answer in enumerate(self.current_item.question.answers):
             question_answer_check = QCheckBox(answer.text)
             question_answer_check.setChecked(self.is_answer_checked(exam_no, question_no, answer_no))
 
@@ -120,38 +132,31 @@ class ScanPage(QWizardPage):
         exam_data = results_data[exam_no]
 
         question_data = exam_data.questions[question_no]
+        # return answer_no + 1 in question_data.answers
         return answer_no in question_data.answers
 
-    def set_answer_checked(self, exam_no, question_no, answer_no, value):
-        results_data = self.results
-        exam_data = results_data[exam_no]
-        question_data = exam_data.questions[question_no]
-
-        answer_no += 1
-
-        if value and answer_no not in question_data.answers:
-            question_data.answers.append(answer_no)
-        elif not value and answer_no in question_data.answers:
-            question_data.answers.remove(answer_no)
-
     def update_current_question_state(self, state):
-        current_question_item = self.ui.treeWidget.currentItem()
-        current_exam_item = current_question_item.parent()
+        current_exam_item = self.current_item.parent()
 
         exam_no = self.ui.treeWidget.indexOfTopLevelItem(current_exam_item)
-        question_no = current_exam_item.indexOfChild(current_question_item)
+        question_no = current_exam_item.indexOfChild(self.current_item)
 
         results_data = self.results
         exam_data = results_data[exam_no]
         question_data = exam_data.questions[question_no]
 
-        for i, answer in enumerate(current_question_item.question.answers):
-            i += 1
+        for i, answer in enumerate(self.current_item.question.answers):
+            # i += 1
             checked = self.ui.questionDataLayout.itemAt(i + 1).widget().isChecked()
             if checked and i not in question_data.answers:
                 question_data.answers.append(i)
             elif not checked and i in question_data.answers:
                 question_data.answers.remove(i)
+
+        assert len(question_data.answers) <= len(question_data.order)
+
+    def cleanupPage(self):
+        pass
 
 
     def start_scan(self):
