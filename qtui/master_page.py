@@ -4,6 +4,8 @@ import os
 from os.path import join
 import api
 
+#TODO: Save current question on close
+
 
 class MasterPage(QWizardPage):
     path = "qtui/ui/page1_master.ui"
