@@ -18,17 +18,17 @@ class ListWidget(QListWidget):
         self.setDragDropMode(QAbstractItemView.InternalMove)
         self.item_clicked = False
         self.num = 1
-        self.questions = []
 
     def addCustomItem(self):
         item = QListWidgetItem()
         item.setText("")
         item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsDragEnabled | Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
         self.insertItem(self.count(), item)
-        question_id = "Question %d" % self.num
+        self.num = max(self.num, self.count())
+        question_id = "Question {num}".format(num=self.num)
+        print 'question_id: ', question_id
         self.rowAdded.emit(question_id)
         item.setText(question_id)
-        self.num += 1
         return item
 
     def itemDoubleClicked(self, index):
@@ -38,6 +38,7 @@ class ListWidget(QListWidget):
         text = item.text()
         row = self.row(item)
         if not text:
+            print '[ERROR] item cannot be empty'
             # item cannot be empty
             self.takeItem(row)
             self.rowRemoved.emit(row)
@@ -45,7 +46,8 @@ class ListWidget(QListWidget):
         for i in range(self.count()):
             other = self.item(i)
             if i != row and text == other.text():
-                # item names must be unique
+                print '[ERROR] item names must be unique'
+                print text
                 self.takeItem(row)
                 self.rowRemoved.emit(row)
                 return
