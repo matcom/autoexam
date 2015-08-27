@@ -13,7 +13,7 @@ warn_color = QBrush(QColor(128, 128, 0))
 class ScanPage(QWizardPage):
     path = "qtui/ui/page3_scan.ui"
 
-    def __init__(self, project):
+    def __init__(self, project, parentW=None):
         super(ScanPage, self).__init__()
         self.ui = uic.loadUi(join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
         self.project = project
@@ -24,6 +24,7 @@ class ScanPage(QWizardPage):
         self.exams = []
         self.order = None
         self.results = None
+        self.parentWizard = parentW
 
     def initializePage(self):
         super(ScanPage, self).initializePage()
@@ -41,9 +42,10 @@ class ScanPage(QWizardPage):
 
         # Propagate loaded info to parent
         if self.order:
-            self.parent().order = self.order
+            self.parentWizard.order = self.order
         if self.results:
-            self.parent().order = self.order
+            print 'storing results reference'
+            self.parentWizard.results = self.results
 
         # self.scan_thread = Thread(target=self.start_scan)
         # self.scan_thread.setDaemon(True)
@@ -79,13 +81,6 @@ class ScanPage(QWizardPage):
         elif len(report.test.warnings) > 0:
             current.setForeground(0, warn_color)
 
-        # exam_item = QTreeWidgetItem(self.ui.treeWidget, ['Test'])
-        # exam.ui = exam_item
-        # exam_item.exam = exam
-        # self.ui.treeWidget.setCurrentItem(exam_item)
-
-        # question1 = QTreeWidgetItem(exam_item, ['Question1'])
-
     def change_tree_item(self):
         currentItem = self.ui.treeWidget.currentItem()
         if currentItem is not None:
@@ -95,10 +90,6 @@ class ScanPage(QWizardPage):
             else:
                 print 'selected exam'
 
-        # questions = self.ui.treeWidget.currentItem().exam.questions
-        # for question in questions:
-            # print(dir(question))
-
     def update_question_panel(self):
         for i in reversed(range(self.ui.questionDataLayout.count())):
             elem = self.ui.questionDataLayout.itemAt(i)
@@ -106,7 +97,6 @@ class ScanPage(QWizardPage):
                 break
             elem.widget().deleteLater()
 
-        # TODO: Get the right order
         current_question_item = self.ui.treeWidget.currentItem()
         current_exam_item = current_question_item.parent()
 
@@ -126,14 +116,14 @@ class ScanPage(QWizardPage):
     def is_answer_checked(self, exam_no, question_no, answer_no):
         print 'is_answer_checked'
         print(exam_no,question_no,answer_no)
-        # results_data = model.data['results']
+        results_data = self.results
         exam_data = results_data[exam_no]
 
         question_data = exam_data.questions[question_no]
         return answer_no in question_data.answers
 
     def set_answer_checked(self, exam_no, question_no, answer_no, value):
-        # results_data = model.data['results']
+        results_data = self.results
         exam_data = results_data[exam_no]
         question_data = exam_data.questions[question_no]
 
@@ -143,21 +133,23 @@ class ScanPage(QWizardPage):
             question_data.answers.remove(answer_no)
 
     def update_current_question_state(self, state):
-        # TODO: Get the right order
         current_question_item = self.ui.treeWidget.currentItem()
         current_exam_item = current_question_item.parent()
 
         exam_no = self.ui.treeWidget.indexOfTopLevelItem(current_exam_item)
         question_no = current_exam_item.indexOfChild(current_question_item)
 
-        results_data = model.data['results']
+        results_data = self.results
         exam_data = results_data[exam_no]
         question_data = exam_data.questions[question_no]
 
         for i, answer in enumerate(current_question_item.question.answers):
-            checked = self.ui.questionDataLayout.itemAt(i + 1).widget().isChecked() # TODO? Right order
-            if checked:
+            checked = self.ui.questionDataLayout.itemAt(i + 1).widget().isChecked()
+            if checked and i not in question_data.answers:
                 question_data.answers.append(i)
+            elif not checked and i in question_data.answers:
+                question_data.answers.remove(i)
+
 
     def start_scan(self):
 

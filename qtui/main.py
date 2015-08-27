@@ -53,14 +53,12 @@ class MainWindow(QMainWindow):
         return directory
 
     def startWizard(self):
-        page = exam_wizard.ExamWizard(self.project)
+        self.examWizard = exam_wizard.ExamWizard(self.project)
 
-        name = self.project.name
+        self.ui.tabWidget.addTab(self.examWizard, self.project.name)
+        self.ui.tabWidget.setCurrentWidget(self.examWizard)
 
-        self.ui.tabWidget.addTab(page, name)
-        self.ui.tabWidget.setCurrentWidget(page)
-
-        finish_button = page.button(QWizard.FinishButton)
+        finish_button = self.examWizard.button(QWizard.FinishButton)
         finish_button.clicked.connect(lambda: self.ui.tabWidget.removeTab(self.ui.tabWidget.currentIndex()))
 
     def newExam(self):
@@ -113,15 +111,15 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         if self.saveOnClose():
-            try:
-                model.dump_project(self.project, self.project_path)
-                scanresults.dump(model.data['results'], 'test_results.json', overwrite=True)
-                print 'saved test results'
-            except AttributeError:
-                pass
-                print 'no tests results to save'
-            except KeyError:
-                pass
+            # try:
+            model.dump_project(self.project, self.project_path)
+            scanresults.dump(self.examWizard.results, 'test_results.json', overwrite=True)
+            print 'saved test results'
+            # except AttributeError:
+            #     pass
+            #     print 'no tests results to save'
+            # except KeyError:
+            #     pass
                 # print 'no model.data[results]'
 
             event.accept()

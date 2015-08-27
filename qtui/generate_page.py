@@ -11,7 +11,7 @@ TEMPLATE_PATH = 'qtui/master.jinja'
 class GeneratePage(QWizardPage):
     path = "qtui/ui/page2_generate.ui"
 
-    def __init__(self, project):
+    def __init__(self, project, parentW=None):
         super(GeneratePage, self).__init__()
         self.ui = uic.loadUi(join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
         self.project = project
@@ -22,6 +22,8 @@ class GeneratePage(QWizardPage):
         self.ui.generateBtn.clicked.connect(self.generate)
         self.ui.questionCountSpin.valueChanged.connect(self.update_project)
         self.ui.examCountSpin.valueChanged.connect(self.update_project)
+
+        self.parentWizard = parentW
 
     def generate(self):
         # Both master and exam generation are being done here temporally

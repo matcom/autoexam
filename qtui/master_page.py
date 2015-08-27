@@ -8,12 +8,13 @@ import api
 class MasterPage(QWizardPage):
     path = "qtui/ui/page1_master.ui"
 
-    def __init__(self, project):
+    def __init__(self, project, parentW=None):
         super(MasterPage, self).__init__()
         self.ui = uic.loadUi(join(os.environ['AUTOEXAM_FOLDER'], self.path), self)
         self.project = project
         self.ui.questionWidget.initializeProject(project)
         # self.ui.masterGenBtn.clicked.connect(self.gen_master)
+        self.parentWizard = parentW
 
     def validatePage(self):
         try:
