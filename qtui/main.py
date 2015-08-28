@@ -111,16 +111,13 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         if self.saveOnClose():
-            # try:
-            model.dump_project(self.project, self.project_path)
-            scanresults.dump(self.examWizard.results, 'tests_results.json', overwrite=True)
-            print 'saved test results'
-            # except AttributeError:
-            #     pass
-            #     print 'no tests results to save'
-            # except KeyError:
-            #     pass
-                # print 'no model.data[results]'
+            try:
+                model.dump_project(self.project, self.project_path)
+                scanresults.dump(self.examWizard.results, 'tests_results.json', overwrite=True)
+                print 'saved test results'
+            except AttributeError:
+                pass
+                print 'no tests results to save'
 
             event.accept()
 
