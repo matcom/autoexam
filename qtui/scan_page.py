@@ -37,6 +37,11 @@ class ScanPage(QWizardPage):
         order_file_path = os.path.join('generated', 'last', 'order.json')
         tests_results_file_path = 'tests_results.json'
 
+        # self.scan_thread = Thread(target=self.start_scan)
+        # self.scan_thread.setDaemon(True)
+        # self.scan_thread.start()
+        self.start_scan()
+
         if os.path.exists(order_file_path):
             self.order = scanresults.parse(order_file_path)
         if os.path.exists(tests_results_file_path):
@@ -48,19 +53,6 @@ class ScanPage(QWizardPage):
                 question_item = QTreeWidgetItem(exam_item, ['Pregunta %d' % (j + 1)])
                 question_item.question = self.project.questions[self.results[i].questions[j].id - 1]
 
-        # self.scan_thread = Thread(target=self.start_scan)
-        # self.scan_thread.setDaemon(True)
-        # self.scan_thread.start()
-
-        # TODO: don't do this if self.results is set
-        self.start_scan()
-
-        # TODO: Load this in parent wizard
-        if os.path.exists(tests_results_file_path):
-            self.results = scanresults.parse(tests_results_file_path)
-        if self.results:
-            print 'storing results reference'
-            self.parentWizard.results = self.results
 
         first_exam_item = tree.topLevelItem(0)
         first_exam_item.setExpanded(True)
@@ -69,6 +61,7 @@ class ScanPage(QWizardPage):
 
     def validatePage(self):
         scanresults.dump(self.results, 'tests_results.json', overwrite=True)
+        self.parentWizard.results = self.results
         return True
 
     def cleanupPage(self):
@@ -88,10 +81,11 @@ class ScanPage(QWizardPage):
     def process_report(self, report):
         current = self.ui.treeWidget.topLevelItem(report.test.id)
 
-        if len(report.test.warnings) == 0:
-            current.setForeground(0, ok_color)
-        elif len(report.test.warnings) > 0:
-            current.setForeground(0, warn_color)
+        if current:
+            if len(report.test.warnings) == 0:
+                current.setForeground(0, ok_color)
+            elif len(report.test.warnings) > 0:
+                current.setForeground(0, warn_color)
 
     def change_tree_item(self):
         currentItem = self.ui.treeWidget.currentItem()
