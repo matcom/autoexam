@@ -15,6 +15,9 @@ To install dependencies in a Debian based Linux distribution, just run the follo
 apt-get install texlive texlive-lang-spanish python-opencv \
 python-jinja2 python-qrcode python-zbar python-alsaaudio python-flask
 ```
+
+You should also install `poppler-utils` as a temporary development dependency.
+
 The recommended way to use Autoexam is installing it globally into your system.
 You can use the provided `install.sh` script for this.
 
