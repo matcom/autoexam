@@ -30,7 +30,7 @@ class QuestionWidget(QWidget):
             self.changeCurrentQuestion(0)
             self.current = 0
 
-        print 'project', project
+        # print 'project', project
 
     def connectSignals(self):
         self.ui.idsWidget.rowAdded.connect(self.addQuestion)
