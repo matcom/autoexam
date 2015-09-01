@@ -40,9 +40,9 @@
 
       {% for t, n in q.options_text(i+1, answer.max) %}
         {% if n %}
-        {{ t }} & {{ n }} & \fbox{\pdfsavepos\write-1{[TICK-POSITION] ({{i}}-{{n}}) (\the\pdflastxpos,\the\pdflastypos)} } \\
+        {{ t }} & {{ n }} & \small{$\bigcirc$} \\
         {% else %}
-          & & \phantom{\fbox{}} \\
+          & & \phantom{\small{$\bigcirc$}} \\
         {% endif %}
         {% if not loop.last %}
         & & \\
