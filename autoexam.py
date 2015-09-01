@@ -17,12 +17,6 @@ if 'AUTOEXAM_FOLDER' not in os.environ:
 import evaluator as ev
 import webpoll.webpoll as wp
 import simpleui.app as sui
-import os.path
-
-if 'AUTOEXAM_FOLDER' not in os.environ:
-    path = os.path.dirname(os.path.realpath(__file__))
-    os.environ['AUTOEXAM_FOLDER'] = path
-    sys.path.append(path)
 
 from tabulate import tabulate
 from stats import build_stats
