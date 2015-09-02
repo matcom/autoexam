@@ -113,7 +113,7 @@ class MainWindow(QMainWindow):
         if self.saveOnClose():
             try:
                 model.dump_project(self.project, self.project_path)
-                scanresults.dump(self.examWizard.results, 'tests_results.json', overwrite=True)
+                scanresults.dump(self.examWizard.results, 'results.json', overwrite=True)
                 print 'saved test results'
             except AttributeError:
                 pass
