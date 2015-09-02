@@ -8,6 +8,7 @@ import shutil
 import json
 import gen
 import os.path
+import glob
 
 if 'AUTOEXAM_FOLDER' not in os.environ:
     path = os.path.dirname(os.path.realpath(__file__))
@@ -107,6 +108,18 @@ def generate(args):
 
     print("Test generated successfully")
 
+    os.chdir('..')
+
+    dst_image_dir = os.path.join('generated', 'last', 'images')
+    if not os.path.exists(dst_image_dir):
+        os.mkdir(dst_image_dir)
+        print 'Created images directory'
+    file_list = glob.glob('generated/last/pdf/Answer*')
+    for i, filename in enumerate(file_list):
+        os.system('pdftocairo -jpeg {filename} {dst_image_dir}/{i}-scan'
+            .format(filename=filename, dst_image_dir=dst_image_dir, i=i))
+
+    print("Added empty pictures into images folder for debugging.")
 
 def init(args):
     if is_project_folder():
