@@ -264,18 +264,6 @@ def remove_scan_subscriber(f):
     callables.remove(f)
 
 
-def grade(args):
-    import evaluator
-    import json
-    grades = None
-    if args.gradersheet is not None:
-        grades = evaluator.evaluate(args.gradersheet, args.scans)
-    stats = evaluator.get_stats(args.scans)
-    with open(args.outfile, "wb") as fp:
-        json.dump({"grades": grades, "stats": stats}, fp, indent=4)
-    return 0
-
-
 def qtui(args):
     import qtui.main
     qtui.main.main()
@@ -591,7 +579,7 @@ def main():
     gen_parser.set_defaults(func=generate)
 
     scanner_parser = commands.add_parser('scan', help='Runs the exam scanner')
-    scanner_parser.add_argument('-o', '--outfile', type=str, default="tests_results.json",
+    scanner_parser.add_argument('-o', '--outfile', type=str, default="results.json",
                                 help='the file name to dump the scan results. If the file exists it will append the results.')
     scanner_parser.add_argument('-c', '--cameras', type=int, nargs="+", default=[0],
                                 help='the list of index of the cameras to be used to scan the tests.')
@@ -644,15 +632,9 @@ def main():
 
     report_parser.set_defaults(func=report)
 
-    # grade_parser = commands.add_parser('grade', help="Runs the scanned test through the evaluator.")
-    # grade_parser.add_argument('-v', '--version', help="Specific version to grade. If not provided, then the `last` version is graded.")
-    # grade_parser.add_argument('-f', '--force', help="Force re-evaluation even if the evaluation already exists. WARNING: This will delete the previous evaluation.", action='store_true')
-    # grade_parser.set_defaults(func=grade)
-
-    grade_parser = commands.add_parser('grade', help='Runs the autoexam grader')
-    grade_parser.add_argument("-g", "--gradersheet", help="Gradersheet file", default='generated/last/grader.txt')
-    grade_parser.add_argument("-s", "--scans", help="Scans json file", default='tests_results.json')
-    grade_parser.add_argument("-o", "--outfile", help="Results json file", default='grades.json')
+    grade_parser = commands.add_parser('grade', help="Runs the scanned test through the evaluator.")
+    grade_parser.add_argument('-v', '--version', help="Specific version to grade. If not provided, then the `last` version is graded.")
+    grade_parser.add_argument('-f', '--force', help="Force re-evaluation even if the evaluation already exists. WARNING: This will delete the previous evaluation.", action='store_true')
     grade_parser.set_defaults(func=grade)
 
     qtui_parser = commands.add_parser('qtui', help='Runs the Qt user interface')
