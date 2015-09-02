@@ -37,17 +37,6 @@ class GeneratePage(QWizardPage):
                    "dont_shuffle_options": not self.ui.randItemCheck.isChecked()
                    })
 
-        # TODO: Remove this when scanning is working
-        print 'cwd', os.getcwd()
-        dst_image_dir = os.path.join('generated', 'last', 'images')
-        if not os.path.exists(dst_image_dir):
-            os.mkdir(dst_image_dir)
-            print 'created images directory'
-        file_list = glob('generated/last/pdf/Answer*')
-        for i, filename in enumerate(file_list):
-            os.system('pdftocairo -jpeg {filename} {dst_image_dir}/{i}-scan'
-                .format(filename=filename, dst_image_dir=dst_image_dir, i=i))
-
         msgBox = QMessageBox()
         msgBox.setText("The exam has been successfully generated.")
         msgBox.setModal(True)
