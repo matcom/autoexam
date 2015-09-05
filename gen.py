@@ -41,11 +41,10 @@ def preprocess_line(line, remove_comments=True):
     return line
 
 
-def parser():
+def parser(master_path):
     """
     Lee el archivo master y se parsea cada una de las preguntas.
     """
-    master_path = 'master.txt'
     master = open(master_path)
     lines = master.readlines()
     master.close()
@@ -516,7 +515,7 @@ if __name__ == '__main__':
 
     os.mkdir('generated/v{0}'.format(test_id))
 
-    parser()
+    parser(master_path)
     generate(args.tests_count, args)
 
     print('Generated v{0}'.format(test_id))
