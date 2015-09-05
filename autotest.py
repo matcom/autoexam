@@ -660,7 +660,13 @@ def debug_contour_detection(contours, image):
 
     for contour in contours:
         new_radius = int((1-doc_parameters["selection_circle_padding"])*contour["radius"])
-        cv2.ellipse(vis, int(contour["center"][0]), int(contour["center"][1]), (new_radius, new_radius), 0, 0, 360, (0,0,255), 1)
+
+        print 'vis: ', vis
+        print 'int(contour["center"][0]) ', int(contour["center"][0])
+        print 'int(contour["center"][1]) ', int(contour["center"][1])
+        print '(int(new_radius), int(new_radius))', (int(new_radius), int(new_radius))
+
+        cv2.ellipse(vis, int(contour["center"][0]), int(contour["center"][1]), (int(new_radius), int(new_radius)), 0, 0, 360, (0,0,255), 1)
         cv2.ellipse(vis, int(contour["center"][0]), int(contour["center"][1]), (int(contour["radius"]), int(contour["radius"])), 0, 0, 360, (0,255,0), 1)
 
     cv2.imshow("Selection Area", vis)
