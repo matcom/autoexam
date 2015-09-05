@@ -188,7 +188,7 @@ def scan(args):
     #Set document processing parameters and initialize scanner
     scanner = TestScanner(w, h, args.exams_file, show_image=True,
                           double_check=True, debug=args.debug,
-                          poll=args.poll, squares=not args.poll)
+                          poll=args.poll)
 
     tests = {}
 
