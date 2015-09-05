@@ -181,7 +181,6 @@ def scan(args):
         error('Not an Autoexam folder or exams not generated')
         return
 
-    #Get system camera in index 0
     source = ImageSource(args.cameras if args.folder == ""
                          else args.folder, args.time)
     w, h = source.get_size()
