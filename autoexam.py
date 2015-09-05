@@ -69,7 +69,7 @@ def generate(args):
 
     os.mkdir(os.path.join('generated', 'v{0}'.format(test_id)))
 
-    gen.parser()
+    gen.parser(args.master)
     gen.generate(args.tests_count, args)
 
     print("Compiling LaTeX source files")
@@ -561,6 +561,7 @@ def main():
     review_parser.set_defaults(func=review)
 
     gen_parser = commands.add_parser('gen', help='Generates a new version of the current project.')
+    gen_parser.add_argument('-m', '--master', help="Path to the master file that contains the test description.", default='master.txt')
     gen_parser.add_argument('-s', '--seed', type=int, default=None, help='A custom seed for the random generator.')
     gen_parser.add_argument('-c', '--tests-count', metavar='N', help="Number of actual tests to generate. If not supplied, only the master file will be generated.", type=int, default=0)
     gen_parser.add_argument('-a', '--answers-per-page', help="Number of answer sections to generate per page. By default is 1. It is up to you to ensure all them fit right in your template.", metavar='N', type=int, default=1)
