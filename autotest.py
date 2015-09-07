@@ -406,10 +406,15 @@ def get_answer_images(image, cols, rows, total):
     result = []
     w, h = image.shape[::-1]
 
-    u_margin = int(doc_parameters["up_margin"]*h)
-    d_margin = int(doc_parameters["down_margin"]*h)
-    l_margin = int(doc_parameters["left_margin"]*w)
-    r_margin = int(doc_parameters["right_margin"]*w)
+    u_margin = int(round(doc_parameters["up_margin"]*h))
+    d_margin = int(round(doc_parameters["down_margin"]*h))
+    l_margin = int(round(doc_parameters["left_margin"]*w))
+    r_margin = int(round(doc_parameters["right_margin"]*w))
+
+    # TODO: Remove this huge patch
+    if rows == 1:
+        u_margin *= 4
+        d_margin *= 4
 
     cell_w = (w-(l_margin+r_margin))/cols
     cell_h = (h-(u_margin+d_margin))/rows
