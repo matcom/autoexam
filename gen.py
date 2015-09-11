@@ -252,6 +252,8 @@ class Question:
             self.options_id = {}
 
             for i, o in enumerate(self.options):
+                if o in self.options_id:
+                    raise Exception('Invalid option exception. Duplicated answers are not allowed')
                 self.options_id[o] = i
                 if o[1]:
                     self.fixed[o] = i
