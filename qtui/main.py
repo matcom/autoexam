@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
         self.ui = uic.loadUi(src("qtui/ui/main_window.ui"), self)
         self.ui.clbNewExam.clicked.connect(self.newExam)
         self.ui.clbLoadExam.clicked.connect(self.loadExam)
-        self.ui.tabWidget.tabCloseRequested.connect(self.ui.tabWidget.removeTab)
+        # self.ui.tabWidget.tabCloseRequested.connect(self.ui.tabWidget.removeTab)
 
         if os.path.exists('.autoexam'):
             self.loadExam(directory=os.getcwd())
@@ -54,12 +54,17 @@ class MainWindow(QMainWindow):
 
     def startWizard(self):
         self.examWizard = exam_wizard.ExamWizard(self.project)
+        self.ui.stackedWidget.addWidget(self.examWizard)
 
-        self.ui.tabWidget.addTab(self.examWizard, self.project.name)
-        self.ui.tabWidget.setCurrentWidget(self.examWizard)
+        self.ui.stackedWidget.setCurrentIndex(1)
+
+        # self.ui.tabWidget.addTab(self.examWizard, self.project.name)
+        # self.ui.tabWidget.setCurrentWidget(self.examWizard)
 
         finish_button = self.examWizard.button(QWizard.FinishButton)
-        finish_button.clicked.connect(lambda: self.ui.tabWidget.removeTab(self.ui.tabWidget.currentIndex()))
+        # finish_button.clicked.connect(lambda: self.ui.tabWidget.removeTab(self.ui.tabWidget.currentIndex()))
+        finish_button.clicked.connect(self.close)
+
 
     def newExam(self):
         directory = abspath(str(self.setExistingDirectory()))
