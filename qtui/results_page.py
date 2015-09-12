@@ -20,7 +20,7 @@ class ResultsPage(QWizardPage):
 
         self.results = self.parentWizard.results
         # TODO: Unwire this
-        self.grades = evaluate('generated/last/grader.txt', 'results.json')
+        self.grades = evaluate('generated/last/grader.txt', 'generated/last/results.json')
 
         # This assumes scores are normalized to 1 (which is probably
         # a good idea anyway. Otherwise, the max score would depend

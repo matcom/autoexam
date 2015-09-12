@@ -35,7 +35,7 @@ class ScanPage(QWizardPage):
 
         # TODO: Remove symbolic link for multiplatforming
         order_file_path = os.path.join('generated', 'last', 'order.json')
-        tests_results_file_path = 'results.json'
+        tests_results_file_path = 'generated/last/results.json'
 
         # self.scan_thread = Thread(target=self.start_scan)
         # self.scan_thread.setDaemon(True)
@@ -60,7 +60,7 @@ class ScanPage(QWizardPage):
             tree.itemBelow(first_exam_item))
 
     def validatePage(self):
-        scanresults.dump(self.results, 'results.json', overwrite=True)
+        scanresults.dump(self.results, 'generated/last/results.json', overwrite=True)
         self.parentWizard.results = self.results
         return True
 
@@ -156,7 +156,7 @@ class ScanPage(QWizardPage):
     def start_scan(self):
 
         class _args:
-            outfile = 'results.json'
+            outfile = 'generated/last/results.json'
             cameras = [1]
             folder = "generated/last/images"
             time = None
