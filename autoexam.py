@@ -8,8 +8,8 @@ import shutil
 import json
 import gen
 import evaluator as ev
-import webpoll.webpoll as wp
-import simpleui.app as sui
+# import webpoll.webpoll as wp
+# import simpleui.app as sui
 
 from tabulate import tabulate
 from stats import build_stats
