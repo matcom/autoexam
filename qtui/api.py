@@ -119,7 +119,15 @@ def validate_project(project):
     for question in project.questions:
         if not question.tag_names:
             # TODO: Tr (translator)
-            raise Exception("Debe haber al menos una etiqueta por pregunta")
+            raise Exception("There must be at least one tag per question.")
+        if question.text is "":
+            raise Exception("There is at least one question with empty text.")
+        answers = set()
+        for answer in question.answers:
+            if answer.text in answers:
+                raise Exception("There cannot be two answers with the same text in the same question.")
+            answers.add(answer.text)
+
 
 
 def render_master(project, template_path):
