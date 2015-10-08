@@ -289,7 +289,8 @@ class Question:
     def convert(self):
         order = [self.options_id[o] for o in self.options]
 
-        print(order)
+	if debug:
+            print(order)
 
         return scanresults.Question(self.number, len(self.options),
                                     self.multiple, order=order)
