@@ -117,7 +117,7 @@ def generate(args):
 
     print("Added empty pictures into images folder for debugging.")
 
-def init(args):
+def new(args):
     if is_project_folder():
         error("This project is already initialized.\nPlease run this outside this folder.")
         return
@@ -548,12 +548,12 @@ def main():
 
     commands = parser.add_subparsers(help="Command option", title="Commands", description="Specific sub-tasks for Autoexam to perform.")
 
-    init_parser = commands.add_parser('init', help='Creates a new Autoexam project.')
-    init_parser.add_argument('name', help='Name for the project.')
-    init_parser.add_argument('-f', '--folder', help='Override the folder create for the project.')
-    init_parser.add_argument('--election', help='Makes the project an election template instead of the standard test template.', action='store_true')
-    init_parser.add_argument('--questionnaire', help='Makes the project a questionaire template instead of the standard test template.', action='store_true')
-    init_parser.set_defaults(func=init)
+    new_parser = commands.add_parser('new', help='Creates a new Autoexam project.')
+    new_parser.add_argument('name', help='Name for the project.')
+    new_parser.add_argument('-f', '--folder', help='Override the folder create for the project.')
+    new_parser.add_argument('--election', help='Makes the project an election template instead of the standard test template.', action='store_true')
+    new_parser.add_argument('--questionnaire', help='Makes the project a questionaire template instead of the standard test template.', action='store_true')
+    new_parser.set_defaults(func=new)
 
     review_parser = commands.add_parser('review', help="Review scanned tests to fix warnings")
     review_parser.add_argument('-v', '--version', help="Specific version to review. If not provided, then the `last` version is reviewed.")
