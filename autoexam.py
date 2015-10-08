@@ -15,10 +15,6 @@ if 'AUTOEXAM_FOLDER' not in os.environ:
     os.environ['AUTOEXAM_FOLDER'] = path
     sys.path.append(path)
 
-import evaluator as ev
-import webpoll.webpoll as wp
-import simpleui.app as sui
-
 from tabulate import tabulate
 from stats import build_stats
 
@@ -329,10 +325,12 @@ def stats(args):
 
 
 def webpoll(args):
+    import webpoll.webpoll as wp
     wp.run(args)
 
 
 def simpleui(args):
+    import simpleui.app as sui
     sui.run(args)
 
 
@@ -435,6 +433,8 @@ def get_base_path(args):
 def grade(args):
     if not check_project_folder():
         return
+
+    import evaluator as ev
 
     base_path = get_base_path(args)
     grader_path = os.path.join(base_path, 'grader.txt')
