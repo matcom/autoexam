@@ -24,7 +24,7 @@
    <item>
     <widget class="QPlainTextEdit" name="questionEdit">
      <property name="plainText">
-      <string>This is a sample answer</string>
+      <string></string>
      </property>
     </widget>
    </item>
@@ -40,7 +40,7 @@
      <item>
       <widget class="QCheckBox" name="rightBox">
        <property name="text">
-        <string>Right answer</string>
+        <string>Correct answer</string>
        </property>
       </widget>
      </item>
