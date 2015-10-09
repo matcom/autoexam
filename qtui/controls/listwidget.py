@@ -63,10 +63,13 @@ class ListWidget(QListWidget):
     def keyPressEvent(self, event):
         super(ListWidget, self).keyPressEvent(event)
         if event.key() in REMOVE_KEYS:
-            index = self.currentRow()
-            self.takeItem(index)
-            self.rowRemoved.emit(index)
+            self.removeCurrentItem()
 
+    def removeCurrentItem(self):
+        index = self.currentRow()
+        self.takeItem(index)
+        print '[list] index of removal'
+        self.rowRemoved.emit(index)
 
 if __name__ == '__main__':
     import sys
