@@ -37,6 +37,8 @@ class QuestionWidget(QWidget):
         self.ui.idsWidget.rowChanged.connect(self.changeQuestionId)
         self.ui.idsWidget.rowRemoved.connect(self.removeQuestion)
         self.ui.idsWidget.currentRowChanged.connect(self.changeCurrentQuestion)
+        self.ui.minusButton.clicked.connect(self.ui.idsWidget.removeCurrentItem)
+        self.ui.plusButton.clicked.connect(self.ui.idsWidget.addCustomItem)
 
     def addQuestion(self, question_id):
         # save question and answers
