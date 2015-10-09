@@ -53,7 +53,7 @@ def init(name, folder='.', template='', **kwargs):
     questionnaire = get_flag(kwargs, 'questionnaire')
 
     # params = [autoexam, 'init', folder, election, questionnaire, '"%s"'%name]
-    params = ['autoexam', 'init', folder, '"%s"'%name]
+    params = ['autoexam', 'new', folder, '"%s"'%name]
 
     cmd = ' '.join(params)
     return os.system(cmd)
