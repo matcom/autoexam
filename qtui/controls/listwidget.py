@@ -22,7 +22,8 @@ class ListWidget(QListWidget):
     def addCustomItem(self):
         item = QListWidgetItem()
         item.setText("")
-        item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsDragEnabled | Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
+        # item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsDragEnabled | Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
+        item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
         self.insertItem(self.count(), item)
         self.num = max(self.num, self.count())
         question_id = "Question {num}".format(num=self.num)
