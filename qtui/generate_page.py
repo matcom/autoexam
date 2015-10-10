@@ -19,14 +19,24 @@ class GeneratePage(QWizardPage):
         self.ui.questionCountSpin.setValue(self.project.total_questions_per_exam)
         self.ui.examCountSpin.setValue(self.project.total_exams_to_generate)
 
-        self.ui.generateBtn.clicked.connect(self.generate)
         self.ui.questionCountSpin.valueChanged.connect(self.update_project)
         self.ui.examCountSpin.valueChanged.connect(self.update_project)
 
         self.parentWizard = parentW
 
+    def validatePage(self):
+        if self.parentWizard.should_generate_master:
+            self.generate()
+            self.parentWizard.should_generate_master = False
+        return True
+
     def generate(self):
         # Both master and exam generation are being done here temporally
+
+        msgBox = QMessageBox()
+        msgBox.setText("The master file will now be generated.")
+        msgBox.setModal(True)
+        msgBox.exec_()
 
         master_data = api.render_master(self.project, join(os.environ['AUTOEXAM_FOLDER'], TEMPLATE_PATH))
         api.save_master(master_data)
@@ -41,6 +51,8 @@ class GeneratePage(QWizardPage):
         msgBox.setText("The exam has been successfully generated.")
         msgBox.setModal(True)
         msgBox.exec_()
+
+        self.parentWizard.should_regenerate_master = False
 
     def update_project(self):
         self.project.total_questions_per_exam = self.ui.questionCountSpin.value()
