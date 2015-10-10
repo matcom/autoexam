@@ -7,7 +7,7 @@ REMOVE_KEYS = (Qt.Key_Backspace, Qt.Key_Delete)
 
 class ListWidget(QListWidget):
     rowAdded = pyqtSignal([str]) # name
-    rowChanged = pyqtSignal([int, str]) # index, name
+    rowRenamed = pyqtSignal([int, str]) # index, name
     rowRemoved = pyqtSignal([int]) # index
 
     def __init__(self, parent=None):
@@ -41,18 +41,20 @@ class ListWidget(QListWidget):
         if not text:
             print '[ERROR] item cannot be empty'
             # item cannot be empty
-            self.takeItem(row)
-            self.rowRemoved.emit(row)
+            item.setText('Unnamed')
+            # self.takeItem(row)
+            # self.rowRemoved.emit(row)
             return
         for i in range(self.count()):
             other = self.item(i)
             if i != row and text == other.text():
                 print '[ERROR] item names must be unique'
                 print text
-                self.takeItem(row)
-                self.rowRemoved.emit(row)
+                item.setText(text + '.')
+                # self.takeItem(row)
+                # self.rowRemoved.emit(row)
                 return
-        self.rowChanged.emit(row, text)
+        self.rowRenamed.emit(row, text)
 
     def mouseDoubleClickEvent(self, event):
         super(ListWidget, self).mouseDoubleClickEvent(event)
@@ -68,9 +70,10 @@ class ListWidget(QListWidget):
 
     def removeCurrentItem(self):
         index = self.currentRow()
-        self.takeItem(index)
-        print '[list] index of removal'
-        self.rowRemoved.emit(index)
+        if index > -1:
+            self.takeItem(index)
+            print '[list] index of removal'
+            self.rowRemoved.emit(index)
 
 if __name__ == '__main__':
     import sys
