@@ -12,7 +12,6 @@ class QuestionWidget(QWidget):
     def __init__(self, parent=None):
         super(QuestionWidget, self).__init__(parent)
         self.ui = uic.loadUi(os.path.join(os.environ['AUTOEXAM_FOLDER'], "qtui/ui/question.ui"), self)
-        self.current = -1
         self.connectSignals()
         # item = self.ui.idsWidget.addCustomItem()
         # self.ui.idsWidget.editItem(item)
@@ -27,43 +26,39 @@ class QuestionWidget(QWidget):
             self.ui.idsWidget.addItem(question.id)
 
         if len(self.questions) > 0:
-            self.changeCurrentQuestion(0)
-            self.current = 0
+            self.ui.idsWidget.setCurrentRow(0)
 
         # print 'project', project
 
     def connectSignals(self):
-        self.ui.idsWidget.rowAdded.connect(self.addQuestion)
-        self.ui.idsWidget.rowChanged.connect(self.changeQuestionId)
+        self.ui.idsWidget.rowAdded.connect(self.newQuestion)
+        self.ui.idsWidget.rowRenamed.connect(self.renameQuestion)
         self.ui.idsWidget.rowRemoved.connect(self.removeQuestion)
-        self.ui.idsWidget.currentRowChanged.connect(self.changeCurrentQuestion)
+        self.ui.idsWidget.currentItemChanged.connect(self.saveQuestionOnChange)
+        self.ui.idsWidget.currentRowChanged.connect(self.__loadQuestionData__)
         self.ui.minusButton.clicked.connect(self.ui.idsWidget.removeCurrentItem)
         self.ui.plusButton.clicked.connect(self.ui.idsWidget.addCustomItem)
 
-    def addQuestion(self, question_id):
+    def newQuestion(self, question_id):
         # save question and answers
-        question = qtui.model.Question(str(question_id), '', '', [])
-        if self.questions:
-            # self.printStatus()
-            self.saveQuestion(self.current)
-        self.ui.questionEdit.clear()
-        self.tagsEdit.clear()
-        self.ui.answersWidget.reset()
+        question = qtui.model.Question(str(question_id), ['default'], 'Place {question_number}\'s text here.'.format(question_number=question_id), [qtui.model.Answer(False, False,'This is a default answer for {question_number}'.format(question_number=question_id))])
+
         self.questions.append(question)
-        self.current = len(self.questions) - 1
+        self.ui.idsWidget.setCurrentRow(len(self.questions) - 1)
 
-    def printStatus(self):
-        print 'questions:', self.questions
-        print 'current', self.current
-        pass
-
-    def changeQuestionId(self, index, question_id):
+    def renameQuestion(self, index, question_id):
         self.questions[index].id = question_id
 
     def removeQuestion(self, index):
-        del(self.questions[index])
-        self.ui.questionEdit.clear()
-        self.tagsEdit.clear()
+        del self.questions[index]
+        if len(self.questions) == 0:
+            self.clearQuestionData()
+
+    def saveQuestionOnChange(self, new_item, old_item):
+        print 'saving item: ', old_item
+        if old_item is not None:
+            self.saveQuestion(self.idsWidget.row(old_item))
+        print 'new item is: ', new_item
 
     def saveQuestion(self, index):
         q_id = str(self.idsWidget.item(index).text())
@@ -77,16 +72,20 @@ class QuestionWidget(QWidget):
         else:
             self.questions[index] = qtui.model.Question(q_id, tag_names, text, answers)
 
-    def changeCurrentQuestion(self, index):
-        if self.current != -1:
-            # self.printStatus()
-            self.saveQuestion(self.current)
-        if index != -1:
-            self.ui.questionEdit.setPlainText(self.questions[index].text)
-            self.ui.tagsEdit.setText(' '.join(self.questions[index].tag_names))
-            self.ui.answersWidget.reset(self.questions[index].answers)
-            self.current = index
-            self.ui.idsWidget.setCurrentItem(self.ui.idsWidget.item(index))
+    # DO NOT CALL THIS DIRECTLY FROM THIS CLASS!!!
+    def __loadQuestionData__(self, index):
+        print 'changing current question to: ', index
+        # import pdb; pdb.set_trace()
+        q = self.questions[index]
+
+        self.ui.questionEdit.setPlainText(q.text)
+        self.ui.tagsEdit.setText(' '.join(q.tag_names))
+        self.ui.answersWidget.reset(q.answers)
+
+    def clearQuestionData(self):
+        self.ui.questionEdit.setPlainText('')
+        self.ui.tagsEdit.setText('')
+        self.ui.answersWidget.reset([])
 
     def getTags(self):
         tag_names = set()
@@ -94,16 +93,10 @@ class QuestionWidget(QWidget):
             tag_names.update(set(question.tag_names))
         return [qtui.model.Tag(tag_name, 0) for tag_name in tag_names]
 
+    def printStatus(self):
+        print 'questions:', self.questions
+
     def dump(self):
-        if 0 <= self.current < len(self.questions):
-            self.saveQuestion(self.current)
+        if 0 <= self.idsWidget.currentRow() < len(self.questions):
+            self.saveQuestion(self.idsWidget.currentRow())
         return self.getTags(), self.questions
-
-
-# if __name__ == '__main__':
-#     import model
-#     import sys
-#     app = QApplication(sys.argv)
-#     win = QuestionWidget()
-#     win.show()
-#     sys.exit(app.exec_())
