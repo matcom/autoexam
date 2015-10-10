@@ -49,28 +49,33 @@ class MainWindow(QMainWindow):
         # TOFIX: directory always returns a string even on cancel.
         options = QFileDialog.DontResolveSymlinks | QFileDialog.ShowDirsOnly
         directory = QFileDialog.getExistingDirectory(self,
-                "Select a folder for a new project...", DEFAULT_PROJECT_PATH, options)
+                "Select a project folder...", DEFAULT_PROJECT_PATH, options)
         return directory
 
     def startWizard(self):
         self.examWizard = exam_wizard.ExamWizard(self.project)
-        self.ui.stackedWidget.addWidget(self.examWizard)
+        self.examWizard.should_generate_master = True
 
+        self.ui.stackedWidget.addWidget(self.examWizard)
         self.ui.stackedWidget.setCurrentIndex(1)
 
-        # self.ui.tabWidget.addTab(self.examWizard, self.project.name)
-        # self.ui.tabWidget.setCurrentWidget(self.examWizard)
-
         finish_button = self.examWizard.button(QWizard.FinishButton)
-        # finish_button.clicked.connect(lambda: self.ui.tabWidget.removeTab(self.ui.tabWidget.currentIndex()))
-        finish_button.clicked.connect(self.close)
+        finish_button.clicked.connect(self.returnToStartScreen)
 
+        cancel_button = self.examWizard.button(QWizard.CancelButton)
+        cancel_button.clicked.connect(self.returnToStartScreen)
+
+    def returnToStartScreen(self):
+        wizard = self.ui.stackedWidget.currentWidget()
+        self.ui.stackedWidget.removeWidget(wizard)
+        self.saveOnClose(None)
 
     def newExam(self):
-        directory = abspath(str(self.setExistingDirectory()))
+        directory = str(self.setExistingDirectory())
+
         if directory:
+            directory = abspath(directory)
             print(directory)
-            # Logic + UI
 
             project_count = 1
 
@@ -79,21 +84,19 @@ class MainWindow(QMainWindow):
 
             name = DEFAULT_PROJECT_FOLDER_NAME % project_count
 
-            __project_path__ = join(directory, name)
+            project_path = join(directory, name)
 
             # TODO: Fix project creation
             self.project = model.Project(name, 1, 1, [], [])
-            self.project_path = join(__project_path__, DEFAULT_PROJECT_FILENAME)
+            self.project_path = join(project_path, DEFAULT_PROJECT_FILENAME)
 
             # Invoke Autoexam
-            api.init(name, __project_path__)
+            api.init(name, project_path)
 
-            try:
-                model.dump_project(self.project, '%s' % self.project_path)
-            except AttributeError:
-                pass  # No project loaded
+            # Create base project file
+            model.dump_project(self.project, '%s' % self.project_path)
 
-            os.chdir(__project_path__)
+            os.chdir(project_path)
             self.startWizard()
 
     def loadExam(self, directory=False):
@@ -102,14 +105,23 @@ class MainWindow(QMainWindow):
 
         if directory:
             __project_file_path__ = join(directory, DEFAULT_PROJECT_FILENAME)
-            if not exists(__project_file_path__):
-                self.project = None
-                print("No project found!!")
-                # TODO: QDialog
-                return
-            else:
+            if exists(__project_file_path__):
                 self.project = model.load_project(__project_file_path__)
+
+                exists = os.path.exists(join(directory, 'master.txt'))
+
+                print 'exists: ', exists
+
                 self.project_path = __project_file_path__
+            else:
+                self.project = None
+
+                msgBox = QMessageBox()
+                msgBox.setText("No project found in the given folder.")
+                msgBox.setModal(True)
+                msgBox.exec_()
+
+                return
 
             os.chdir(directory)
             self.startWizard()
@@ -124,7 +136,8 @@ class MainWindow(QMainWindow):
                 pass
                 print 'no tests results to save'
 
-            event.accept()
+            if event is not None:
+                event.accept()
 
     def saveOnClose(self):
         return True

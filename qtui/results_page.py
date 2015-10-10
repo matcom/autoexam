@@ -34,7 +34,9 @@ class ResultsPage(QWizardPage):
             name = random.choice(['Fulano', 'Mengano', 'Ciclano', 'Esperanzejo'])
             grade = self.grades[test_num]['total_grade']
             score = float(grade)/float(self.max_score) * 100  # TODO: implement scoring correctly
-            item = QTreeWidgetItem([str(test_num), str(name), str(grade), str(score)])
+            # item = QTreeWidgetItem([str(test_num), str(name), str(grade), str(score)])
+            item = QTreeWidgetItem([str(test_num), str(grade)])
+
             self.ui.treeWidget.addTopLevelItem(item)
 
     def validatePage(self):
