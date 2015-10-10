@@ -23,7 +23,7 @@ class QuestionWidget(QWidget):
         self.ui.idsWidget.clear()
 
         for question in self.questions:
-            self.ui.idsWidget.addItem(question.id)
+            self.ui.idsWidget.addItem(str(question.id))
 
         if len(self.questions) > 0:
             self.ui.idsWidget.setCurrentRow(0)
@@ -63,7 +63,7 @@ class QuestionWidget(QWidget):
     def saveQuestion(self, index):
         q_id = str(self.idsWidget.item(index).text())
         tag_names = str(self.ui.tagsEdit.text()).split()
-        text = str(self.questionEdit.toPlainText())
+        text = str(self.questionEdit.toPlainText().toUtf8()).decode('utf-8')
         answers = self.answersWidget.dump()
 
         question = qtui.model.Question(q_id, tag_names, text, answers)
