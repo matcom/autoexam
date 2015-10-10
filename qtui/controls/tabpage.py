@@ -23,5 +23,5 @@ class TabPage(QWidget):
     def dump(self):
         right = self.ui.rightBox.isChecked()
         fixed = self.ui.fixedBox.isChecked()
-        text = str(self.ui.questionEdit.toPlainText())
+        text = str(self.ui.questionEdit.toPlainText().toUtf8()).decode('utf-8')
         return Answer(right, fixed, text)

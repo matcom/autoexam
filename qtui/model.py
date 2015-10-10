@@ -60,6 +60,23 @@ def load_project(path):
                 question.answers[j] = Answer(*a)
         return proj
 
+def load_project_from_master(questions_by_id, restrictions):
+
+    p = Project('imported project', 2, 2,
+            [Tag(r,restrictions[r]) for r in restrictions],
+            [
+                Question(
+                    question_id,
+                    questions_by_id[question_id].tags,
+                    questions_by_id[question_id].header,
+                    [Answer(option[0],option[1],option[2])
+                        for option in questions_by_id[question_id].options]
+                )
+            for question_id in questions_by_id.keys()
+            ]
+        )
+    return p
+
 
 def test():
     t1 = Tag('tag', 3)

@@ -22,6 +22,7 @@ import scanresults
 DEFAULT_PROJECT_FILENAME = '.autoexam_project'
 DEFAULT_PROJECT_PATH = join(environ['HOME'], 'autoexam_projects')
 DEFAULT_PROJECT_FOLDER_NAME = 'Project %d'
+DEFAULT_MASTER_FILENAME = 'master.txt'
 
 # Qt.QT_NO_DEBUG_OUTPUT = True
 
@@ -39,7 +40,7 @@ class MainWindow(QMainWindow):
         self.ui.clbLoadExam.clicked.connect(self.loadExam)
         # self.ui.tabWidget.tabCloseRequested.connect(self.ui.tabWidget.removeTab)
 
-        if os.path.exists('.autoexam'):
+        if exists('.autoexam'):
             self.loadExam(directory=os.getcwd())
 
     def setExistingDirectory(self):
@@ -52,7 +53,7 @@ class MainWindow(QMainWindow):
                 "Select a project folder...", DEFAULT_PROJECT_PATH, options)
         return directory
 
-    def startWizard(self):
+    def startWizard(self, load=False):
         self.examWizard = exam_wizard.ExamWizard(self.project)
         self.examWizard.should_generate_master = True
 
@@ -79,7 +80,7 @@ class MainWindow(QMainWindow):
 
             project_count = 1
 
-            while exists(join(directory, DEFAULT_PROJECT_FOLDER_NAME % project_count)):
+            while os.path.exists(join(directory, DEFAULT_PROJECT_FOLDER_NAME % project_count)):
                 project_count += 1
 
             name = DEFAULT_PROJECT_FOLDER_NAME % project_count
@@ -87,7 +88,7 @@ class MainWindow(QMainWindow):
             project_path = join(directory, name)
 
             # TODO: Fix project creation
-            self.project = model.Project(name, 1, 1, [], [])
+            self.project = model.Project(name, 5, 1, [], [])
             self.project_path = join(project_path, DEFAULT_PROJECT_FILENAME)
 
             # Invoke Autoexam
@@ -107,24 +108,27 @@ class MainWindow(QMainWindow):
             __project_file_path__ = join(directory, DEFAULT_PROJECT_FILENAME)
             if exists(__project_file_path__):
                 self.project = model.load_project(__project_file_path__)
-
-                exists = os.path.exists(join(directory, 'master.txt'))
-
-                print 'exists: ', exists
-
-                self.project_path = __project_file_path__
             else:
                 self.project = None
+                master_filename = join(directory, DEFAULT_MASTER_FILENAME)
+                if exists(master_filename):
+                    print 'there is no project, but there is a master file that could be imported'
+                    import gen
+                    gen.parser(master_filename)
+                    project = model.load_project_from_master(gen.questions_by_id, gen.restrictions)
 
-                msgBox = QMessageBox()
-                msgBox.setText("No project found in the given folder.")
-                msgBox.setModal(True)
-                msgBox.exec_()
+                    self.project = project
+                    self.project_path = __project_file_path__
 
-                return
+                else:
+                    msgBox = QMessageBox()
+                    msgBox.setText("No project found in the given folder.")
+                    msgBox.setModal(True)
+                    msgBox.exec_()
+                    return
 
             os.chdir(directory)
-            self.startWizard()
+            self.startWizard(load=True)
 
     def closeEvent(self, event):
         if self.saveOnClose():
