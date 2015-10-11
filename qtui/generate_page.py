@@ -59,7 +59,7 @@ class GeneratePage(QWizardPage):
         self.grid.addItem(vs1, pos, 0)
         self.grid.addItem(vs2, pos, 1)
         self.grid.addItem(vs3, pos, 2)
-    
+
     def updateTags(self):
         self.listGrid()
         tags = []
