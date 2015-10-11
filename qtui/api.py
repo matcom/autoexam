@@ -31,7 +31,7 @@ def get_value(kwargs, field, default=None):
 
 def save_master(master_text):
     with open(master, 'w') as fp:
-        fp.write(master_text)
+        fp.write(master_text.encode('utf-8'))
 # endregion Helpers
 
 # region Autoexam Methods
