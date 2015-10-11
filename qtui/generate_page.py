@@ -1,10 +1,11 @@
 from PyQt4.QtGui import *
+from PyQt4.QtCore import Qt
 from PyQt4 import uic
 import os
 from os.path import join
 from glob import glob
 import api
-
+from model import Tag
 TEMPLATE_PATH = 'qtui/master.jinja'
 
 
@@ -19,19 +20,40 @@ class GeneratePage(QWizardPage):
         self.ui.questionCountSpin.setValue(self.project.total_questions_per_exam)
         self.ui.examCountSpin.setValue(self.project.total_exams_to_generate)
 
-        self.ui.questionCountSpin.valueChanged.connect(self.update_project)
-        self.ui.examCountSpin.valueChanged.connect(self.update_project)
+        self.ui.questionCountSpin.valueChanged.connect(self.updateProject)
+        self.ui.examCountSpin.valueChanged.connect(self.updateProject)
+
+        self.grid = self.ui.scrollAreaWidgetContents.layout()
+        self.setupTagMenu()
 
         self.parentWizard = parentW
 
-    def validatePage(self):
-        if self.parentWizard.should_generate_master:
-            self.generate()
-            self.parentWizard.should_generate_master = False
-        return True
+    def gridItemAt(self, r, c):
+         self.grid.itemAtPosition(r, c).widget()
+
+    def setupTagMenu(self):
+        print 'tags:', self.project.tags
+        if self.project.tags:
+            tags = iter(self.project.tags)
+
+            t1 = next(tags)
+            self.gridItemAt(0, 0).setText(t1.name)
+            self.gridItemAt(0, 2).setValue(t1.min_questions)
+
+            for i, tag in enumerate(tags, 1):
+                self.grid.addWidget(QLabel(tag.name), i, 0, Qt.AlignTop|Qt.AlignRight)
+                self.grid.addWidget(QSpinBox(tag.min_questions), i, 2, Qt.AlignTop)
+
+    def getTags(self):
+        for i in range(self.grid.rows()-1):
+            name = str(self.gridItemAt(i, 0).text())
+            minq = self.gridItemAt(i, 2).value()
+            yield Tag(name, minq)
 
     def generate(self):
         # Both master and exam generation are being done here temporally
+
+        self.update_project()
 
         msgBox = QMessageBox()
         msgBox.setText("The master file will now be generated.")
@@ -54,6 +76,15 @@ class GeneratePage(QWizardPage):
 
         self.parentWizard.should_regenerate_master = False
 
-    def update_project(self):
+    def updateProject(self):
         self.project.total_questions_per_exam = self.ui.questionCountSpin.value()
         self.project.total_exams_to_generate = self.ui.examCountSpin.value()
+        self.project.tags = {tag for tag in self.getTags()}
+
+
+if __name__ == '__main__':
+    import sys
+    app = QApplication(sys.argv)
+    win = GeneratePage()
+    win.show()
+    sys.exit(app.exec_())
