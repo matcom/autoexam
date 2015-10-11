@@ -23,32 +23,54 @@ class GeneratePage(QWizardPage):
         self.ui.questionCountSpin.valueChanged.connect(self.updateProject)
         self.ui.examCountSpin.valueChanged.connect(self.updateProject)
 
-        self.grid = self.ui.scrollAreaWidgetContents.layout()
-        self.setupTagMenu()
-
         self.parentWizard = parentW
 
     def gridItemAt(self, r, c):
          self.grid.itemAtPosition(r, c).widget()
 
+    def listGrid(self):
+        for i in range(self.grid.count()):
+            item = self.grid.itemAt(i)
+            print i, type(item.widget() if item.widget() else item).__name__
+
+    def clearGrid(self):
+        widget = QWidget()
+        layout = QGridLayout()
+        widget.setLayout(layout)
+        self.ui.scrollArea.widget().destroy()
+        self.ui.scrollArea.setWidget(widget)
+        self.grid = layout
+
     def setupTagMenu(self):
-        print 'tags:', self.project.tags
-        if self.project.tags:
-            tags = iter(self.project.tags)
+        self.clearGrid()
+        for i, tag in enumerate(self.project.tags):
+            self.grid.addWidget(QLabel(tag.name), i, 0, Qt.AlignTop|Qt.AlignRight)
+            spinbox = QSpinBox()
+            spinbox.setValue(tag.min_questions)
+            self.grid.addWidget(spinbox, i, 2, Qt.AlignTop)
 
-            t1 = next(tags)
-            self.gridItemAt(0, 0).setText(t1.name)
-            self.gridItemAt(0, 2).setValue(t1.min_questions)
+        hs = QSpacerItem(40, 20, hPolicy=QSizePolicy.Fixed)
+        self.grid.addItem(hs, 0, 1)
 
-            for i, tag in enumerate(tags, 1):
-                self.grid.addWidget(QLabel(tag.name), i, 0, Qt.AlignTop|Qt.AlignRight)
-                self.grid.addWidget(QSpinBox(tag.min_questions), i, 2, Qt.AlignTop)
+        vs1 = QSpacerItem(20, 300, vPolicy=QSizePolicy.Expanding)
+        vs2 = QSpacerItem(20, 300, vPolicy=QSizePolicy.Expanding)
+        vs3 = QSpacerItem(20, 300, vPolicy=QSizePolicy.Expanding)
+        pos = len(self.project.tags)
+        self.grid.addItem(vs1, pos, 0)
+        self.grid.addItem(vs2, pos, 1)
+        self.grid.addItem(vs3, pos, 2)
+    
+    def updateTags(self):
+        self.listGrid()
+        tags = []
+        for i in xrange(len(self.project.tags)):
+            name = str(self.grid.itemAt(2*i).widget().text())
+            minq = self.grid.itemAt(2*i+1).widget().value()
+            tags.append(Tag(name, minq))
+        self.project.tags = tags
 
-    def getTags(self):
-        for i in range(self.grid.rows()-1):
-            name = str(self.gridItemAt(i, 0).text())
-            minq = self.gridItemAt(i, 2).value()
-            yield Tag(name, minq)
+    def initializePage(self):
+        self.setupTagMenu()
 
     def generate(self):
         # Both master and exam generation are being done here temporally
@@ -79,7 +101,7 @@ class GeneratePage(QWizardPage):
     def updateProject(self):
         self.project.total_questions_per_exam = self.ui.questionCountSpin.value()
         self.project.total_exams_to_generate = self.ui.examCountSpin.value()
-        self.project.tags = {tag for tag in self.getTags()}
+        self.updateTags()
 
 
 if __name__ == '__main__':
