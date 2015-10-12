@@ -1,13 +1,19 @@
 from PyQt4.QtGui import *
 from PyQt4 import uic
+from PyQt4.QtCore import QFileSystemWatcher
 import os
 from os.path import join
 import api
 import model
 import scanresults
 
+from threading import Thread
+
 ok_color = QBrush(QColor(0, 128, 0))
 warn_color = QBrush(QColor(128, 128, 0))
+
+TESTS_RESULTS_FILE_PATH = 'generated/last/results.json'
+ORDER_FILE_PATH = os.path.join('generated', 'last', 'order.json')
 
 
 class ScanPage(QWizardPage):
@@ -156,12 +162,15 @@ class ScanPage(QWizardPage):
     def start_scan(self):
 
         class _args:
-            outfile = 'generated/last/results.json'
-            cameras = [1]
+            outfile = TESTS_RESULTS_FILE_PATH
+            cameras = [0] #TODO: UN-WIRE THIS !!!!
             folder = "generated/last/images"
             time = None
-            autowrite = None
+            autowrite = True
             poll = None
             debug = True
 
-        api.scan(_args()) # TODO: Fill dictionary properly
+        # This should block until the scanning is finished.
+        ret_value = api.scan(_args()) # TODO: Fill dictionary properly
+
+        print('The scanning has finished!')
