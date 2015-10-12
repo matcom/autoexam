@@ -27,66 +27,46 @@
      </attribute>
      <column>
       <property name="text">
-       <string>Temarios</string>
+       <string>Exams</string>
       </property>
      </column>
      <item>
       <property name="text">
-       <string>Temario 1</string>
+       <string>Sample Exam 1</string>
       </property>
       <item>
        <property name="text">
-        <string>Pregunta 1</string>
+        <string>Question 1</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>Pregunta 2</string>
+        <string>Question 2</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>Pregunta 3</string>
+        <string>Question 3</string>
        </property>
       </item>
      </item>
      <item>
       <property name="text">
-       <string>Temario 2</string>
+       <string>Sample Exam 2</string>
       </property>
       <item>
        <property name="text">
-        <string>Pregunta 1</string>
+        <string>Question 1</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>Pregunta 2</string>
+        <string>Question 2</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>Pregunta 3</string>
-       </property>
-      </item>
-     </item>
-     <item>
-      <property name="text">
-       <string>Temario 3</string>
-      </property>
-      <item>
-       <property name="text">
-        <string>Pregunta 1</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Pregunta 2</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Pregunta 3</string>
+        <string>Question 3</string>
        </property>
       </item>
      </item>
@@ -99,6 +79,12 @@
    </item>
    <item row="0" column="1">
     <widget class="QScrollArea" name="scrollArea">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="widgetResizable">
       <bool>true</bool>
      </property>
@@ -107,8 +93,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>321</width>
-        <height>513</height>
+        <width>402</width>
+        <height>605</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_2">
@@ -119,25 +105,34 @@
          </property>
          <item>
           <widget class="QLabel" name="label_2">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="text">
-            <string>Texto de la pregunta</string>
+            <string>You should now see a camera image. Please place your tests in front of the camera as clear as possible and wait for the beep (or check the console for errors). Once the scanning is finished, please press 'q'. You will be able to edit the results in this screen.</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QCheckBox" name="checkBox">
            <property name="text">
-            <string>Opción 1</string>
+            <string>Option 1</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QCheckBox" name="checkBox_2">
            <property name="text">
-            <string>Opción 2</string>
+            <string>Option 2</string>
            </property>
            <property name="checked">
             <bool>true</bool>
@@ -147,14 +142,14 @@
          <item>
           <widget class="QCheckBox" name="checkBox_3">
            <property name="text">
-            <string>Opción 3</string>
+            <string>Option 3</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QCheckBox" name="checkBox_4">
            <property name="text">
-            <string>Opción 4</string>
+            <string>Option 4</string>
            </property>
            <property name="checked">
             <bool>true</bool>
@@ -162,19 +157,6 @@
           </widget>
          </item>
         </layout>
-       </item>
-       <item row="0" column="1">
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>163</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
        </item>
        <item row="1" column="0">
         <spacer name="verticalSpacer">
@@ -185,6 +167,19 @@
           <size>
            <width>20</width>
            <height>354</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="0" column="1">
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>163</width>
+           <height>20</height>
           </size>
          </property>
         </spacer>

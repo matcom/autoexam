@@ -32,11 +32,6 @@ class ScanPage(QWizardPage):
         self.results = None
         self.parentWizard = parentW
 
-        self.watcher = QFileSystemWatcher()
-        self.watcher.fileChanged.connect(self.on_scan_file_change)
-        self.watcher.addPath(TESTS_RESULTS_FILE_PATH)
-
-
     def initializePage(self):
         super(ScanPage, self).initializePage()
         # api.add_scan_event_subscriber(self)
@@ -49,9 +44,18 @@ class ScanPage(QWizardPage):
         if os.path.exists(ORDER_FILE_PATH):
             self.order = scanresults.parse(ORDER_FILE_PATH)
 
+
+        self.watcher = QFileSystemWatcher()
+        self.watcher.fileChanged.connect(self.on_scan_file_change)
+
         if os.path.exists(TESTS_RESULTS_FILE_PATH):
             self.results = scanresults.parse(TESTS_RESULTS_FILE_PATH)
             self.loadResults()
+        else:
+            with open(TESTS_RESULTS_FILE_PATH,'w') as f:
+                f.write('{}')
+
+        self.watcher.addPath(TESTS_RESULTS_FILE_PATH)
 
     def loadResults(self):
         tree = self.ui.treeWidget
@@ -92,7 +96,11 @@ class ScanPage(QWizardPage):
 
     def on_scan_file_change(self, filename):
         print('Detected changes!!! ', filename)
-        self.loadResults()
+        try:
+            self.results = scanresults.parse(TESTS_RESULTS_FILE_PATH)
+            self.loadResults()
+        except:
+            print('Could not load results.')
 
     def process_report(self, report):
         current = self.ui.treeWidget.topLevelItem(report.test.id)
@@ -183,7 +191,7 @@ class ScanPage(QWizardPage):
             time = None
             autowrite = True
             poll = None
-            debug = True
+            debug = False
 
         # This should block until the scanning is finished.
         ret_value = api.scan(_args()) # TODO: Fill dictionary properly
