@@ -55,10 +55,10 @@ class QuestionWidget(QWidget):
             self.clearQuestionData()
 
     def saveQuestionOnChange(self, new_item, old_item):
-        print 'saving item: ', old_item
+        # print 'saving item: ', old_item
         if old_item is not None:
             self.saveQuestion(self.idsWidget.row(old_item))
-        print 'new item is: ', new_item
+        # print 'new item is: ', new_item
 
     def saveQuestion(self, index):
         q_id = str(self.idsWidget.item(index).text())
@@ -74,7 +74,7 @@ class QuestionWidget(QWidget):
 
     # DO NOT CALL THIS DIRECTLY FROM THIS CLASS!!!
     def __loadQuestionData__(self, index):
-        print 'changing current question to: ', index
+        # print 'changing current question to: ', index
         # import pdb; pdb.set_trace()
         q = self.questions[index]
 
