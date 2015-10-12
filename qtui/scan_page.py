@@ -1,6 +1,6 @@
 from PyQt4.QtGui import *
 from PyQt4 import uic
-from PyQt4.QtCore import QFileSystemWatcher
+from PyQt4.QtCore import QFileSystemWatcher, pyqtSignal
 import os
 from os.path import join
 import api
@@ -14,9 +14,10 @@ warn_color = QBrush(QColor(128, 128, 0))
 
 TESTS_RESULTS_FILE_PATH = 'generated/last/results.json'
 ORDER_FILE_PATH = os.path.join('generated', 'last', 'order.json')
-
+IMAGES_FOLDER = 'generated/last/images'
 
 class ScanPage(QWizardPage):
+    scanError = pyqtSignal() # name
     path = "qtui/ui/page3_scan.ui"
 
     def __init__(self, project, parentW=None):
@@ -31,6 +32,7 @@ class ScanPage(QWizardPage):
         self.order = None
         self.results = None
         self.parentWizard = parentW
+        self.scanError.connect(self.go_to_previous)
 
     def initializePage(self):
         super(ScanPage, self).initializePage()
@@ -186,14 +188,22 @@ class ScanPage(QWizardPage):
 
         class _args:
             outfile = TESTS_RESULTS_FILE_PATH
-            cameras = [0] #TODO: UN-WIRE THIS !!!!
-            folder = "generated/last/images"
+            cameras = [self.parentWizard.camera_id] #TODO: UN-WIRE THIS !!!!
+            folder = IMAGES_FOLDER
             time = None
             autowrite = True
             poll = None
             debug = False
 
-        # This should block until the scanning is finished.
-        ret_value = api.scan(_args()) # TODO: Fill dictionary properly
+        ok = api.scan(_args()) # TODO: Fill dictionary properly
+        if not ok:
+            self.scanError.emit()
+        else:
+            print 'All OK with the scanning!'
 
-        print('The scanning has finished!')
+    def go_to_previous(self):
+        self.parentWizard.back()
+        msgBox = QMessageBox()
+        msgBox.setText("There was an error in the scanning process. Please, check if the right camera is selected and try again.")
+        msgBox.setModal(True)
+        msgBox.exec_()

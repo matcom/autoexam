@@ -72,6 +72,13 @@ class GeneratePage(QWizardPage):
     def initializePage(self):
         self.setupTagMenu()
 
+    def validatePage(self):
+        if self.parentWizard.should_generate_master:
+            self.generate()
+            self.parentWizard.should_generate_master = False
+        self.parentWizard.camera_id = self.ui.cameraSourceCombo.currentIndex()
+        return True
+
     def generate(self):
         # Both master and exam generation are being done here temporally
 
