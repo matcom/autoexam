@@ -134,13 +134,24 @@ def render_master(project, template_path):
     return jinja2.Template(open(template_path).read().decode('utf-8')).render(project=project)
 
 
-def add_scan_event_subscriber(obj):
-    autoexam.add_scan_subscriber(obj)
-
-
-def remove_scan_event_subscriber(obj):
-    autoexam.remove_scan_subscriber(obj)
+# def add_scan_event_subscriber(obj):
+#     autoexam.add_scan_subscriber(obj)
+#
+#
+# def remove_scan_event_subscriber(obj):
+#     autoexam.remove_scan_subscriber(obj)
 
 
 def scan(_args):
-    autoexam.scan(_args)
+    import subprocess
+    print subprocess.check_output('autoexam scan \
+                --autowrite \
+                -c {camera_number}\
+                -o {outfile}'.format(
+                    camera_number=_args.cameras[0],
+                    outfile='generated/last/results.json'
+                ).split()
+    )
+    return 0
+
+    # autoexam.scan(_args)
