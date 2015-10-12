@@ -82,7 +82,7 @@ class GeneratePage(QWizardPage):
     def generate(self):
         # Both master and exam generation are being done here temporally
 
-        self.update_project()
+        self.updateProject()
 
         msgBox = QMessageBox()
         msgBox.setText("The master file will now be generated.")
