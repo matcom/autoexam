@@ -181,6 +181,8 @@ def scan(args):
                          else args.folder, args.time)
     w, h = source.get_size()
 
+    print('Initializing scanner...')
+
     #Set document processing parameters and initialize scanner
     scanner = TestScanner(w, h, args.exams_file, show_image=True,
                           double_check=True, debug=args.debug,
@@ -191,9 +193,11 @@ def scan(args):
     while True:
         #While user does not press the q key if it is a camera
         if source.is_camera:
-            if cv2.waitKey(100) & 0xFF != ord('q'):
+            if (cv2.waitKey(100) & 0xFF) == ord('q'):
+                print('Camera finished!')
                 break
         elif source.finished:
+            print('Folder finished!')
             break
 
         #Get the scan report of the source image
@@ -210,7 +214,7 @@ def scan(args):
                     print "Warnings:"
                     for w in report.test.warnings:
                         print "\t", w
-                on_scan(report)
+                # on_scan(report)
                 #this method appends the test results if the file exists...
                 if args.autowrite:
                     scanresults.dump(tests, args.outfile, overwrite=False)
@@ -230,7 +234,7 @@ def scan(args):
                       if isinstance(x, scanresults.QuestionError) or
                       (isinstance(x, scanresults.QrcodeError) and x.err_type == scanresults.QRCodeErrorTypes.FORMAT) or args.debug]:
                 print e
-            on_scan(report)
+            # on_scan(report)
 
     scanner.finalize()
     source.release()
