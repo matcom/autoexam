@@ -143,15 +143,18 @@ def render_master(project, template_path):
 
 
 def scan(_args):
-    import subprocess
-    print subprocess.check_output('autoexam scan \
-                --autowrite \
-                -c {camera_number}\
-                -o {outfile}'.format(
-                    camera_number=_args.cameras[0],
-                    outfile='generated/last/results.json'
-                ).split()
-    )
-    return 0
+    try:
+        import subprocess
+        print subprocess.check_output('autoexam scan \
+                    --autowrite \
+                    -c {camera_number}\
+                    -o {outfile}'.format(
+                        camera_number=_args.cameras[0],
+                        outfile='generated/last/results.json'
+                    ).split()
+        )
+        return True
+    except subprocess.CalledProcessError:
+        return False
 
     # autoexam.scan(_args)
