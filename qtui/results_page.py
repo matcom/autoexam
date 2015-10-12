@@ -25,15 +25,15 @@ class ResultsPage(QWizardPage):
         # This assumes scores are normalized to 1 (which is probably
         # a good idea anyway. Otherwise, the max score would depend
         # on the specific questions each exam got out of randomness)
-        self.max_score = len(self.grades[0]['questions_grades'].keys())
+        self.max_score = self.project.total_questions_per_exam
 
         self.ui.treeWidget.clear()
 
         for test_num, test_data in self.results.items():
             # TODO: Make name editable
-            name = random.choice(['Fulano', 'Mengano', 'Ciclano', 'Esperanzejo'])
+            # name = random.choice(['Fulano', 'Mengano', 'Ciclano', 'Esperanzejo'])
             grade = self.grades[test_num]['total_grade']
-            score = float(grade)/float(self.max_score) * 100  # TODO: implement scoring correctly
+            # score = float(grade)/float(self.max_score) * 100  # TODO: implement scoring correctly
             # item = QTreeWidgetItem([str(test_num), str(name), str(grade), str(score)])
             item = QTreeWidgetItem([str(test_num), str(grade)])
 
@@ -44,7 +44,8 @@ class ResultsPage(QWizardPage):
         count = self.ui.treeWidget.topLevelItemCount()
         rows = []
 
-        rows.append(['Temario', 'Nombre', 'Nota', 'Puntos'])
+        # rows.append(['Temario', 'Nombre', 'Nota', 'Puntos'])
+        rows.append(['Temario', 'Puntos'])
 
         for i in range(count):
             row = self.ui.treeWidget.topLevelItem(i)

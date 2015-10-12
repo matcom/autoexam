@@ -69,7 +69,7 @@ class MainWindow(QMainWindow):
     def returnToStartScreen(self):
         wizard = self.ui.stackedWidget.currentWidget()
         self.ui.stackedWidget.removeWidget(wizard)
-        self.saveOnClose(None)
+        self.saveOnClose()
 
     def newExam(self):
         directory = str(self.setExistingDirectory())
