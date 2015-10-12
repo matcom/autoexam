@@ -107,11 +107,12 @@ class ScanPage(QWizardPage):
         currentItem = self.ui.treeWidget.currentItem()
         if currentItem is not None:
             if currentItem.parent() is not None:  # If it is a question
-                print 'selected question'
+                # print 'selected question'
                 self.current_item = currentItem
                 self.update_question_panel()
             else:
-                print 'selected exam'
+                pass
+                # print 'selected exam'
 
     def update_question_panel(self):
         for i in reversed(range(self.ui.questionDataLayout.count())):
@@ -141,8 +142,8 @@ class ScanPage(QWizardPage):
                 self.ui.questionDataLayout.addWidget(question_answer_check)
 
     def is_answer_checked(self, exam_no, question_no, answer_no):
-        print 'is_answer_checked'
-        print(exam_no,question_no,answer_no)
+        # print 'is_answer_checked'
+        # print(exam_no,question_no,answer_no)
         results_data = self.results
         exam_data = results_data[exam_no]
 

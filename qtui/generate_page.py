@@ -31,7 +31,7 @@ class GeneratePage(QWizardPage):
     def listGrid(self):
         for i in range(self.grid.count()):
             item = self.grid.itemAt(i)
-            print i, type(item.widget() if item.widget() else item).__name__
+            # print i, type(item.widget() if item.widget() else item).__name__
 
     def clearGrid(self):
         widget = QWidget()
