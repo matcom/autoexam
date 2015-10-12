@@ -32,57 +32,67 @@ class ScanPage(QWizardPage):
         self.results = None
         self.parentWizard = parentW
 
+        self.watcher = QFileSystemWatcher()
+        self.watcher.fileChanged.connect(self.on_scan_file_change)
+        self.watcher.addPath(TESTS_RESULTS_FILE_PATH)
+
+
     def initializePage(self):
         super(ScanPage, self).initializePage()
-        api.add_scan_event_subscriber(self)
+        # api.add_scan_event_subscriber(self)
 
+        self.scan_thread = Thread(target=self.start_scan)
+        self.scan_thread.setDaemon(True)
+        self.scan_thread.start()
+        # self.start_scan()
+
+        if os.path.exists(ORDER_FILE_PATH):
+            self.order = scanresults.parse(ORDER_FILE_PATH)
+
+        if os.path.exists(TESTS_RESULTS_FILE_PATH):
+            self.results = scanresults.parse(TESTS_RESULTS_FILE_PATH)
+            self.loadResults()
+
+    def loadResults(self):
         tree = self.ui.treeWidget
         tree.clear()
-
-        # TODO: Remove symbolic link for multiplatforming
-        order_file_path = os.path.join('generated', 'last', 'order.json')
-        tests_results_file_path = 'generated/last/results.json'
-
-        # self.scan_thread = Thread(target=self.start_scan)
-        # self.scan_thread.setDaemon(True)
-        # self.scan_thread.start()
-        self.start_scan()
-
-        if os.path.exists(order_file_path):
-            self.order = scanresults.parse(order_file_path)
-        if os.path.exists(tests_results_file_path):
-            self.results = scanresults.parse(tests_results_file_path)
 
         for i in range(self.project.total_exams_to_generate):
             exam_item = QTreeWidgetItem(tree, ['Examen %d' % (i + 1)])
             for j in range(self.project.total_questions_per_exam):
                 question_item = QTreeWidgetItem(exam_item, ['Pregunta %d' % (j + 1)])
-                question_item.question = self.project.questions[self.results[i].questions[j].id - 1]
-
+                if i in self.results:
+                    question_item.question = self.project.questions[self.results[i].questions[j].id - 1]
 
         first_exam_item = tree.topLevelItem(0)
         first_exam_item.setExpanded(True)
         tree.setCurrentItem(
             tree.itemBelow(first_exam_item))
 
+
     def validatePage(self):
-        scanresults.dump(self.results, 'generated/last/results.json', overwrite=True)
+        # TODO: Warning validation here!!!
+        scanresults.dump(self.results, TESTS_RESULTS_FILE_PATH, overwrite=True)
         self.parentWizard.results = self.results
         return True
 
     def cleanupPage(self):
         super(ScanPage, self).cleanupPage()
-        api.remove_scan_event_subscriber(self)
+        # api.remove_scan_event_subscriber(self)
 
         # TODO: Do proper shutdown
         # self.scan_thread.__stop()
 
-    def on_scan_event(self, report):
-        if report.success:
-            print 'successful report: ', report
-            self.process_report(report)
-        else:
-            print 'failed report: ', report
+    # def on_scan_event(self, report):
+    #     if report.success:
+    #         print 'successful report: ', report
+    #         self.process_report(report)
+    #     else:
+    #         print 'failed report: ', report
+
+    def on_scan_file_change(self, filename):
+        print('Detected changes!!! ', filename)
+        self.loadResults()
 
     def process_report(self, report):
         current = self.ui.treeWidget.topLevelItem(report.test.id)
@@ -115,15 +125,20 @@ class ScanPage(QWizardPage):
         exam_no = self.ui.treeWidget.indexOfTopLevelItem(current_exam_item)
         question_no = current_exam_item.indexOfChild(self.current_item)
 
-        question_text_label = QLabel(self.current_item.question.text)
-        self.ui.questionDataLayout.addWidget(question_text_label)
+        if not 'question' in dir(self.current_item):
+            question_text_label = QLabel('This exam has not been scanned yet.')
+            self.ui.questionDataLayout.addWidget(question_text_label)
+            return
+        else:
+            question_text_label = QLabel(self.current_item.question.text)
+            self.ui.questionDataLayout.addWidget(question_text_label)
 
-        for answer_no, answer in enumerate(self.current_item.question.answers):
-            question_answer_check = QCheckBox(answer.text)
-            question_answer_check.setChecked(self.is_answer_checked(exam_no, question_no, answer_no))
+            for answer_no, answer in enumerate(self.current_item.question.answers):
+                question_answer_check = QCheckBox(answer.text)
+                question_answer_check.setChecked(self.is_answer_checked(exam_no, question_no, answer_no))
 
-            question_answer_check.stateChanged.connect(self.update_current_question_state)
-            self.ui.questionDataLayout.addWidget(question_answer_check)
+                question_answer_check.stateChanged.connect(self.update_current_question_state)
+                self.ui.questionDataLayout.addWidget(question_answer_check)
 
     def is_answer_checked(self, exam_no, question_no, answer_no):
         print 'is_answer_checked'
@@ -132,7 +147,6 @@ class ScanPage(QWizardPage):
         exam_data = results_data[exam_no]
 
         question_data = exam_data.questions[question_no]
-        # return answer_no + 1 in question_data.answers
         return answer_no in question_data.answers
 
     def update_current_question_state(self, state):
