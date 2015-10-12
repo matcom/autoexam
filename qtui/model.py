@@ -63,7 +63,8 @@ def load_project(path):
 def load_project_from_master(questions_by_id, restrictions):
 
     p = Project('imported project', 2, 2,
-            [Tag(r,restrictions[r]) for r in restrictions],
+            [Tag(r.replace('@',''),restrictions[r])
+                for r in restrictions],
             [
                 Question(
                     question_id,
@@ -75,6 +76,10 @@ def load_project_from_master(questions_by_id, restrictions):
             for question_id in questions_by_id.keys()
             ]
         )
+
+    for q in p.questions:
+        q.tag_names = map(lambda t: t.replace('@',''), q.tag_names)
+
     return p
 
 
