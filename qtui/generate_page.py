@@ -2,12 +2,13 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import Qt
 from PyQt4 import uic
 import os
-from os.path import join
+from os.path import join, exists
 from glob import glob
 import api
 from model import Tag
-TEMPLATE_PATH = 'qtui/master.jinja'
 
+TEMPLATE_PATH = 'qtui/master.jinja'
+LAST_GENERATED_PATH = 'generated/last/'
 
 class GeneratePage(QWizardPage):
     path = "qtui/ui/page2_generate.ui"
@@ -73,7 +74,11 @@ class GeneratePage(QWizardPage):
         self.setupTagMenu()
 
     def validatePage(self):
-        if self.parentWizard.should_generate_master:
+        regen = True
+        if exists(LAST_GENERATED_PATH):
+            confirm_regen = QMessageBox.question(None, "Regenerate?", "There is already an exam generated in this folder. Would you like to regenerate it? \n (WARNING: This will efectively render unusable your current tests if you have already printed them! Normally, you should just select no.)", QMessageBox.Yes | QMessageBox.No )
+            regen = confirm_regen == QMessageBox.Yes
+        if regen:
             self.generate()
             self.parentWizard.should_generate_master = False
         self.parentWizard.camera_id = self.ui.cameraSourceCombo.currentIndex()
