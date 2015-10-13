@@ -8,8 +8,14 @@ import shutil
 import json
 import gen
 import evaluator as ev
-# import webpoll.webpoll as wp
-# import simpleui.app as sui
+import webpoll.webpoll as wp
+import simpleui.app as sui
+import os.path
+
+if 'AUTOEXAM_FOLDER' not in os.environ:
+    path = os.path.dirname(os.path.realpath(__file__))
+    os.environ['AUTOEXAM_FOLDER'] = path
+    sys.path.append(path)
 
 from tabulate import tabulate
 from stats import build_stats
@@ -172,8 +178,14 @@ def scan(args):
 
     tests = {}
 
-    #While user does not press the q key
-    while cv2.waitKey(100) & 0xFF != ord('q'):
+    while True:
+        #While user does not press the q key if it is a camera
+        if source.is_camera:
+            if cv2.waitKey(100) & 0xFF != ord('q'):
+                break
+        elif source.finished:
+            break
+
         #Get the scan report of the source image
         report = scanner.scan(source)
         #if test recognized OK

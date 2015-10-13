@@ -345,13 +345,13 @@ def get_marker_positions(image, marker,threshold):
 def get_mean_point(points):
     mean = (0,0)
     for p in points:
-        mean = (mean[0]+p[0], mean[1]+p[1])    
+        mean = (mean[0]+p[0], mean[1]+p[1])
     return (mean[0]/len(points), mean[1]/len(points) )
 
 
 def rectangle_sort(markers,image):
     result = [0,0,0,0]
-    
+
     mid_x, mid_y = get_mean_point(markers)
 
     for p in markers:
@@ -479,7 +479,7 @@ def get_selections(image, question, index):
         if len(master_answers)==0:
             w = Warning(index + 1, local_answers, WarningTypes.EMPTY_SELECTION, selected = False)
             report.test.warnings.append(w)
-    
+
     #show the image
     # if doc_parameters["poll"]:
     cv2.imshow("Result", vis)
@@ -540,7 +540,7 @@ def get_contours(image, total, question):
     if doc_parameters["debug"]:
         errors = [e for e in report.errors if e.question == question]
         if len(errors)==0: print "-----OK-----"
-        else: 
+        else:
             for e in errors:
                 print e.message
             print "------------"
@@ -600,9 +600,9 @@ def same_size(contours, image):
     w, h = image.shape[::-1]
     max_size = min(w,h)
     for size in sizes:
-        if size >= max_size: 
+        if size >= max_size:
             return False
-        if abs(size/float(median_size) - 1.0) > doc_parameters["circle_size_difference"]: 
+        if abs(size/float(median_size) - 1.0) > doc_parameters["circle_size_difference"]:
             return False
     return True
 

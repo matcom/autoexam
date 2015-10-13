@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 import sys
-
 import os
-import os.path
-os.environ['AUTOEXAM_FOLDER'] = os.path.dirname(os.path.dirname(__file__))
-sys.path.append(os.environ['AUTOEXAM_FOLDER'])
+
+if 'AUTOEXAM_FOLDER' not in os.environ:
+    os.environ['AUTOEXAM_FOLDER'] = os.path.dirname(
+        os.path.dirname(os.path.realpath(__file__)))
+    sys.path.append(os.environ['AUTOEXAM_FOLDER'])
 
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
