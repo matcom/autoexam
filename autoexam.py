@@ -248,6 +248,18 @@ def report(args):
         for q in exam['questions']:
             question_ids.add(q['id'])
 
+    names = {}
+
+    if os.path.exists("names.txt"):
+        columns.append("Name")
+
+        with open("names.txt", 'r') as fp:
+            for line in fp:
+                line = line.decode("utf8").strip().split()
+                tid = line[0]
+                name = " ".join(l for l in line[1:])
+                names[tid] = name
+
     if 'grades' in args.data:
         columns.append('Grade')
 
@@ -263,6 +275,9 @@ def report(args):
 
     for i, d in sorted(results['grades'].items(), key=lambda x: int(x[0])):
         data = [i]
+
+        if names:
+            data.append(names[i])
 
         if 'grades' in args.data:
             data.append(d['total_grade'])
@@ -324,6 +339,84 @@ def grade(args):
         json.dump({"grades": grades, "stats": stats}, fp, indent=4)
 
 
+def review(args):
+    if not check_project_folder():
+        return
+
+    base_path = get_base_path(args)
+    result_path = os.path.join(base_path, 'results.json')
+
+    if not os.path.exists(result_path):
+        error("Test hasn't been scanned yet")
+        return
+
+    with open(result_path, 'r') as fp:
+        results = json.load(fp)
+
+    tests_with_warnings = {}
+
+    for test, data in results.items():
+        if data.get("warnings"):
+            warnings = []
+
+            for w in data["warnings"]:
+                if w["type"] != "Multiple Selection":
+                    warnings.append(w)
+
+            if warnings:
+                tests_with_warnings[test] = warnings
+
+    for test in sorted(tests_with_warnings, key=int):
+        print("Test No. {0}".format(test))
+        warnings = tests_with_warnings[test]
+
+        for w in warnings:
+            print("  Question {0}".format(w["question"]))
+            print("    " + w["message"])
+            print("    Scanned selection: " + ", ".join(str(q) for q in results[test]["questions"][w["question"]-1]["visual_answers"]))
+            answer = raw_input("    If this information correct? [Y/n]: ")
+
+            while answer.lower() not in ["", "y", "n"]:
+                answer = raw_input("    Please answer yes (y) or no (n). Is this information correct? [Y/n]: ")
+
+            if answer.lower() == "n":
+                need_check = True
+
+                while need_check:
+                    correct_answer = raw_input("    Enter the correct selection (numbers separated by spaces only):")
+                    try:
+                        correct_answer = [int(s) for s in correct_answer.split()]
+                        print("    Modified selection: " + ", ".join(str(q) for q in correct_answer))
+
+                        answer = raw_input("    If this new modification correct? [Y/n]: ")
+
+                        while answer.lower() not in ["", "y", "n"]:
+                            answer = raw_input("    Please answer yes (y) or no (n). Is this new modification correct? [Y/n]: ")
+
+                        if answer != "n":
+                            need_check = False
+
+                            question_order = results[test]["questions"][w["question"]-1]["order"]
+                            correct_order = [question_order[i-1] for i in correct_answer]
+
+                            question = results[test]["questions"][w["question"]-1]
+                            question["visual_answers"] = correct_answer
+                            question["answers"] = correct_order
+                    except:
+                        print("    Error parsing your response. Please answer again.")
+        print("")
+
+    
+    answer = raw_input("Apply all modifications? [yes/N]: ")
+
+    if answer == "yes":
+        shutil.copy(result_path, result_path + ".backup")
+        with open(result_path, "w") as fp:
+            json.dump(results, fp, indent=4, sort_keys=True)
+        print("Changes saved. Original result file kept with .backup extension.")
+    else:
+        print("No actual changes were saved. Original result file unmodified.")
+
 def main():
     if 'autoexam.py' in os.listdir('.'):
         error("Please don't run this from inside the Autoexam source folder.\nThis is an evil thing to do that will break the program.")
@@ -339,6 +432,10 @@ def main():
     init_parser.add_argument('--election', help='Makes the project an election template instead of the standard test template.', action='store_true')
     init_parser.add_argument('--questionnaire', help='Makes the project a questionaire template instead of the standard test template.', action='store_true')
     init_parser.set_defaults(func=init)
+
+    review_parser = commands.add_parser('review', help="Review scanned tests to fix warnings")
+    review_parser.add_argument('-v', '--version', help="Specific version to review. If not provided, then the `last` version is reviewed.")
+    review_parser.set_defaults(func=review)
 
     gen_parser = commands.add_parser('gen', help='Generates a new version of the current project.')
     gen_parser.add_argument('-s', '--seed', type=int, default=None, help='A custom seed for the random generator.')
