@@ -21,8 +21,12 @@ class MasterPage(QWizardPage):
     def validatePage(self):
         try:
             tags, questions = self.ui.questionWidget.dump()
+            
+            for tag in tags:
+                if tag not in map(lambda tag: tag.name, self.project.tags):
+                    self.project.tags.append(Tag(tag,0))
 
-            self.project.tags = tags
+            # self.project.tags = tags
             self.project.questions = questions
 
             api.validate_project(self.project)

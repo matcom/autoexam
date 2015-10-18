@@ -61,6 +61,8 @@ def load_project(path):
         return proj
 
 def load_project_from_master(questions_by_id, restrictions):
+    if 'total' in restrictions:
+        del restrictions['total']
 
     p = Project('imported project', 2, 2,
             [Tag(r.replace('@',''),restrictions[r])

@@ -91,7 +91,7 @@ class QuestionWidget(QWidget):
         tag_names = set()
         for question in self.questions:
             tag_names.update(set(question.tag_names))
-        return [qtui.model.Tag(tag_name, 0) for tag_name in tag_names]
+        return tag_names
 
     def printStatus(self):
         print 'questions:', self.questions
