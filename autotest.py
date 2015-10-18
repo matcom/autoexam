@@ -179,7 +179,7 @@ def get_image_report(frame):
                     bad_data = True
                 question+=1
             #TODO debug
-            show_debug_image(answer_area,"Answer area marked.", False)
+            show_debug_image(answer_area,"Answer area marked.", True)
 
             if not bad_data:
                 report.success = True
@@ -489,7 +489,7 @@ def get_selections(image, question, index):
 
     #show the image
     # if doc_parameters["poll"]:
-    cv2.imshow("Result", vis)
+    # cv2.imshow("Result", vis)
 
     return True, master_answers
 
