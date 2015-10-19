@@ -40,6 +40,7 @@ class GeneratePage(QWizardPage):
         widget.setLayout(layout)
         self.ui.scrollArea.widget().destroy()
         self.ui.scrollArea.setWidget(widget)
+        self.ui.tagOrderWidget.clear()
         self.grid = layout
 
     def setupTagMenu(self):
@@ -49,6 +50,7 @@ class GeneratePage(QWizardPage):
             spinbox = QSpinBox()
             spinbox.setValue(tag.min_questions)
             self.grid.addWidget(spinbox, i, 2, Qt.AlignTop)
+            self.ui.tagOrderWidget.addItem(tag.name)
 
         hs = QSpacerItem(40, 20, hPolicy=QSizePolicy.Fixed)
         self.grid.addItem(hs, 0, 1)
@@ -62,13 +64,22 @@ class GeneratePage(QWizardPage):
         self.grid.addItem(vs3, pos, 2)
 
     def updateTags(self):
+        # import pdb; pdb.set_trace()
         self.listGrid()
         tags = []
-        for i in xrange(len(self.project.tags)):
+        for i in range(len(self.project.tags)):
             name = str(self.grid.itemAt(2*i).widget().text())
             minq = self.grid.itemAt(2*i+1).widget().value()
             tags.append(Tag(name, minq))
-        self.project.tags = tags
+
+        ordered_tags = []
+        for i in range(self.ui.tagOrderWidget.count()):
+            current_tag = self.ui.tagOrderWidget.item(i)
+            for tag in tags:
+                if tag.name == str(current_tag.text()):
+                    ordered_tags.append(tag)
+
+        self.project.tags = ordered_tags
 
     def initializePage(self):
         self.setupTagMenu()
@@ -98,9 +109,9 @@ class GeneratePage(QWizardPage):
         api.save_master(master_data)
 
         api.gen(**{"tests_count": self.project.total_exams_to_generate,
-                   "dont_shuffle_tags": not self.ui.randTagCheck.isChecked(),
-                   "sort_questions": self.ui.sortQuestionCheck.isChecked(),
-                   "dont_shuffle_options": not self.ui.randItemCheck.isChecked()
+                   "dont_shuffle_tags": self.ui.keepTagOrderCheck.isChecked(),
+                   "sort_questions": not self.ui.shuffleQuestionsCheck.isChecked(),
+                   "dont_shuffle_options": not self.ui.shuffleAnswersCheck.isChecked()
                    })
 
         msgBox = QMessageBox()
