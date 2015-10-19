@@ -3,6 +3,7 @@ from PyQt4 import uic
 import os
 from os.path import join
 import api
+import model
 
 #TODO: Save current question on close
 
@@ -21,10 +22,11 @@ class MasterPage(QWizardPage):
     def validatePage(self):
         try:
             tags, questions = self.ui.questionWidget.dump()
-            
+
             for tag in tags:
-                if tag not in map(lambda tag: tag.name, self.project.tags):
-                    self.project.tags.append(Tag(tag,0))
+                if tag not in list(map(lambda tag: tag.name, self.project.tags)):
+                    # import pdb; pdb.set_trace()
+                    self.project.tags.append(model.Tag(tag,0))
 
             # self.project.tags = tags
             self.project.questions = questions

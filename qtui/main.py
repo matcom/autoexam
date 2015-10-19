@@ -108,6 +108,7 @@ class MainWindow(QMainWindow):
             __project_file_path__ = join(directory, DEFAULT_PROJECT_FILENAME)
             if exists(__project_file_path__):
                 self.project = model.load_project(__project_file_path__)
+                self.project_path = __project_file_path__
             else:
                 self.project = None
                 master_filename = join(directory, DEFAULT_MASTER_FILENAME)
@@ -132,8 +133,8 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         if self.saveOnClose():
+            model.dump_project(self.project, self.project_path)
             try:
-                model.dump_project(self.project, self.project_path)
                 scanresults.dump(self.examWizard.results, 'generated/last/results.json', overwrite=True)
                 print 'saved test results'
             except AttributeError:
