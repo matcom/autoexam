@@ -122,6 +122,8 @@ class ScanPage(QWizardPage):
                 self.update_question_panel()
             else:
                 pass
+                # TODO: This is probably the right place to place warnings
+                # and a summary of errors for the current exam.
                 # print 'selected exam'
 
     def update_question_panel(self):
@@ -144,8 +146,20 @@ class ScanPage(QWizardPage):
             question_text_label = QLabel(self.current_item.question.text)
             self.ui.questionDataLayout.addWidget(question_text_label)
 
-            for answer_no, answer in enumerate(self.current_item.question.answers):
-                question_answer_check = QCheckBox(answer.text)
+            order_info = self.order[exam_no].questions[question_no].order
+
+            # for answer_no, answer in enumerate(self.current_item.question.answers):
+            #     question_answer_check = QCheckBox(answer.text)
+            #     question_answer_check.setChecked(self.is_answer_checked(exam_no, question_no, answer_no))
+            #
+            #     question_answer_check.stateChanged.connect(self.update_current_question_state)
+            #     self.ui.questionDataLayout.addWidget(question_answer_check)
+
+            for answer_no in order_info:
+                answer = self.current_item.question.answers[answer_no]
+                answer_text = answer.text
+                answer_text += ' (x)' if answer.valid else ''
+                question_answer_check = QCheckBox(answer_text)
                 question_answer_check.setChecked(self.is_answer_checked(exam_no, question_no, answer_no))
 
                 question_answer_check.stateChanged.connect(self.update_current_question_state)
@@ -170,7 +184,8 @@ class ScanPage(QWizardPage):
         exam_data = results_data[exam_no]
         question_data = exam_data.questions[question_no]
 
-        for i, answer in enumerate(self.current_item.question.answers):
+        # for i, answer in enumerate(self.current_item.question.answers):
+        for i in self.order[exam_no].questions[question_no].order:
             # i += 1
             checked = self.ui.questionDataLayout.itemAt(i + 1).widget().isChecked()
             if checked and i not in question_data.answers:
