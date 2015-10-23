@@ -184,14 +184,14 @@ class ScanPage(QWizardPage):
         exam_data = results_data[exam_no]
         question_data = exam_data.questions[question_no]
 
-        # for i, answer in enumerate(self.current_item.question.answers):
-        for i in self.order[exam_no].questions[question_no].order:
-            # i += 1
+        order_data = self.order[exam_no].questions[question_no].order
+        for i in range(len(order_data)):
             checked = self.ui.questionDataLayout.itemAt(i + 1).widget().isChecked()
-            if checked and i not in question_data.answers:
-                question_data.answers.append(i)
-            elif not checked and i in question_data.answers:
-                question_data.answers.remove(i)
+            question_idx = order_data[i]
+            if checked and question_idx not in question_data.answers:
+                question_data.answers.append(question_idx)
+            elif not checked and question_idx in question_data.answers:
+                question_data.answers.remove(question_idx)
 
         assert len(question_data.answers) <= len(question_data.order)
 
