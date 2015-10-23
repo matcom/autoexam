@@ -1,8 +1,9 @@
 from PyQt4.QtGui import *
 from PyQt4 import uic
-from PyQt4.QtCore import QFileSystemWatcher, pyqtSignal
+from PyQt4.QtCore import QFileSystemWatcher, pyqtSignal, Qt
 import os
 from os.path import join
+import time
 import api
 import model
 import scanresults
@@ -46,7 +47,6 @@ class ScanPage(QWizardPage):
         if os.path.exists(ORDER_FILE_PATH):
             self.order = scanresults.parse(ORDER_FILE_PATH)
 
-
         self.watcher = QFileSystemWatcher()
         self.watcher.fileChanged.connect(self.on_scan_file_change)
 
@@ -58,17 +58,25 @@ class ScanPage(QWizardPage):
                 f.write('{}')
 
         self.watcher.addPath(TESTS_RESULTS_FILE_PATH)
+        self.last_load_time = time.time()
 
     def loadResults(self):
         tree = self.ui.treeWidget
         tree.clear()
 
+        # TODO: replace self.project.total_exams_to_generate for a real count
         for i in range(self.project.total_exams_to_generate):
+            incomplete_test = False
             exam_item = QTreeWidgetItem(tree, ['Exam %d' % i])
+            # TODO: idem
             for j in range(self.project.total_questions_per_exam):
                 question_item = QTreeWidgetItem(exam_item, ['Question %d' % (j + 1)])
                 if i in self.results:
-                    question_item.question = self.project.questions[self.results[i].questions[j].id - 1]
+                    question_item.question = self.project.questions[self.order[i].questions[j].id - 1]
+                else:
+                    incomplete_test = True
+            if incomplete_test:
+                exam_item.setBackground(0, QBrush(Qt.lightGray))
 
         first_exam_item = tree.topLevelItem(0)
         first_exam_item.setExpanded(True)
@@ -97,82 +105,76 @@ class ScanPage(QWizardPage):
     #         print 'failed report: ', report
 
     def on_scan_file_change(self, filename):
-        print('Detected changes!!! ', filename)
-        try:
-            self.results = scanresults.parse(TESTS_RESULTS_FILE_PATH)
-            self.loadResults()
-        except:
-            print('Could not load results.')
+        curr_time = time.time()
 
-    def process_report(self, report):
-        current = self.ui.treeWidget.topLevelItem(report.test.id)
+        if curr_time - self.last_load_time > 5000:
+            try:
+                print('Reloading results...')
+                self.results = scanresults.parse(TESTS_RESULTS_FILE_PATH)
+                self.loadResults()
+                self.last_load_time = time.time()
+                print('Results reloaded')
+            except:
+                print('Could not load results.')
 
-        if current:
-            if len(report.test.warnings) == 0:
-                current.setForeground(0, ok_color)
-            elif len(report.test.warnings) > 0:
-                current.setForeground(0, warn_color)
+    # def process_report(self, report):
+    #     current = self.ui.treeWidget.topLevelItem(report.test.id)
+    #
+    #     if current:
+    #         if len(report.test.warnings) == 0:
+    #             current.setForeground(0, ok_color)
+    #         elif len(report.test.warnings) > 0:
+    #             current.setForeground(0, warn_color)
 
     def change_tree_item(self):
         currentItem = self.ui.treeWidget.currentItem()
         if currentItem is not None:
-            if currentItem.parent() is not None:  # If it is a question
-                # print 'selected question'
-                self.current_item = currentItem
-                self.update_question_panel()
+            self.cleanupPanel()
+            self.current_item = currentItem
+            if currentItem.parent() is not None:  # i.e. it is a question
+                self.update_question_panel_with_question()
             else:
-                pass
-                # TODO: This is probably the right place to place warnings
-                # and a summary of errors for the current exam.
-                # print 'selected exam'
+                self.update_question_panel_with_exam()
 
-    def update_question_panel(self):
-        for i in reversed(range(self.ui.questionDataLayout.count())):
-            elem = self.ui.questionDataLayout.itemAt(i)
-            if not elem:
-                break
-            elem.widget().deleteLater()
-
+    def update_question_panel_with_question(self):
         current_exam_item = self.current_item.parent()
-
         exam_no = self.ui.treeWidget.indexOfTopLevelItem(current_exam_item)
         question_no = current_exam_item.indexOfChild(self.current_item)
+        question_info = self.project.questions[self.order[exam_no].questions[question_no].id - 1]
 
+        self.ui.questionDataLayout.addWidget(QLabel(question_info.text))
+
+        order_info = self.order[exam_no].questions[question_no].order
+
+        for answer_no in order_info:
+            answer = question_info.answers[answer_no]
+            answer_text = answer.text
+            answer_text += ' (x)' if answer.valid else ''
+            question_answer_check = QCheckBox(answer_text)
+            question_answer_check.setChecked(
+                self.is_answer_checked(exam_no, question_no, answer_no))
+            question_answer_check.stateChanged.connect(
+                self.update_current_question_state)
+            self.ui.questionDataLayout.addWidget(question_answer_check)
+
+    def update_question_panel_with_exam(self):
         if not 'question' in dir(self.current_item):
-            question_text_label = QLabel('This exam has not been scanned yet.')
-            self.ui.questionDataLayout.addWidget(question_text_label)
-            return
-        else:
-            question_text_label = QLabel(self.current_item.question.text)
-            self.ui.questionDataLayout.addWidget(question_text_label)
-
-            order_info = self.order[exam_no].questions[question_no].order
-
-            # for answer_no, answer in enumerate(self.current_item.question.answers):
-            #     question_answer_check = QCheckBox(answer.text)
-            #     question_answer_check.setChecked(self.is_answer_checked(exam_no, question_no, answer_no))
-            #
-            #     question_answer_check.stateChanged.connect(self.update_current_question_state)
-            #     self.ui.questionDataLayout.addWidget(question_answer_check)
-
-            for answer_no in order_info:
-                answer = self.current_item.question.answers[answer_no]
-                answer_text = answer.text
-                answer_text += ' (x)' if answer.valid else ''
-                question_answer_check = QCheckBox(answer_text)
-                question_answer_check.setChecked(self.is_answer_checked(exam_no, question_no, answer_no))
-
-                question_answer_check.stateChanged.connect(self.update_current_question_state)
-                self.ui.questionDataLayout.addWidget(question_answer_check)
+            question_text_label = QLabel('This exam has not been scanned!')
+        self.ui.questionDataLayout.addWidget(question_text_label)
 
     def is_answer_checked(self, exam_no, question_no, answer_no):
         # print 'is_answer_checked'
         # print(exam_no,question_no,answer_no)
-        results_data = self.results
-        exam_data = results_data[exam_no]
 
-        question_data = exam_data.questions[question_no]
-        return answer_no in question_data.answers
+        try:
+            results_data = self.results
+            exam_data = results_data[exam_no]
+
+            question_data = exam_data.questions[question_no]
+            return answer_no in question_data.answers
+        except:
+            print('answer not scanned exception')
+            return False
 
     def update_current_question_state(self, state):
         current_exam_item = self.current_item.parent()
@@ -196,8 +198,15 @@ class ScanPage(QWizardPage):
         assert len(question_data.answers) <= len(question_data.order)
 
     def cleanupPage(self):
-        pass
+        self.watcher.fileChanged.disconnect(self.on_scan_file_change)
+        del self.watcher
 
+    def cleanupPanel(self):
+        for i in reversed(range(self.ui.questionDataLayout.count())):
+            elem = self.ui.questionDataLayout.itemAt(i)
+            if not elem:
+                break
+            elem.widget().deleteLater()
 
     def start_scan(self):
 
