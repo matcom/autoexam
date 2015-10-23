@@ -64,7 +64,7 @@ class ScanPage(QWizardPage):
         tree.clear()
 
         for i in range(self.project.total_exams_to_generate):
-            exam_item = QTreeWidgetItem(tree, ['Exam %d' % (i + 1)])
+            exam_item = QTreeWidgetItem(tree, ['Exam %d' % i])
             for j in range(self.project.total_questions_per_exam):
                 question_item = QTreeWidgetItem(exam_item, ['Question %d' % (j + 1)])
                 if i in self.results:
