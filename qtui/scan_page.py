@@ -117,6 +117,7 @@ class ScanPage(QWizardPage):
             except:
                 print('Could not load results.')
 
+
     # def process_report(self, report):
     #     current = self.ui.treeWidget.topLevelItem(report.test.id)
     #
@@ -189,10 +190,28 @@ class ScanPage(QWizardPage):
         question_no = current_exam_item.indexOfChild(self.current_item)
 
         results_data = self.results
-        exam_data = results_data[exam_no]
-        question_data = exam_data.questions[question_no]
 
-        order_data = self.order[exam_no].questions[question_no].order
+        if exam_no in results_data:
+            question_data = results_data[exam_no].questions[question_no]
+
+            order_data = self.order[exam_no].questions[question_no].order
+            self.synchronize_answers_with_model(order_data,question_data)
+
+        else:
+            # If we get here, we're trying to manually enter info for an
+            # exam that has not been scanned yet.
+            # We should create an entry in results_data similar
+            confirm_edit = QMessageBox.question(None, "Manual input?", "Do you want to manually enter this test's results?", QMessageBox.Yes | QMessageBox.No )
+            regen = confirm_edit == QMessageBox.Yes
+            if confirm_edit:
+                self.results[exam_no] = self.order[exam_no]
+                self.synchronize_answers_with_model()
+                question_data = results_data[exam_no].questions[question_no]
+                order_data = self.order[exam_no].questions[question_no].order
+                self.synchronize_answers_with_model(order_data,question_data)
+                #TODO: Refactor this logic
+
+    def synchronize_answers_with_model(self, order_data, question_data):
         for i in range(len(order_data)):
             checked = self.ui.questionDataLayout.itemAt(i + 1).widget().isChecked()
             question_idx = order_data[i]
@@ -200,8 +219,6 @@ class ScanPage(QWizardPage):
                 question_data.answers.append(question_idx)
             elif not checked and question_idx in question_data.answers:
                 question_data.answers.remove(question_idx)
-
-        assert len(question_data.answers) <= len(question_data.order)
 
     def cleanupPage(self):
         self.watcher.fileChanged.disconnect(self.on_scan_file_change)
