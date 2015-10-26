@@ -205,7 +205,6 @@ class ScanPage(QWizardPage):
             regen = confirm_edit == QMessageBox.Yes
             if confirm_edit:
                 self.results[exam_no] = self.order[exam_no]
-                self.synchronize_answers_with_model()
                 question_data = results_data[exam_no].questions[question_no]
                 order_data = self.order[exam_no].questions[question_no].order
                 self.synchronize_answers_with_model(order_data,question_data)
