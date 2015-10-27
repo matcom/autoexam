@@ -85,6 +85,8 @@ autoexam qtui
 ...and a wizard-like interface will pop up. If it is run from inside a project folder,
 it will automatically be loaded. It's all pretty intuitive, so... enjoy! :)
 
+Currently there is no UI for editing the gradersheet. It's just a text file `grader.txt` inside the generated folder, so feel free to edit it. The syntax is similar to this: [points_for_selecting:points_for_unselecting] * number_of_options. This should probably get more user friendly in the near future. 
+
 Contribute
 ==========
 
