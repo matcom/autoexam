@@ -180,7 +180,7 @@ class ScanPage(QWizardPage):
             question_data = exam_data.questions[question_no]
             return answer_no in question_data.answers
         except:
-            print('answer not scanned exception')
+            # print('answer not scanned exception')
             return False
 
     def update_current_question_state(self, state):
