@@ -23,6 +23,7 @@ DEFAULT_PROJECT_FILENAME = '.autoexam_project'
 DEFAULT_PROJECT_PATH = join(environ['HOME'], 'autoexam_projects')
 DEFAULT_PROJECT_FOLDER_NAME = 'Project %d'
 DEFAULT_MASTER_FILENAME = 'master.txt'
+DEFAULT_RESULTS_PATH = 'generated/last/results.json'
 
 # Qt.QT_NO_DEBUG_OUTPUT = True
 
@@ -59,6 +60,9 @@ class MainWindow(QMainWindow):
 
         self.ui.stackedWidget.addWidget(self.examWizard)
         self.ui.stackedWidget.setCurrentIndex(1)
+
+        # for i in range(self.project.current_page):
+        #     self.examWizard.next()
 
         finish_button = self.examWizard.button(QWizard.FinishButton)
         finish_button.clicked.connect(self.returnToStartScreen)
@@ -132,10 +136,12 @@ class MainWindow(QMainWindow):
             self.startWizard(load=True)
 
     def closeEvent(self, event):
+        # TODO: Place a close dialog?
         if self.saveOnClose():
             model.dump_project(self.project, self.project_path)
             try:
-                scanresults.dump(self.examWizard.results, 'generated/last/results.json', overwrite=True)
+                # self.project.current_page = self.examWizard.currentId()
+                scanresults.dump(self.examWizard.results, DEFAULT_RESULTS_PATH)
                 print 'saved test results'
             except AttributeError:
                 pass
