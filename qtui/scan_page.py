@@ -86,7 +86,7 @@ class ScanPage(QWizardPage):
 
     def validatePage(self):
         # TODO: Warning validation here!!!
-        scanresults.dump(self.results, TESTS_RESULTS_FILE_PATH, overwrite=True)
+        scanresults.dump(self.results, TESTS_RESULTS_FILE_PATH, overwrite=False)
         self.parentWizard.results = self.results
         return True
 
