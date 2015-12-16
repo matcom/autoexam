@@ -213,7 +213,8 @@ class ScanPage(QWizardPage):
                 question_data = results_data[exam_no].questions[question_no]
                 order_data = self.order[exam_no].questions[question_no].order
                 self.synchronize_answers_with_model(order_data,question_data)
-                #TODO: Refactor this logic
+
+                current_exam_item.setBackground(0, QBrush(Qt.white))
 
     def synchronize_answers_with_model(self, order_data, question_data):
         for i in range(len(order_data)):
