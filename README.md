@@ -1,11 +1,9 @@
-Autoexam
-========
+# Autoexam
 
 A simple exam generator and grader written in Python with OpenCV.
 
 
-Getting Started
-===============
+## Getting Started
 
 Currently, the only supported platform is Linux. Support for other operating systems is on it's way. ;)
 
@@ -28,13 +26,11 @@ sudo ./install.sh
 
 The rest of the examples in this README will assume you did this.
 
-How it works
-============
+## How it works
 
 You can use Autoexam both as a command line tool, or with a PyQt GUI.
 
-Command Line Interface
-----------------------
+### Command Line Interface
 
 To create a new project, just type:
 
@@ -85,10 +81,9 @@ autoexam qtui
 ...and a wizard-like interface will pop up. If it is run from inside a project folder,
 it will automatically be loaded. It's all pretty intuitive, so... enjoy! :)
 
-Currently there is no UI for editing the gradersheet. It's just a text file `grader.txt` inside the generated folder, so feel free to edit it. The syntax is similar to this: [points_for_selecting:points_for_unselecting] * number_of_options. This should probably get more user friendly in the near future. 
+Currently there is no UI for editing the gradersheet. It's just a text file `grader.txt` inside the generated folder, so feel free to edit it. The syntax is similar to this: [points_for_selecting:points_for_unselecting] * number_of_options. This should probably get more user friendly in the near future.
 
-Contribute
-==========
+### Contributing
 
 Whether it's code, ideas, suggestions, or whatever, contributions are more than welcome!
 Please check the AUTHORS file and contact any of us through email.
