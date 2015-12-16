@@ -40,7 +40,27 @@ class ResultsPage(QWizardPage):
             self.ui.treeWidget.addTopLevelItem(item)
 
     def validatePage(self):
+        #TODO: Remove this logic from the UI
 
+        rows = self.build_csv_rows()
+
+        question = "Do you want to save these tests results to excel?"
+        answer = QMessageBox.question(self, 'Finished!', question,
+            buttons=QMessageBox.Yes | QMessageBox.No)
+        if answer == QMessageBox.Yes:
+            if self.save_to_csv('autoexam_output.csv', rows):
+                QMessageBox.information(self, 'Results saved!',
+                    'Saved test results to autoexam_output.csv.',
+                    buttons=QMessageBox.Ok)
+            else:
+                QMessageBox.error(self, 'Results can\'t be saved',
+                    'There was an error while saving the results.',
+                    buttons=QMessageBox.Ok)
+                return False
+
+        return True
+
+    def build_csv_rows(self):
         count = self.ui.treeWidget.topLevelItemCount()
         rows = []
 
@@ -52,12 +72,15 @@ class ResultsPage(QWizardPage):
             txtrow = [row.text(j) for j in range(row.columnCount())]
             rows.append(txtrow)
 
-        with open('autoexam_output.csv', 'w') as csvfile:
-            autowriter = csv.writer(csvfile, delimiter=',',
-                                    quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            for row in rows:
-                autowriter.writerow(row)
+        return rows
 
-        print 'Saved csv to project folder'
-
-        return True
+    def save_to_csv(self, filename, rows):
+        try:
+            with open(filename, 'w') as csvfile:
+                autowriter = csv.writer(csvfile, delimiter=',',
+                                        quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                for row in rows:
+                    autowriter.writerow(row)
+            return True
+        except:
+            return False
