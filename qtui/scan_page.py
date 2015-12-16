@@ -172,10 +172,13 @@ class ScanPage(QWizardPage):
         current_exam_item = self.current_item
         exam_no = self.ui.treeWidget.indexOfTopLevelItem(current_exam_item)
 
-        if exam_no in self.results:
-            question_text_label = QLabel('TODO: Put here the warnings...')
+        if self.results is not None:
+            if exam_no in self.results:
+                question_text_label = QLabel('TODO: Put here the warnings...')
+            else:
+                question_text_label = QLabel('This exam has not been scanned!')
         else:
-            question_text_label = QLabel('This exam has not been scanned!')
+            print('results null! please check!')
 
         self.ui.questionDataLayout.addWidget(question_text_label)
 
