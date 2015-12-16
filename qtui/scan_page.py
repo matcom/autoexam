@@ -64,12 +64,10 @@ class ScanPage(QWizardPage):
         tree = self.ui.treeWidget
         tree.clear()
 
-        # TODO: replace self.project.total_exams_to_generate for a real count
-        for i in range(self.project.total_exams_to_generate):
+        for i in range(len(self.order)):
             incomplete_test = False
             exam_item = QTreeWidgetItem(tree, ['Exam %d' % i])
-            # TODO: idem
-            for j in range(self.project.total_questions_per_exam):
+            for j in range(len(self.order[i].questions)):
                 question_item = QTreeWidgetItem(exam_item, ['Question %d' % (j + 1)])
                 if i in self.results:
                     question_item.question = self.project.questions[self.order[i].questions[j].id - 1]
