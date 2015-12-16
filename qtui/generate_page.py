@@ -92,7 +92,6 @@ class GeneratePage(QWizardPage):
         if regen:
             self.generate()
             self.parentWizard.should_generate_master = False
-        self.parentWizard.camera_id = self.ui.cameraSourceCombo.currentIndex()
         return True
 
     def generate(self):

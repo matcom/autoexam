@@ -28,24 +28,22 @@ class ScanPage(QWizardPage):
         self.project = project
         self.scan_thread = None
         self.ui.treeWidget.currentItemChanged.connect(self.change_tree_item)
+        self.ui.openCameraButton.clicked.connect(self.open_camera)
         self.question_item_to_question = {}
 
         self.exams = []
         self.order = None
         self.results = None
         self.parentWizard = parentW
-        self.scanError.connect(self.go_to_previous)
-        self.scanSuccess.connect(self.handle_scan_success)
+        self.scanError.connect(self.on_scan_error)
+        self.scanSuccess.connect(self.on_scan_success)
         self.scanning = False
 
     def initializePage(self):
         super(ScanPage, self).initializePage()
         # api.add_scan_event_subscriber(self)
 
-        self.scan_thread = Thread(target=self.start_scan)
-        self.scan_thread.setDaemon(True)
-        self.scan_thread.start()
-        # self.start_scan()
+        self.open_camera()
 
         if os.path.exists(ORDER_FILE_PATH):
             self.order = scanresults.parse(ORDER_FILE_PATH)
@@ -122,7 +120,8 @@ class ScanPage(QWizardPage):
             except:
                 print('Could not load results.')
         else:
-            print('Ignoring repetitive filewatcher event (this is normal)')
+            # print('Ignoring repetitive filewatcher event (this is normal)')
+            pass
 
 
     # def process_report(self, report):
@@ -242,7 +241,7 @@ class ScanPage(QWizardPage):
 
         class _args:
             outfile = TESTS_RESULTS_FILE_PATH
-            cameras = [self.parentWizard.camera_id] #TODO: UN-WIRE THIS !!!!
+            cameras = [self.ui.cameraIndexSpin.value()] #TODO: UN-WIRE THIS !!!!
             folder = IMAGES_FOLDER
             time = None
             autowrite = True
@@ -259,11 +258,20 @@ class ScanPage(QWizardPage):
 
         self.scanning = False
 
-    def go_to_previous(self):
-        self.parentWizard.back()
+    def open_camera(self):
+        self.ui.openCameraButton.setEnabled(False)
+
+        self.scan_thread = Thread(target=self.start_scan)
+        self.scan_thread.setDaemon(True)
+        self.scan_thread.start()
+        # self.start_scan()
+
+    def on_scan_error(self):
+        # self.parentWizard.back()
         self.show_modal_message(
         "There was an error in the scanning process.\
         Please, check if the right camera is selected and try again.")
+        self.ui.openCameraButton.setEnabled(True)
 
     def show_modal_message(self, msg):
         """
@@ -275,7 +283,7 @@ class ScanPage(QWizardPage):
         msgBox.setIcon(QMessageBox.Warning)
         msgBox.exec_()
 
-    def handle_scan_success(self):
+    def on_scan_success(self):
         """
         Reloads results one last time in case the filewatcher doesn't work
         """
@@ -288,6 +296,9 @@ class ScanPage(QWizardPage):
 
         # Update UI
         self.update_question_tree_widget()
+
+        # Reenable the button in case someone needs to scan again
+        self.ui.openCameraButton.setEnabled(True)
 
         # Msg for debugging purposes
         print 'All OK with the scanning!'
