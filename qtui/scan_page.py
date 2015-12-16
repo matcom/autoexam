@@ -52,7 +52,7 @@ class ScanPage(QWizardPage):
 
         if os.path.exists(TESTS_RESULTS_FILE_PATH):
             self.results = scanresults.parse(TESTS_RESULTS_FILE_PATH)
-            self.loadResults()
+            self.update_question_tree_widget()
         else:
             with open(TESTS_RESULTS_FILE_PATH,'w') as f:
                 f.write('{}')
@@ -61,7 +61,7 @@ class ScanPage(QWizardPage):
         self.watcher.addPath(TESTS_RESULTS_FILE_PATH)
         self.last_load_time = time.time()
 
-    def loadResults(self):
+    def update_question_tree_widget(self):
         tree = self.ui.treeWidget
         tree.clear()
 
@@ -110,7 +110,7 @@ class ScanPage(QWizardPage):
             try:
                 print('Reloading results...')
                 self.results = scanresults.parse(TESTS_RESULTS_FILE_PATH)
-                self.loadResults()
+                self.update_question_tree_widget()
                 self.last_load_time = time.time()
                 print('Results reloaded')
             except:
