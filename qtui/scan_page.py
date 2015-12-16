@@ -91,9 +91,13 @@ class ScanPage(QWizardPage):
             'Please close the scanner window first by pressing \'q\'')
             return False
         # TODO: Warning validation here!!!
-        scanresults.dump(self.results, TESTS_RESULTS_FILE_PATH, overwrite=False)
-        self.parentWizard.results = self.results
-        return True
+        if self.results is not None:
+            scanresults.dump(self.results, TESTS_RESULTS_FILE_PATH, overwrite=False)
+            self.parentWizard.results = self.results
+            return True
+        else:
+            self.show_modal_message('There are still no results to save')
+            return False
 
     def cleanupPage(self):
         super(ScanPage, self).cleanupPage()
