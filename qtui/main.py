@@ -151,7 +151,10 @@ class MainWindow(QMainWindow):
                 event.accept()
 
     def saveOnClose(self):
-        return True
+        try:
+            return self.project is not None
+        except:
+            return False
 
 
 def main():
