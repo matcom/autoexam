@@ -19,6 +19,7 @@ IMAGES_FOLDER = 'generated/last/images'
 
 class ScanPage(QWizardPage):
     scanError = pyqtSignal() # name
+    scanSuccess = pyqtSignal()
     path = "qtui/ui/page3_scan.ui"
 
     def __init__(self, project, parentW=None):
@@ -34,6 +35,7 @@ class ScanPage(QWizardPage):
         self.results = None
         self.parentWizard = parentW
         self.scanError.connect(self.go_to_previous)
+        self.scanSuccess.connect(self.handle_scan_success)
         self.scanning = False
 
     def initializePage(self):
@@ -250,10 +252,10 @@ class ScanPage(QWizardPage):
         self.scanning = True
 
         ok = api.scan(_args()) # TODO: Fill dictionary properly
-        if not ok:
-            self.scanError.emit()
+        if ok:
+            self.scanSuccess.emit()
         else:
-            print 'All OK with the scanning!'
+            self.scanError.emit()
 
         self.scanning = False
 
@@ -272,3 +274,20 @@ class ScanPage(QWizardPage):
         msgBox.setModal(True)
         msgBox.setIcon(QMessageBox.Warning)
         msgBox.exec_()
+
+    def handle_scan_success(self):
+        """
+        Reloads results one last time in case the filewatcher doesn't work
+        """
+
+        # Do another dump first to store manually entered results
+        scanresults.dump(self.results, TESTS_RESULTS_FILE_PATH)
+
+        # Reload merged results
+        self.results = scanresults.parse(TESTS_RESULTS_FILE_PATH)
+
+        # Update UI
+        self.update_question_tree_widget()
+
+        # Msg for debugging purposes
+        print 'All OK with the scanning!'
