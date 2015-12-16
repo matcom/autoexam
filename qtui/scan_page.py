@@ -247,7 +247,16 @@ class ScanPage(QWizardPage):
 
     def go_to_previous(self):
         self.parentWizard.back()
+        self.show_modal_message(
+        "There was an error in the scanning process.\
+        Please, check if the right camera is selected and try again.")
+
+    def show_modal_message(self, msg):
+        """
+        Shows a modal MessageBox displaying the argument string
+        """
         msgBox = QMessageBox()
-        msgBox.setText("There was an error in the scanning process. Please, check if the right camera is selected and try again.")
+        msgBox.setText(msg)
         msgBox.setModal(True)
+        msgBox.setIcon(QMessageBox.Warning)
         msgBox.exec_()
