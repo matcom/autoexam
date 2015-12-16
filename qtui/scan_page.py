@@ -112,9 +112,7 @@ class ScanPage(QWizardPage):
     #         print 'failed report: ', report
 
     def on_scan_file_change(self, filename):
-        curr_time = time.time()
-
-        if curr_time - self.last_load_time > 5000:
+        if time.time() - self.last_load_time > 2:
             try:
                 print('Reloading results...')
                 self.results = scanresults.parse(TESTS_RESULTS_FILE_PATH)
@@ -123,6 +121,8 @@ class ScanPage(QWizardPage):
                 print('Results reloaded')
             except:
                 print('Could not load results.')
+        else:
+            print('Ignoring repetitive filewatcher event (this is normal)')
 
 
     # def process_report(self, report):
