@@ -34,6 +34,7 @@ class ScanPage(QWizardPage):
         self.results = None
         self.parentWizard = parentW
         self.scanError.connect(self.go_to_previous)
+        self.scanning = False
 
     def initializePage(self):
         super(ScanPage, self).initializePage()
@@ -84,6 +85,11 @@ class ScanPage(QWizardPage):
 
 
     def validatePage(self):
+
+        if self.scanning:
+            self.show_modal_message(
+            'Please close the scanner window first by pressing \'q\'')
+            return False
         # TODO: Warning validation here!!!
         scanresults.dump(self.results, TESTS_RESULTS_FILE_PATH, overwrite=False)
         self.parentWizard.results = self.results
@@ -240,11 +246,15 @@ class ScanPage(QWizardPage):
             poll = None
             debug = False
 
+        self.scanning = True
+
         ok = api.scan(_args()) # TODO: Fill dictionary properly
         if not ok:
             self.scanError.emit()
         else:
             print 'All OK with the scanning!'
+
+        self.scanning = False
 
     def go_to_previous(self):
         self.parentWizard.back()
