@@ -31,6 +31,7 @@ DEFAULT_RESULTS_PATH = 'generated/last/results.json'
 def src(path):
     return os.path.join(os.environ['AUTOEXAM_FOLDER'], path)
 
+DEFAULT_WINDOW_ICON_PATH = src('latex/marker.png')
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -40,6 +41,8 @@ class MainWindow(QMainWindow):
         self.ui.clbNewExam.clicked.connect(self.newExam)
         self.ui.clbLoadExam.clicked.connect(self.loadExam)
         # self.ui.tabWidget.tabCloseRequested.connect(self.ui.tabWidget.removeTab)
+
+        self.setWindowIcon(QIcon(DEFAULT_WINDOW_ICON_PATH))
 
         if exists('.autoexam'):
             self.loadExam(directory=os.getcwd())
