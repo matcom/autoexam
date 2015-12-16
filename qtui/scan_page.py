@@ -57,6 +57,7 @@ class ScanPage(QWizardPage):
             with open(TESTS_RESULTS_FILE_PATH,'w') as f:
                 f.write('{}')
 
+        # TODO: Check why this doesn't always work
         self.watcher.addPath(TESTS_RESULTS_FILE_PATH)
         self.last_load_time = time.time()
 
