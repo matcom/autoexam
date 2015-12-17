@@ -153,7 +153,9 @@ class ScanPage(QWizardPage):
         question_no = current_exam_item.indexOfChild(self.current_item)
         question_info = self.project.questions[self.order[exam_no].questions[question_no].id - 1]
 
-        self.ui.questionDataLayout.addWidget(QLabel(question_info.text))
+        self.ui.questionTextLabel.setText(question_info.text)
+
+        # self.ui.questionDataLayout.addWidget(QLabel(question_info.text))
 
         order_info = self.order[exam_no].questions[question_no].order
 
