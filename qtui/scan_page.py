@@ -57,6 +57,7 @@ class ScanPage(QWizardPage):
         else:
             with open(TESTS_RESULTS_FILE_PATH,'w') as f:
                 f.write('{}')
+            self.results = scanresults.parse(TESTS_RESULTS_FILE_PATH)
 
         # TODO: Check why this doesn't always work
         self.watcher.addPath(TESTS_RESULTS_FILE_PATH)
