@@ -90,8 +90,7 @@ class GeneratePage(QWizardPage):
             confirm_regen = QMessageBox.question(None, "Regenerate?", "There is already an exam generated in this folder. Would you like to regenerate it? \n (WARNING: This will efectively render unusable your current tests if you have already printed them! Normally, you should just select no.)", QMessageBox.Yes | QMessageBox.No )
             regen = confirm_regen == QMessageBox.Yes
         if regen:
-            self.generate()
-            self.parentWizard.should_generate_master = False
+            return self.generate()
         return True
 
     def generate(self):
@@ -115,12 +114,12 @@ class GeneratePage(QWizardPage):
 
         if ret == 0:
             self.showModalMsg("The exam has been successfully generated.")
+            return True
         else:
             self.showModalMsg(
                 "There was an error while generating the test."
                 "\nPlease check the console for details.")
-
-        self.parentWizard.should_regenerate_master = False
+            return False
 
     def showModalMsg(self, msg):
         msgBox = QMessageBox()
