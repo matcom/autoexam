@@ -229,7 +229,7 @@ class ScanPage(QWizardPage):
 
     def synchronize_answers_with_model(self, order_data, question_data):
         for i in range(len(order_data)):
-            checked = self.ui.questionDataLayout.itemAt(i + 1).widget().isChecked()
+            checked = self.ui.questionDataLayout.itemAt(i).widget().isChecked()
             question_idx = order_data[i]
             if checked and question_idx not in question_data.answers:
                 question_data.answers.append(question_idx)
