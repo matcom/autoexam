@@ -107,18 +107,26 @@ class GeneratePage(QWizardPage):
         master_data = api.render_master(self.project, join(os.environ['AUTOEXAM_FOLDER'], TEMPLATE_PATH))
         api.save_master(master_data)
 
-        api.gen(**{"tests_count": self.project.total_exams_to_generate,
+        ret = api.gen(**{"tests_count": self.project.total_exams_to_generate,
                    "dont_shuffle_tags": self.ui.keepTagOrderCheck.isChecked(),
                    "sort_questions": not self.ui.shuffleQuestionsCheck.isChecked(),
                    "dont_shuffle_options": not self.ui.shuffleAnswersCheck.isChecked()
                    })
 
-        msgBox = QMessageBox()
-        msgBox.setText("The exam has been successfully generated.")
-        msgBox.setModal(True)
-        msgBox.exec_()
+        if ret == 0:
+            self.showModalMsg("The exam has been successfully generated.")
+        else:
+            self.showModalMsg(
+                "There was an error while generating the test."
+                "\nPlease check the console for details.")
 
         self.parentWizard.should_regenerate_master = False
+
+    def showModalMsg(self, msg):
+        msgBox = QMessageBox()
+        msgBox.setText(msg)
+        msgBox.setModal(True)
+        msgBox.exec_()
 
     def updateProject(self):
         self.project.total_questions_per_exam = self.ui.questionCountSpin.value()
