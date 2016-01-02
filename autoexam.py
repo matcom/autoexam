@@ -6,7 +6,6 @@ import sys
 import argparse
 import shutil
 import json
-import gen
 import os.path
 import glob
 
@@ -14,9 +13,6 @@ if 'AUTOEXAM_FOLDER' not in os.environ:
     path = os.path.dirname(os.path.realpath(__file__))
     os.environ['AUTOEXAM_FOLDER'] = path
     sys.path.append(path)
-
-from tabulate import tabulate
-from stats import build_stats
 
 autoexam_source = os.path.dirname(os.path.realpath(__file__))
 
@@ -38,6 +34,8 @@ def is_project_folder():
 
 
 def generate(args):
+    import gen
+
     if not check_project_folder():
         return
 
@@ -322,6 +320,8 @@ def warn(msg):
 
 
 def stats(args):
+    from stats import build_stats
+
     if not check_project_folder():
         return
 
@@ -339,6 +339,8 @@ def simpleui(args):
 
 
 def report(args):
+    from tabulate import tabulate
+
     if not check_project_folder():
         return
 
@@ -532,7 +534,7 @@ def review(args):
                         print("    Error parsing your response. Please answer again.")
         print("")
 
-    
+
     answer = raw_input("Apply all modifications? [yes/N]: ")
 
     if answer == "yes":
