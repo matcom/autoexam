@@ -10,9 +10,11 @@ Currently, the only supported platform is Linux. Support for other operating sys
 To install dependencies in a Debian based Linux distribution, just run the following command as superuser:
 
 ```bash
-apt-get install texlive texlive-lang-spanish python-opencv \
+sudo apt-get install texlive texlive-lang-spanish python-opencv \
 python-jinja2 python-qrcode python-zbar python-alsaaudio python-flask
 ```
+
+If you're going to use the Qt UI, 'python-qt4' is required as well.
 
 You should also install `poppler-utils` as a temporary development dependency.
 
