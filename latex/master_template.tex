@@ -41,6 +41,8 @@ co-rres-pon-de}
 
   \item {{ q.header }}
 
+  {% if q.options %}
+
   \begin{enumerate}
    %\setlength{\itemsep}{-0.1cm}
    {% for right, fixed, text in q.options %}
@@ -49,6 +51,8 @@ co-rres-pon-de}
    \item {% if right %}$\times${% endif %}{% if fixed %}\textbf{*}{% endif %} {{ text }}
    {% endfor %}
   \end{enumerate}
+
+  {% endif %}
 
 {% endfor %}
 \end{enumerate}

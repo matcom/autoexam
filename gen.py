@@ -293,8 +293,8 @@ def parse_answers(i, lines):
         else:
             break
 
-    if not answers:
-        raise ValueError('No answer found at line %i' % i)
+    # if not answers:
+        # raise ValueError('No answer found at line %i' % i)
 
     return i, answers
 
@@ -349,7 +349,7 @@ class Question:
     respuestas correctas."""
 
     def __init__(self, header, options, number, tags, options_id=None, fixed=None):
-        if (not header or not options):
+        if (not header):
             raise ValueError(u'Invalid question %s' % number)
 
         self.options = options
@@ -505,7 +505,7 @@ def generate_quiz(args=None):
         test.add(q)
         tries += 1
 
-    if len(test) < total:
+    if len(test) < total or res:
         raise ValueError('Could not complete test')
 
     test = list(test)
@@ -516,6 +516,9 @@ def generate_quiz(args=None):
 
     if args and args.sort_questions:
         test.sort(key=lambda q: q.number)
+
+    # Moving manual questions to the end
+    test.sort(key=lambda q: '@autoexam-manual' in q.tags)
 
     return test
 
@@ -611,9 +614,10 @@ def generate(n, args):
         answers_in_page = []
 
         for k,q in enumerate(test):
-            answers_in_page.append((k, q))
+            if '@autoexam-manual' not in q.tags:
+                answers_in_page.append((k, q))
 
-            if len(answers_in_page) == args.answers_per_page or k == len(test) - 1:
+            if len(answers_in_page) == args.answers_per_page or (k == len(test) - 1 and answers_in_page):
                 generate_qrcode(i, test, page)
                 answers.append(dict(test=answers_in_page, number=i, page=page, name=name, seed=seed, max=max(len(q.options) for q in test)))
                 answers_in_page = []
