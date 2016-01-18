@@ -32,7 +32,7 @@ doc_parameters = {
     "p_answer_cols": 1, ##the number of questions per column, this value is fixed
 
     #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
-    "p_up_margin": 0.13,
+    "p_up_margin": 0.15,
     "p_down_margin": 0.15,
     "p_left_margin": 0.2,
     "p_right_margin": 0.2,
@@ -45,7 +45,7 @@ doc_parameters = {
     #-----------------------------------------------------------------------------------------------------------
 
     #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
-    "up_margin": 0.0145,
+    "up_margin": 0.02,
     "down_margin": 0.012,
     "left_margin": 0.00,
     "right_margin": 0.00,

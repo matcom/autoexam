@@ -79,7 +79,7 @@ def generate(args):
 
     for f in os.listdir('.'):
         if f.endswith('.tex'):
-            os.system("pdflatex %s -interaction=nonstopmode > compile_latex.log" % f)
+            os.system("pdflatex %s" % f)
 
     os.mkdir('pdf')
     os.mkdir('src')
@@ -424,7 +424,7 @@ def report(args):
 
         rows.append(data)
 
-    print(tabulate(rows, headers=columns, tablefmt=args.format))
+    print(tabulate(rows, headers=columns, tablefmt=args.format).encode("utf8"))
 
 
 def get_base_path(args):
@@ -442,7 +442,7 @@ def grade(args):
 
     base_path = get_base_path(args)
     grader_path = os.path.join(base_path, 'grader.txt')
-    order_path = os.path.join(base_path, 'order.json')
+    order_path = os.path.join(base_path, 'scan.json')
     result_path = os.path.join(base_path, 'results.json')
 
     if os.path.exists(result_path) and not args.force:
@@ -470,7 +470,7 @@ def review(args):
         return
 
     base_path = get_base_path(args)
-    result_path = os.path.join(base_path, 'results.json')
+    result_path = os.path.join(base_path, 'scan.json')
 
     if not os.path.exists(result_path):
         error("Test hasn't been scanned yet")
@@ -484,10 +484,12 @@ def review(args):
     for test, data in results.items():
         if data.get("warnings"):
             warnings = []
+            questions = set()
 
             for w in data["warnings"]:
-                if w["type"] != "Multiple Selection":
+                if w["type"] == "Uncertainty" and not w["question"] in questions:
                     warnings.append(w)
+                    questions.add(w["question"])
 
             if warnings:
                 tests_with_warnings[test] = warnings
@@ -498,7 +500,7 @@ def review(args):
 
         for w in warnings:
             print("  Question {0}".format(w["question"]))
-            print("    " + w["message"])
+            # print("    " + w["message"])
             print("    Scanned selection: " + ", ".join(str(q) for q in results[test]["questions"][w["question"]-1]["visual_answers"]))
             answer = raw_input("    If this information correct? [Y/n]: ")
 
@@ -532,7 +534,7 @@ def review(args):
                         print("    Error parsing your response. Please answer again.")
         print("")
 
-    
+
     answer = raw_input("Apply all modifications? [yes/N]: ")
 
     if answer == "yes":
@@ -543,6 +545,11 @@ def review(args):
     else:
         print("No actual changes were saved. Original result file unmodified.")
 
+def test_suite(args):
+    import test
+    test.test_suite()
+
+
 def main():
     if 'autoexam.py' in os.listdir('.'):
         error("Please don't run this from inside the Autoexam source folder.\nThis is an evil thing to do that will break the program.")
@@ -551,6 +558,9 @@ def main():
     parser = argparse.ArgumentParser(description="Autoexam: automatic questionnaire generation and evaluation.")
 
     commands = parser.add_subparsers(help="Command option", title="Commands", description="Specific sub-tasks for Autoexam to perform.")
+
+    test_parser = commands.add_parser("test", help="Runs the automatic test suite and exit.")
+    test_parser.set_defaults(func=test_suite)
 
     new_parser = commands.add_parser('new', help='Creates a new Autoexam project.')
     new_parser.add_argument('name', help='Name for the project.')
@@ -567,7 +577,7 @@ def main():
     gen_parser.add_argument('-m', '--master', help="Path to the master file that contains the test description.", default='master.txt')
     gen_parser.add_argument('-s', '--seed', type=int, default=None, help='A custom seed for the random generator.')
     gen_parser.add_argument('-c', '--tests-count', metavar='N', help="Number of actual tests to generate. If not supplied, only the master file will be generated.", type=int, default=0)
-    gen_parser.add_argument('-a', '--answers-per-page', help="Number of answer sections to generate per page. By default is 1. It is up to you to ensure all them fit right in your template.", metavar='N', type=int, default=1)
+    gen_parser.add_argument('-a', '--answers-per-page', help="Number of answer to generate per page. Longer tests will be split in more pages. By default is 25 which fits well in a letter paper with 4 options each. It is up to you to ensure all them fit right in your template.", metavar='N', type=int, default=25)
     gen_parser.add_argument('-t', '--title', help="Title of the test.", default="")
     gen_parser.add_argument('--answer-template', help="Template for the answers sheets.", default="templates/answer_template.tex")
     gen_parser.add_argument('--master-template', help="Template for the master sheet.", default="templates/master_template.tex")
@@ -583,7 +593,7 @@ def main():
     gen_parser.set_defaults(func=generate)
 
     scanner_parser = commands.add_parser('scan', help='Runs the exam scanner')
-    scanner_parser.add_argument('-o', '--outfile', type=str, default="results.json",
+    scanner_parser.add_argument('-o', '--outfile', type=str, default="scan.json",
                                 help='the file name to dump the scan results. If the file exists it will append the results.')
     scanner_parser.add_argument('-c', '--cameras', type=int, nargs="+", default=[0],
                                 help='the list of index of the cameras to be used to scan the tests.')

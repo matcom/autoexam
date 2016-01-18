@@ -16,19 +16,18 @@
 
   {% for answer in answers %}
 
-  %\begin{figure}[h!]
-     \hspace{0.2cm}
-     \includegraphics[width=2cm]{qrcode-{{ answer.number }}.png}
-     \hspace{0.5cm}
-     \parbox[b]{10cm}{Examen: {{ answer.number }} \vspace{1cm} }
-     \hspace{1cm}
-     \\
-     \includegraphics[width=0.5cm]{../../templates/marker.png}
-     \pdfsavepos\write-1{[UPPER-LEFT] ({{i}}-{{n}}) (\the\pdflastxpos,\the\pdflastypos)}
-     \hspace{13.5cm}
-     \includegraphics[width=0.5cm]{../../templates/marker.png}
-     \pdfsavepos\write-1{[UPPER-RIGHT] ({{i}}-{{n}}) (\the\pdflastxpos,\the\pdflastypos)}
-  %\end{figure}
+  \begin{minipage}{\textwidth}
+  \hspace{0.2cm}
+  \includegraphics[width=2cm]{qrcode-{{ answer.number }}-{{ answer.page }}.png}
+  \hspace{0.5cm}
+  \parbox[b]{10cm}{Examen: {{ answer.number }} - Pág: {{ answer.page }} \\ Nombre: {{ answer.name }} \vspace{1cm} }
+  \hspace{1cm}
+  \\
+  \includegraphics[width=0.5cm]{../../templates/marker.png}
+  \pdfsavepos\write-1{[UPPER-LEFT] ({{i}}-{{n}}) (\the\pdflastxpos,\the\pdflastypos)}
+  \hspace{13.5cm}
+  \includegraphics[width=0.5cm]{../../templates/marker.png}
+  \pdfsavepos\write-1{[UPPER-RIGHT] ({{i}}-{{n}}) (\the\pdflastxpos,\the\pdflastypos)}
 
   \hspace{0.01cm}
   \begin{tabular}{c@{\hspace{0cm}}c@{\hspace{0cm}}c@{\hspace{0cm}}c@{\hspace{0cm}}c}
@@ -65,6 +64,8 @@
   \hspace{13.5cm}
   \includegraphics[width=0.5cm]{../../templates/marker.png}
   \pdfsavepos\write-1{[BOTTOM-RIGHT] ({{i}}-{{n}}) (\the\pdflastxpos,\the\pdflastypos)}
+  \end{minipage}
+
   \vspace{2cm}
 
   {% endfor %}

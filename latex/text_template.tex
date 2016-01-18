@@ -1,11 +1,23 @@
-\documentclass[twocolumn]{article}
+\documentclass[9pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{geometry}
 \usepackage{graphicx}
 \usepackage{multicol}
-\usepackage[english]{babel}
+\usepackage{fancyhdr}
+\usepackage[spanish]{babel}
 
 \geometry{left=1.5cm, right=1.5cm, top=2cm, bottom=1.5cm}
+
+\newcommand{\thetest}{0}
+
+\fancypagestyle{empty}{
+    \fancyhf{ }
+    \fancyhead[L]{\bfseries Ex:\thetest}
+    \fancyhead[R]{\bfseries P:\thepage}
+    \renewcommand{\headrulewidth}{0.5pt}
+    \renewcommand{\footrulewidth}{0pt}
+}
+
 \pagestyle{empty}
 
 \hyphenation{ ta-re-as arro-jan na-tu-ral cons-ti-tu-yen di-fe-ren-cia pro-ble-ma pa-la-bra
@@ -26,21 +38,28 @@ co-rres-pon-de}
 
 %\maketitle
 
+{% for test in tests %}
+
+\renewcommand{\thetest}{ {{ test.number }} }
+\setcounter{page}{1}
+
 \begin{center}
- \hspace{0.2cm}
- \includegraphics[width=2cm]{qrcode-{{ number }}.png}
- \hspace{0.5cm}
- \Large{ {{ header }} (No. {{ number }}) }
+ % \hspace{0.2cm}
+ % \includegraphics[width=2cm]{qrcode-{{ test.number }}.png}
+ % \hspace{0.5cm}
+ \large{ {{ test.header }} (No. {{ test.number }}) }
+ \\
+ \large{Nombre: {{ test.name }} }
 \end{center}
 
 %\begin{small}
 
-% \begin{multicols}{2}
+\begin{multicols}{2}
 
 \begin{enumerate}
  %\setlength{\itemsep}{-0.1cm}
 
-{% for q in test %}
+{% for q in test.test %}
 
   \item {{ q.header }}
 
@@ -56,8 +75,12 @@ co-rres-pon-de}
 {% endfor %}
 \end{enumerate}
 
-% \end{multicols}
+\end{multicols}
 
 %\end{small}
+
+\newpage
+
+{% endfor %}
 
 \end{document}

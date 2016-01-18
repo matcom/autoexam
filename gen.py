@@ -7,11 +7,14 @@ import jinja2
 import random
 import qrcode
 import os
+import pprint
 import sys
 import pprint
 import json
 import scanresults
+import csv
 import argparse
+import json
 
 
 database = collections.defaultdict(lambda: [])
@@ -21,6 +24,8 @@ restrictions_order = {}
 test_id = 1
 debug = sys.argv.count('-d')
 count = 0
+names = {}
+rules = []
 
 VERSION = 1
 
@@ -41,7 +46,7 @@ def preprocess_line(line, remove_comments=True):
     return line
 
 
-def parser(master_path):
+def parser(master_path="master.txt"):
     """
     Lee el archivo master y se parsea cada una de las preguntas.
     """
@@ -76,6 +81,112 @@ def parser(master_path):
     # Parse questions
     while i < len(lines):
         i = parse_question(i, lines)
+
+    # Parse names
+    if os.path.exists("names.csv"):
+        all_names = list(csv.reader(open("names.csv")))
+        fields = all_names[0][1:]
+        all_names = all_names[1:]
+
+        for line in all_names:
+            name = line[0]
+            names[name] = {}
+
+            for field, val in zip(fields, line[1:]):
+                names[name][field] = float(val) if val else 0.0
+
+    if os.path.exists("rules.txt"):
+        with open('rules.txt') as fp:
+            for line in fp:
+                line = line.strip()
+                if not line:
+                    continue
+
+                splitted = line.split("=>")
+
+                if len(splitted) != 2:
+                    raise ValueError(u"Error parsing rule {0}".format(line))
+
+                pre, post = splitted
+                pre = pre.strip().split()
+                post = post.strip().split()
+
+                if len(pre) % 3 != 0:
+                    raise ValueError(u"Error parsing precondition for rule {0}".format(line))
+
+                if len(post) % 2 != 0:
+                    raise ValueError(u"Error parsing precondition for rule {0}".format(line))
+
+                rule = []
+
+                for i in range(len(pre) / 3):
+                    key, comp, val = pre[3*i:3*i+3]
+                    key = key.strip()
+                    comp = comp.strip()
+                    val = float(val.strip())
+
+                    if comp in rules_functors:
+                        rule_item = rules_functors[comp](key, val)
+                    else:
+                        raise ValueError(u"Error parsing comparison symbol {0} for rule {1}".format(val, line))
+
+                    rule.append(rule_item)
+
+                action = []
+
+                for i in range(len(post) / 2):
+                    tag, val = post[2*i:2*i+2]
+                    tag = tag.strip()
+                    val = int(val.strip())
+
+                    action.append((tag, val))
+
+                rules.append((rule, action))
+
+
+def less_than_rule(key, val):
+    def test(results):
+        actual = results.get(key)
+        return actual is not None and actual < val
+    return test
+
+
+def less_equal_than__rule(key, val):
+    def test(results):
+        actual = results.get(key)
+        return actual is not None and actual <= val
+    return test
+
+
+def greater_than_rule(key, val):
+    def test(results):
+        actual = results.get(key)
+        return actual is not None and actual > val
+    return test
+
+
+def greater_equal_than_rule(key, val):
+    def test(results):
+        actual = results.get(key)
+        return actual is not None and actual >= val
+    return test
+
+
+def equal_than_rule(key, val):
+    def test(results):
+        actual = results.get(key)
+        return actual is not None and actual == val
+    return test
+
+
+rules_functors = {
+    '<': less_than_rule,
+    '<=': less_equal_than__rule,
+    '>': greater_than_rule,
+    '>=': greater_equal_than_rule,
+    '=': equal_than_rule,
+    '==': equal_than_rule,
+}
 
 
 def parse_question(i, lines):
@@ -327,16 +438,16 @@ class Question:
             return "%i%s" % (self.number, opts)
 
 
-def qrcode_data(test_id, i, test):
-    return "%i|%i|%i" % (test_id, i, VERSION)
+def qrcode_data(test_id, i, test, page):
+    return "%i|%i|%i|%i" % (test_id, i, page, VERSION)
 
 
-def generate_qrcode(i, test):
-    filename = 'generated/v{0}/qrcode-{1}.png'.format(test_id, i)
+def generate_qrcode(i, test, page):
+    filename = 'generated/v{0}/qrcode-{1}-{2}.png'.format(test_id, i, page)
 
     f = open(filename, 'w')
     qr = qrcode.QRCode(box_size=10, border=0)
-    data = qrcode_data(test_id, i, test)
+    data = qrcode_data(test_id, i, test, page)
     qr.add_data(data)
 
     if debug > 1:
@@ -392,6 +503,7 @@ def generate_quiz(args=None):
             q = get_question(tag)
 
         test.add(q)
+        tries += 1
 
     if len(test) < total:
         raise ValueError('Could not complete test')
@@ -412,6 +524,9 @@ def generate(n, args):
     # Guaranteeing reproducibility
     seed = args.seed or random.randint(1, 2 ** 32)
     random.seed(seed)
+
+    n += len(names)
+    names_text = sorted(names.keys())
 
     text_template = jinja2.Template(open(args.text_template).
                                     read().decode('utf8'))
@@ -441,84 +556,81 @@ def generate(n, args):
     sol_file.close()
 
     order = {}
+    order['answers_per_page'] = args.answers_per_page
+    order['seed'] = seed
 
     answers = []
+    texts = []
 
     for i in range(n):
         if debug:
             print('Generating quiz number %i' % i)
 
+        name = names_text[i] if i < len(names_text) else ""
+        name = name.decode('utf8')
+
         test = generate_quiz(args)
-        # order[i] = dict(exam_id=test_id, id=i, options=[])
-        order[i] = scanresults.Test(test_id, i, [q.convert() for q in test])
-        generate_qrcode(i, test)
 
-        if not args.dont_generate_text:
-            text_file = open('generated/v{0}/Test-{1:04}.tex'.format(test_id, i), 'w')
+        # Parsing rules and modifying test accordingly
+        results = names.get(name)
 
-            text_file.write(text_template.render(
-                            test=test, number=i, header=args.title).encode('utf8'))
-            text_file.close()
+        if results is not None:
+            for rule in rules:
+                matches = True
 
-        answers.append(dict(test=list(enumerate(test)), number=i, seed=seed, max=max(len(q.options) for q in test)))
+                tests, actions = rule
 
-        if len(answers) == args.answers_per_page or i == n - 1:
-            answer_file = open('generated/v{0}/Answer-{1:04}.tex'.format(test_id, i / args.answers_per_page), 'w')
-            answer_file.write(answer_template.render(answers=answers).encode('utf8'))
-            answer_file.close()
-            answers = []
+                for t in tests:
+                    matches = matches and t(results)
 
-    scanresults.dump(order, 'generated/v{0}/order.json'.format(test_id))
+                if matches:
+                    for action in actions:
+                        print(u"Applying {0} to {1}".format(action, name))
+
+                        tag, val = action
+                        possible_questions = [q for q in test if tag in q.tags]
+
+                        print(u" There are %i possible questions to select" % len(possible_questions))
+
+                        if val < 0:
+                            to_remove = random.sample(possible_questions, min(-val, len(possible_questions)))
+                            print(u" Selected %i questions to remove" % len(to_remove))
+
+                            for q in to_remove:
+                                test.remove(q)
+
+                            print(u" Test has %i questions remaining" % len(test))
+                        else:
+                            raise ValueError(u"Adding questions is not yet allowed.")
+
+
+        order[i] = scanresults.Test(test_id, i, [q.convert() for q in test]).to_dict()
+        texts.append(dict(test=test, number=i, header=args.title, name=name))
+
+        page = 1
+        answers_in_page = []
+
+        for k,q in enumerate(test):
+            answers_in_page.append((k, q))
+
+            if len(answers_in_page) == args.answers_per_page or k == len(test) - 1:
+                generate_qrcode(i, test, page)
+                answers.append(dict(test=answers_in_page, number=i, page=page, name=name, seed=seed, max=max(len(q.options) for q in test)))
+                answers_in_page = []
+                page += 1
+
+    order['total_tests'] = len(texts)
+    order['total_answers'] = len(answers)
+
+    if not args.dont_generate_text:
+        with open('generated/v{0}/Tests.tex'.format(test_id), 'w') as text_file:
+            text_file.write(text_template.render(tests=texts).encode('utf8'))
+
+    with open('generated/v{0}/Answers.tex'.format(test_id), 'w') as answer_file:
+        answer_file.write(answer_template.render(answers=answers).encode('utf8'))
+
+    with open('generated/v{0}/order.json'.format(test_id), 'w') as fp:
+        json.dump(order, fp, indent=4)
 
     with open('generated/v{0}/seed'.format(test_id), 'w') as fp:
         fp.write(str(seed) + '\n')
-
-
-if __name__ == '__main__':
-    args_parser = argparse.ArgumentParser(description="Parses a master file and generates tests.")
-    args_parser.add_argument('master', metavar="PATH", help="Path to the master file that contains the test description.")
-    args_parser.add_argument('-c', '--tests-count', metavar='N', help="Number of actual tests to generate. If not supplied, only the master file will be generated.", type=int, default=0)
-    args_parser.add_argument('-a', '--answers-per-page', help="Number of answer sections to generate per page. By default is 1. It is up to you to ensure all them fit right in your template.", metavar='N', type=int, default=1)
-    args_parser.add_argument('-t', '--title', help="Title of the test.", default="")
-    args_parser.add_argument('--answer-template', help="Template for the answers sheets.", default="latex/answer_template.tex")
-    args_parser.add_argument('--master-template', help="Template for the master sheet.", default="latex/master_template.tex")
-    args_parser.add_argument('--text-template', help="Template for the text sheets.", default="latex/text_template.tex")
-    args_parser.add_argument('-v', '--questions-value', help="Default value for each question.", metavar='N', type=float, default=1.)
-    args_parser.add_argument('--dont-shuffle-tags', help="Disallow shuffling of tags.", action='store_true')
-    args_parser.add_argument('--sort-questions', help="After selecting questions, put them in the same order as in the master.", action='store_true')
-    args_parser.add_argument('--dont-shuffle-options', help="Do not shuffle the options in the questions.", action='store_true')
-    args_parser.add_argument('--dont-generate-text', help="Do not generate text sheets, only answers.", action='store_true')
-    args_parser.add_argument('--election', help="Toggle all options for election mode.", action='store_true')
-    args_parser.add_argument('--questionnaire', help="Toggle all options for questionnaire mode.", action='store_true')
-    args_parser.add_argument('--dont-generate-master', help="Do not generate a master file.", action='store_true')
-
-    args = args_parser.parse_args()
-
-    if args.election:
-        args.answer_template = 'latex/election_template.tex'
-        args.sort_questions = True
-        args.dont_shuffle_options = True
-        args.dont_generate_text = True
-        args.dont_generate_master = True
-
-    if args.questionnaire:
-        args.answer_template = 'latex/questionnaire_template.tex'
-        args.sort_questions = True
-        args.dont_shuffle_options = True
-        args.dont_generate_text = True
-        args.dont_generate_master = True
-
-    if not os.path.exists('generated'):
-        os.mkdir('generated')
-
-    for d in os.listdir('generated'):
-        num = int(d[1:])
-        if num >= test_id:
-            test_id = num + 1
-
-    os.mkdir('generated/v{0}'.format(test_id))
-
-    parser(master_path)
-    generate(args.tests_count, args)
-
-    print('Generated v{0}'.format(test_id))
