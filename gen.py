@@ -89,11 +89,12 @@ def parser(master_path="master.txt"):
         all_names = all_names[1:]
 
         for line in all_names:
-            name = line[0]
+            name = line[0].decode('utf8')
             names[name] = {}
 
             for field, val in zip(fields, line[1:]):
                 names[name][field] = float(val) if val else 0.0
+
 
     if os.path.exists("rules.txt"):
         with open('rules.txt') as fp:
@@ -570,12 +571,9 @@ def generate(n, args):
             print('Generating quiz number %i' % i)
 
         name = names_text[i] if i < len(names_text) else ""
-        name = name.decode('utf8')
-
         test = generate_quiz(args)
-
-        # Parsing rules and modifying test accordingly
         results = names.get(name)
+
 
         if results is not None:
             for rule in rules:
