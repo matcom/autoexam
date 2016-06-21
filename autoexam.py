@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
+import random
 import os
 import sys
 import argparse
@@ -163,6 +164,42 @@ def new(args):
         set_project_option('questionnaire', True)
 
 
+def split_the_order_file_oh_my_god():
+    with open("generated/last/order.json") as fp:
+        order_content = json.load(fp)
+
+    answers_per_page = order_content["answers_per_page"]
+    new_order = {}
+
+    for k,v in order_content.items():
+        if k.isdigit():
+            page = 1
+            test = dict(v)
+            questions = test["questions"]
+            test["questions"] = []
+            test["id"] = int(test["id"]) * 1000 + page
+            new_order[test["id"]] = test
+            print(test["id"])
+
+            for q in questions:
+                if len(test["questions"]) == answers_per_page:
+                    page += 1
+                    test = dict(v)
+                    questions = test["questions"]
+                    test["questions"] = []
+                    test["id"] = int(test["id"]) * 1000 + page
+                    new_order[test["id"]] = test
+                    print(test["id"])
+
+                if len(q["order"]) == 1:
+                    continue
+
+                test["questions"].append(q)
+
+    with open("generated/last/order-split.json", "w") as fp:
+        json.dump(new_order, fp, indent=4, sort_keys=True)
+
+
 def scan(args):
     import beep
     import cv2
@@ -172,7 +209,15 @@ def scan(args):
     import json
 
     # TODO: Remove symlink for Windows
-    args.exams_file = 'generated/last/order.json'
+    args.exams_file = 'generated/last/order-split.json'
+
+    ## MASSIVE HACK
+    # Split order.json into order-split.json and feed that to the scanner
+
+    split_the_order_file_oh_my_god()
+
+    ## END OF HACK HERE
+
     if not os.path.exists(args.exams_file):
         error('Not an Autoexam folder or exams not generated')
         return
@@ -368,9 +413,10 @@ def report(args):
 
     question_ids = set()
 
-    for _, exam in orders.items():
-        for q in exam['questions']:
-            question_ids.add(q['id'])
+    for test, exam in orders.items():
+        if test.isdigit():
+            for q in exam['questions']:
+                question_ids.add(q['id'])
 
     names = {}
 
@@ -550,6 +596,88 @@ def test_suite(args):
     test.test_suite()
 
 
+def rules(args):
+    if not check_project_folder():
+        return
+
+    gen.parser()
+
+    with open("generated/last/order.json") as fp:
+        order = json.load(fp)
+
+    index = 0
+
+    with open("generated/last/scan.json") as fp:
+        scanned = json.load(fp)
+
+    random.seed(order["seed"])
+
+    for name, results in sorted(gen.names.items(), key=lambda k: k[0]):
+        questions = order[str(index)]['questions']
+        index += 1
+        test = [gen.questions_by_id[q['id']] for q in questions]
+        removed = []
+        all_actions = []
+
+        if len(questions) < 41:
+            print(u"{2},{0},{1},{1}".format(name, 41 - len(questions), index - 1))
+            continue
+
+        for rule in gen.rules:
+            matches = True
+
+            tests, actions = rule
+
+            for t in tests:
+                matches = matches and t(results)
+
+            if matches:
+                for action in actions:
+                    all_actions.append(action)
+
+                    tag, val = action
+                    possible_questions = [q for q in test if tag in q.tags]
+
+                    if val < 0:
+                        to_remove = random.sample(possible_questions, min(-val, len(possible_questions)))
+
+                        for q in to_remove:
+                            test.remove(q)
+                            removed.append(q)
+                    else:
+                        raise ValueError(u"Adding questions is not yet allowed.")
+
+        real_indices = []
+
+        for qrem in removed:
+            for i,qord in enumerate(questions):
+                if qord['id'] == qrem.number:
+                    real_indices.append(i+1)
+                    break
+
+        actually_conv = 0
+        the_test = scanned[str(index - 1)]
+
+        for i, q in enumerate(the_test["questions"]):
+            if not q["answers"] and (i+1) in real_indices:
+                actually_conv += 1
+
+                if args.apply:
+                    q["answers"] = gen.solutions[q["id"]]
+
+        # print index, "-", name
+        # print "Preguntas convalidadas:"
+        # print " ".join(str(i) for i in sorted(real_indices))
+        # print ""
+        print(u"{2},{0},0,{1},MOD".format(name, len(real_indices), index - 1, actually_conv))
+
+    if args.apply:
+        shutil.copy("generated/last/scan.json", "generated/last/scan.json.backup")
+        with open("generated/last/scan.json", "w") as fp:
+            json.dump(scanned, fp, indent=4, sort_keys=True)
+        print("Changed the scan.json file")
+
+
 def main():
     if 'autoexam.py' in os.listdir('.'):
         error("Please don't run this from inside the Autoexam source folder.\nThis is an evil thing to do that will break the program.")
@@ -653,6 +781,10 @@ def main():
 
     qtui_parser = commands.add_parser('qtui', help='Runs the Qt user interface')
     qtui_parser.set_defaults(func=qtui)
+
+    rules_parser = commands.add_parser('rules')
+    rules_parser.add_argument("--apply", help="Apply the convalidation rules. Modifies the scan.json", action='store_true')
+    rules_parser.set_defaults(func=rules)
 
     args = parser.parse_args()
     args.func(args)

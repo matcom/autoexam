@@ -26,6 +26,7 @@ debug = sys.argv.count('-d')
 count = 0
 names = {}
 rules = []
+solutions = {}
 
 VERSION = 1
 
@@ -210,6 +211,7 @@ def parse_question(i, lines):
         database[t].append(question)
 
     questions_by_id[count] = question
+    solutions[count] = [idx for idx,a in enumerate(answers) if a[0]]
 
     return i
 

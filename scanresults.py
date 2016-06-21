@@ -181,7 +181,8 @@ def parse(filename):
         f.close()
 
         for k,v in content.items():
-            tests[int(k)] = Test.load_from_json(v)
+            if k.isdigit():
+                tests[int(k)] = Test.load_from_json(v)
 
         return tests
 

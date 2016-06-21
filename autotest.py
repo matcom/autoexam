@@ -24,7 +24,7 @@ doc_parameters = {
     #TODO try to recode this to use percent and not pixel units as they are now
     "qrcode_width": 100, #qrcode final width in pixels after perspective transformation
     "margin" : 60, #margin used to crop image after the rotation rectification
-    "work_size": 800, #resolution of the smaller side of the image after rectification, like saying 1000p
+    "work_size": 600, #resolution of the smaller side of the image after rectification, like saying 1000p
 
     #---------------------------------------------REMOVE ALL OF THIS---------------------------------------------
     "poll": False, #if we are scanning a poll or not
@@ -45,14 +45,14 @@ doc_parameters = {
     #-----------------------------------------------------------------------------------------------------------
 
     #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
-    "up_margin": 0.02,
-    "down_margin": 0.012,
+    "up_margin": 0.00,
+    "down_margin": 0.013,
     "left_margin": 0.00,
     "right_margin": 0.00,
 
     #padding between the rectangle with the selection cells and the inner cell area (used to rectify any misalignment within the answer selection rectangle)
     "cell_up_margin": 0.05,
-    "cell_down_margin": 0.05,
+    "cell_down_margin": 0.00,
     "cell_left_margin": 0.72,
     "cell_right_margin": 0.05,
 
@@ -192,8 +192,8 @@ def get_image_report(frame):
 
     return report
 
-#   exam id | test id | version
-DATA_RE = re.compile(r'''[0-9]+\|[0-9]+\|[0-9]+''',re.UNICODE)
+#   exam id | test id | page_id| version
+DATA_RE = re.compile(r'''[0-9]+\|[0-9]+\|[0-9]+\|[0-9]+''',re.UNICODE)
 
 def qrcode_ok(qrcodes):
     if len(qrcodes)!=1:
@@ -201,9 +201,10 @@ def qrcode_ok(qrcodes):
     data = qrcodes[0].data
     #the qrcode matches the format
     if DATA_RE.match(data):
-        version = int(data.split('|')[2])
-        test_id = int(data.split('|')[1])
         exam_id = int(data.split('|')[0])
+        page_id = int(data.split('|')[2])
+        test_id = int(data.split('|')[1]) * 1000 + page_id
+        version = int(data.split('|')[3])
         #has the correct version
         if doc_parameters["version"]!=version:
             return False, QrcodeError(  err_type=QRCodeErrorTypes.FORMAT,
@@ -224,7 +225,7 @@ def qrcode_ok(qrcodes):
 
 def get_test_from_qrcode(qrcode):
     info = qrcode.data.split('|')
-    test_id = int(info[1])
+    test_id = int(info[1]) * 1000 + int(info[2])
     return copy.deepcopy(doc_parameters["tests"][test_id])
 
 class QRCode(object):
