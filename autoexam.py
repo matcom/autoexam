@@ -10,6 +10,7 @@ import json
 import gen
 import os.path
 import glob
+import time
 
 if 'AUTOEXAM_FOLDER' not in os.environ:
     path = os.path.dirname(os.path.realpath(__file__))
@@ -200,7 +201,64 @@ def split_the_order_file_oh_my_god():
         json.dump(new_order, fp, indent=4, sort_keys=True)
 
 
+def manual_scan():
+    import json
+
+    answers = []
+    letters = 'abcdefghijklmnopqrstuvwxz'
+
+    with open("generated/last/order.json") as fp:
+        order_content = json.load(fp)
+
+    with open("manual.txt") as fp:
+        for l in fp:
+            l = l.strip().split()
+            question = []
+
+            for group in l:
+                options = []
+                if group != '-':
+                    for letter in group:
+                        options.append(letters.index(letter) + 1)
+                question.append(options)
+
+            answers.append(question)
+
+    dropped_keys = []
+
+    for key, test in order_content.items():
+        if not isinstance(test, dict):
+            continue
+
+        if test["id"] >= len(answers):
+            dropped_keys.append(key)
+            continue
+
+        answer = answers[test["id"]]
+
+        for i, q in enumerate(test["questions"]):
+            q["visual_answers"] = answer[i]
+            q["answers"] = [q["order"][a-1] for a in answer[i]]
+
+    for key in dropped_keys:
+        order_content.pop(key)
+
+    filestamp = int(time.time())
+
+    if os.path.exists("generated/last/scan.json"):
+        print("!! File 'scan.json' already exists. Will be renamed to 'scan-%i.json'" % filestamp)
+        shutil.move("generated/last/scan.json", "generated/last/scan-%i.json" % filestamp)
+
+    with open("generated/last/scan.json", "w") as fp:
+        json.dump(order_content, fp, indent=4, sort_keys=True)
+
+    print("Manually read %s tests" % len(answers))
+
+
 def scan(args):
+    if args.manual:
+        return manual_scan()
+
     import beep
     import cv2
     from autotest import TestScanner, ImageSource
@@ -726,7 +784,7 @@ def main():
     scanner_parser.add_argument('-c', '--cameras', type=int, nargs="+", default=[0],
                                 help='the list of index of the cameras to be used to scan the tests.')
     scanner_parser.add_argument('-f', '--folder', type=str, default="",
-                                help='the folder that includes all the images to scann.')
+                                help='the folder that includes all the images to scan.')
     scanner_parser.add_argument('-t', '--time', type=float, default=0.5,
                                 help='time in seconds it takes to load the next image on the specified folder.')
     scanner_parser.add_argument('-a', '--autowrite', action='store_true', default=False,
@@ -736,6 +794,7 @@ def main():
                                 help='if present the margins of the polls are used (REMOVE THIS OPTION PLZ).')
     scanner_parser.add_argument('-d', '--debug', action='store_true', default=False,
                                 help='debug mode enabled')
+    scanner_parser.add_argument('-m', '--manual', help="manually enter the tests results.", action='store_true')
     scanner_parser.set_defaults(func=scan)
 
     status_parser = commands.add_parser('status', help='Reports various details about the project.')

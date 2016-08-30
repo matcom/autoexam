@@ -13,7 +13,7 @@ import re
 
 report = None
 doc_parameters = {
-    "debug": False, #Show images of all the recognition process
+    "debug": True, #Show images of all the recognition process
     "show_image": True, #if it is a camera it shows a window with the images, and if it is an image it shows the image #not in use
     "is_camera": False,
     "double_check": True, #Makes a double confirmation before to return a success report
@@ -24,7 +24,7 @@ doc_parameters = {
     #TODO try to recode this to use percent and not pixel units as they are now
     "qrcode_width": 100, #qrcode final width in pixels after perspective transformation
     "margin" : 60, #margin used to crop image after the rotation rectification
-    "work_size": 600, #resolution of the smaller side of the image after rectification, like saying 1000p
+    "work_size": 1000, #resolution of the smaller side of the image after rectification, like saying 1000p
 
     #---------------------------------------------REMOVE ALL OF THIS---------------------------------------------
     "poll": False, #if we are scanning a poll or not
@@ -39,7 +39,7 @@ doc_parameters = {
 
     #padding between the rectangle with the selection cells and the inner cell area (used to rectify any misalignment within the answer selection rectangle)
     "p_cell_up_margin": 0.0,
-    "p_cell_down_margin": 0.0,
+    "p_cell_down_margin": 0.04,
     "p_cell_left_margin": 0.0,
     "p_cell_right_margin": 0.0,
     #-----------------------------------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ doc_parameters = {
     "distance_threshold": 0.8, #threshold of the allowed distance between the selection boxes over the mean distance
     "aligned_threshold": 0.5, #threshold of the alignment allowed between the selection boxes over the mean displacement
     "circle_ratio_threshold": 0.4, #a perfect circle is of ratio 1.0, this number the max deviation from 1.0, it is w/h
-    "circle_size_difference": 0.4, #the percent of the median size allowed
+    "circle_size_difference": 100, #the percent of the median size allowed
     "circle_aligment_percent": 1.0, #the percent over the radius that is allowed as a displacement over the median x coodinate
     "selection_box_padding":0.5, #padding used to select the inner area of the selection boxes
     "selection_circle_padding":0.35, #padding used to select the inner area of the selection circles
@@ -68,7 +68,7 @@ doc_parameters = {
     "selection_error": 30, #threshold around the selection_threshold that marks the uncertainty range:[0,255]
     "merge_size_factor": 1.2, #Size factor to decide if a merge is needed in the scattered squares
     #this is the parameter that cretaes most of the problems with the presision of the system
-    "adaptative_threshold_size": 12, #size of the kernel in the adaptive threshold to highlight the circle, smaller makes it more sensitive
+    "adaptative_threshold_size": 10, #size of the kernel in the adaptive threshold to highlight the circle, smaller makes it more sensitive
     "version": 1 #version control to reject invalid qrcodes
 }
 
