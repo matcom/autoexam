@@ -75,8 +75,7 @@ def load_project_from_master(questions_by_id, restrictions):
                     questions_by_id[question_id].header,
                     [Answer(option[0],option[1],option[2])
                         for option in questions_by_id[question_id].options]
-                )
-            for question_id in questions_by_id.keys()
+                ) for question_id in questions_by_id.keys()
             ]
         )
 

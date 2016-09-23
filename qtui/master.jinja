@@ -14,7 +14,9 @@ total: {{ project.total_questions_per_exam }}
 % @tag_name: minimum_number_of_questions (for each tag)
 
 {% for tag in project.tags %}
+{% if tag.min_questions > 0 %}
 @{{ tag.name }}: {{ tag.min_questions }}
+{% endif %}
 {% endfor %}
 
 ------------------------------------------------------------------------------

@@ -359,15 +359,24 @@ def generate_quiz(args=None):
     for k, v in database.items():
         base[k] = list(v)
 
+    print('new quiz')
+    print('total', total)
+    print('base', base)
+    print('res', res)
+    print('')
     test = set()
     tries = 0
 
     def get_question(tag):
+        print('tag', tag)
+        print('base', base)
         if tag not in base:
             raise ValueError('Could not fullfill a restriction '
                              'with tag "%s"' % tag)
         i = random.choice(range(len(base[tag])))
         q = base[tag].pop(i)
+
+        print('base[%s]' % tag, base[tag], bool(base[tag]))
 
         if not base[tag]:
             base.pop(tag)
@@ -377,10 +386,12 @@ def generate_quiz(args=None):
 
         if debug > 1:
             print(u'Selection question:\n%s' % str(q))
+        print('')
 
         return q
 
     while len(test) < total and tries < 10 * total:
+        print('test', test)
         if res:
             tag = random.choice(res.keys())
             q = get_question(tag)
@@ -399,8 +410,9 @@ def generate_quiz(args=None):
     test = list(test)
     random.shuffle(test)
 
+    print('restictions order', restrictions_order)
     if args and args.dont_shuffle_tags:
-        test.sort(key=lambda q: restrictions_order[q.tags[0]])
+        test.sort(key=lambda q: restrictions_order.get(q.tags[0], float('inf')))
 
     if args and args.sort_questions:
         test.sort(key=lambda q: q.number)

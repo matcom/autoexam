@@ -23,10 +23,10 @@ class MasterPage(QWizardPage):
         try:
             tags, questions = self.ui.questionWidget.dump()
 
-            for tag in tags:
+            for tag in tags: # [tag.name for tag in project.tags]
                 if tag not in list(map(lambda tag: tag.name, self.project.tags)):
                     # import pdb; pdb.set_trace()
-                    self.project.tags.append(model.Tag(tag,0))
+                    self.project.tags.append(model.Tag(tag, 0))
 
             # self.project.tags = tags
             self.project.questions = questions

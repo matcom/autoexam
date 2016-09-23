@@ -94,6 +94,7 @@ class MainWindow(QMainWindow):
 
             project_path = join(directory, name)
 
+            print('about to create %s at %s' % (name, directory))
             # TODO: Fix project creation
             self.project = model.Project(name, 5, 1, [], [])
             self.project_path = join(project_path, DEFAULT_PROJECT_FILENAME)
@@ -111,12 +112,14 @@ class MainWindow(QMainWindow):
         if directory is False:
             directory = str(self.setExistingDirectory())
 
-        if directory:
+        if  directory:
             __project_file_path__ = join(directory, DEFAULT_PROJECT_FILENAME)
             if exists(__project_file_path__):
+                print('project file path exists')
                 self.project = model.load_project(__project_file_path__)
                 self.project_path = __project_file_path__
             else:
+                print('project file path do not exists')
                 self.project = None
                 master_filename = join(directory, DEFAULT_MASTER_FILENAME)
                 if exists(master_filename):
@@ -136,11 +139,15 @@ class MainWindow(QMainWindow):
                     return
 
             os.chdir(directory)
+            print('loading project')
             self.startWizard(load=True)
+        else:
+            print('No directory were selected')
 
     def closeEvent(self, event):
         # TODO: Place a close dialog?
         if self.saveOnClose():
+            print('save on close')
             model.dump_project(self.project, self.project_path)
             try:
                 # self.project.current_page = self.examWizard.currentId()
@@ -152,6 +159,8 @@ class MainWindow(QMainWindow):
 
             if event is not None:
                 event.accept()
+        else:
+            print('do not save')
 
     def saveOnClose(self):
         try:
