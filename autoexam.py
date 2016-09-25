@@ -338,6 +338,11 @@ def simpleui(args):
     sui.run(args)
 
 
+def flask_ui(args):
+    import flask_ui as fui
+    fui.run(args)
+
+
 def report(args):
     from tabulate import tabulate
 
@@ -630,6 +635,12 @@ def main():
     simpleui_parser.add_argument('--port', help='The port to run in.', type=int, default=5000)
     simpleui_parser.add_argument('-d', '--debug', help='Run in debug mode.', action='store_true')
     simpleui_parser.set_defaults(func=simpleui)
+
+    flask_ui_parser = commands.add_parser('flaskui', help="Runs autoexam as a web service")
+    flask_ui_parser.add_argument('--host', help='The host interface to run in.')
+    flask_ui_parser.add_argument('--port', help='The port to run in.', type=int)
+    flask_ui_parser.add_argument('-d', '--debug', help='Run in debug mode.')
+    flask_ui_parser.set_defaults(func=flask_ui)
 
     report_parser = commands.add_parser('report', help="Generates several reports for an evaluated test.")
     report_parser.add_argument('data', help='The specific report(s) to generate.', nargs='+', choices=['grades', 'selection', 'partials'])

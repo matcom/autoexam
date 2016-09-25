@@ -14,7 +14,7 @@ _autoexam()
 
 
     COMPREPLY=( $( compgen -W '-h --help new review gen scan status edit stats
-        webpoll ui report grade qtui' -- "$cur" ) )
+        webpoll ui report grade qtui flaskui' -- "$cur" ) )
 
     return 0
 } &&
