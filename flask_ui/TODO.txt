@@ -1,0 +1,33 @@
+Leyenda
+=============
+[high]
+[medium]
+[low]
+[future]
+
+TODO
+============
+* [high] login del usuario
+* [high] crear la base de datos
+* [high] poder visualizar el master.txt para ver las preguntas hechas hasta el momento
+* [high] hacer la pagina de tomar la fotografia
+* [high] hacer los grupos y la interaccion entre ellos
+* [high] hacer los procedimientos en sql-alchemy
+*
+*
+*
+*
+*
+*
+* [low] los tiempos tienen que estar en UTC time para tener un tiempo uniforme alrededor del mundo
+* [low] convertir los tiempos en UTC time hacia la zona de tiempo local del usuario.
+* [low] hacer diagrama de venn para menos de n tags(n creo que es menor que 20~24)
+*
+* [future] hacer la conexion https
+*
+*
+*
+*
+*
+*
+*
