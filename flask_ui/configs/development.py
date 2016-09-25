@@ -5,4 +5,4 @@ basedir = abspath(dirname(__file__))
 
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + join(basedir, 'flask_ui.db')
-SQLALCHEMY_MIGRATE_REPO = join(basedir, 'flask_ui_migrations')
+SQLALCHEMY_MIGRATE_REPO = join(basedir, 'migrations')
