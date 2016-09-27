@@ -15,7 +15,7 @@ TODO
 * [high] hacer los procedimientos en sql-alchemy
 *
 *
-*
+* [medium] poder añadir preguntas ya creadas en el grupo a un proyecto.
 *
 *
 *
@@ -26,8 +26,10 @@ TODO
 * [future] hacer la conexion https
 *
 *
+
+Hechos
+============
+* 
 *
-*
-*
-*
+* [medium] crear scripts para gestionar la creación y la migración de la base de datos.
 *
