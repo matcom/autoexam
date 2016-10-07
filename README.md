@@ -1,55 +1,94 @@
-autoexam
-========
+# Autoexam
 
-A simple exam generator and grader written in Python with OpenCV
+A simple exam generator and grader written in Python with OpenCV.
 
 
-Installing in Linux
-===================
+## Getting Started
+
+Currently, the only supported platform is Linux. Support for other operating systems is on it's way. ;)
+
+To install dependencies in a Debian based Linux distribution, just run the following command as superuser:
 
 ```bash
-sudo apt-get install texlive texlive-lang-spanish python-opencv python-jinja2 python-qrcode python-zbar python-alsaaudio
+sudo apt-get install texlive texlive-lang-spanish python-opencv \
+python-jinja2 python-qrcode python-zbar python-alsaaudio python-flask
 ```
 
-How it works
-============
+If you're going to use the Qt UI, 'python-qt4' is required as well.
 
-Create an exam by following the example format shown in the file example-master.txt.
+You should also install `poppler-utils` as a temporary development dependency.
+
+The recommended way to use Autoexam is installing it globally into your system.
+You can use the provided `install.sh` script for this.
+
+```bash
+cd /path/to/autoexam
+sudo ./install.sh
+```
+
+The rest of the examples in this README will assume you did this.
+
+## How it works
+
+You can use Autoexam both as a command line tool, or with a PyQt GUI.
+
+### Command Line Interface
+
+To create a new project, just type:
+
+```bash
+autoexam new 'test_name'
+cd 'test_name'
+```
+
+You can define your questions database by editing the `master.txt` file. Use this file as well
+to specify how many questions you'd like in your exams, and how many of each tag.
 
 Afterwards, run the following command:
 
 ```bash
-python generador.py [master-exam-file.txt]
+autoexam gen -c number_of_exams
 ```
 
-If you do not specify a filename, it will look by default for a file named 'master.txt' in the current folder.
-
-This will generate the exams under a 'generated' folder. To avoid overwriting old generated exams, there will be a 'v#' folder for each generated exam.
-
-The following files will be automatically generated:
-
-* Master.tex: [TODO: ???]
-* Test-x.tex: Templates for the exams questions text.
-* Answer-x.tex: These contain the templates for generating the answer sheets for each generated exam.
-* qrcode-x.png: A qrcode for each exam containing [TODO: ???].
-* Solution.txt: A plain text file containing [TODO: ???]
-* Order.txt: A JSON file containing [TODO: ???]
-
-[TODO: Where to specify the number of exams to generate?]
-[TODO: Where to specify student names?]
-
-You can directly generate the corresponding pdfs by using the provided 'generateLatex' script, passing as an argument the id of the exam you want to generate (for example, v1 if it is the first exam you've generated). (Note: you need to have a valid pdflatex interpreter installed in your system!)
-
-```bash
-./generateLatex v{x}
-```
-
-This script will also reorganize the generated files into 'pdf' and 'src' folders.
+Your exams will be generated in pdf format in the `/path/to/project/generated/last` folder.
 
 The next step would be actually printing out the exams and torturing the students a little. :)
 
 After you've got your answer sheets filled up, run the following command:
 
+```bash
+autoexam scan
+```
 
+At this point, you can modify the default grader sheet if needed.
+It's just a text file inside the `generated` folder.
 
+The last thing to do is to actually grade the exams. It's pretty simple:
 
+```bash
+autoexam grade
+```
+
+This will create a `grades.json` file with the results. Pretty simple, right?
+
+GUI
+---
+
+Just run:
+
+```
+autoexam qtui
+```
+
+...and a wizard-like interface will pop up. If it is run from inside a project folder,
+it will automatically be loaded. It's all pretty intuitive, so... enjoy! :)
+
+Currently there is no UI for editing the gradersheet. It's just a text file `grader.txt` inside the generated folder, so feel free to edit it. The syntax is similar to this: [points_for_selecting:points_for_unselecting] * number_of_options. This should probably get more user friendly in the near future.
+
+### Contributing
+
+Whether it's code, ideas, suggestions, or whatever, contributions are more than welcome!
+Please check the AUTHORS file and contact any of us through email.
+
+Or if you feel adventurous enough, you can always clone/fork the project
+and then do a pull request. ;)

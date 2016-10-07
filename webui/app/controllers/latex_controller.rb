@@ -4,12 +4,13 @@ class LatexController < ApplicationController
     directory = Rails.root.to_s + "/../generated"
     Dir.mkdir(directory) unless File.exists?(directory)
     directory = directory + "/" + examen.directorio
-    Dir.mkdir(directory) unless File.exists?(directory)
+    system('autoexam init ' + directory) unless File.exists?(directory)
     filename = directory + "/" + filename
     File.open(filename, "w") do |file|
       file.write(content)
     end
     redirect_to edit_examan_path(examen), :notice => "#{filename} generated successfully"
+    return directory
   end
 
   def latex_master
@@ -49,6 +50,7 @@ class LatexController < ApplicationController
         #_x* We wouldn't get that far, but is possible.
         string  = "_"
         string += "x" if opcion.right?
+        string += "*" if opcion.fixed?
         string += " "
         string += opcion.titulo
         content << string
@@ -56,7 +58,8 @@ class LatexController < ApplicationController
       content << ""
     end
 
-    string   = content.join("\n")
-    save_file(examen, "master.txt", string)
+    string = content.join("\n")
+    directory = save_file(examen, "master.txt", string)
+    system('cd ' + directory + ' && autoexam gen -c ' + examen.variantes.to_s)
   end
 end

@@ -7,7 +7,13 @@ class Examan < ActiveRecord::Base
   end
 
   def clave(pregunta)
-    ClavePregunta.where(:preguntum_id => pregunta.id).where(:examan_id => self.id).first_or_create
+    cp = ClavePregunta.where(:preguntum_id => pregunta.id).where(:examan_id => self.id).first_or_create
+    if cp.total_puntos.nil?
+      cp.total_puntos = 1
+      cp.minimo = 0
+      cp.maximo = 1
+    end
+    return cp
   end
 
   def maximo(etiqueta)

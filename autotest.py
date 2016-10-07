@@ -1,9 +1,11 @@
 #coding: utf-8
+import os
 import cv2
 import zbar
 import numpy as np
 import sys
 import copy
+import time
 from scanresults import *
 
 import math
@@ -12,16 +14,17 @@ import re
 report = None
 doc_parameters = {
     "debug": False, #Show images of all the recognition process
-    "show_image": True, #if it is a camera it shows a window with the images, and if it is an image it shows the image
+    "show_image": True, #if it is a camera it shows a window with the images, and if it is an image it shows the image #not in use
+    "is_camera": False,
     "double_check": True, #Makes a double confirmation before to return a success report
-    "marker_image": "marker.png", #Image of the marker to use in the borders
+    "marker_image": "latex/marker.png", #Image of the marker to use in the borders
     "answer_cols": 5, ##the number of questions per column, this value is fixed
     "marker_match_min_quality": 0.6, #threshold level to apply to the template matching results
     "marker_size": 0.25, #size of the marker with respect to the qrcode width
     #TODO try to recode this to use percent and not pixel units as they are now
     "qrcode_width": 100, #qrcode final width in pixels after perspective transformation
     "margin" : 60, #margin used to crop image after the rotation rectification
-    "work_size": 500, #resolution of the smaller side of the image after rectification, like saying 1000p
+    "work_size": 800, #resolution of the smaller side of the image after rectification, like saying 1000p
 
     #---------------------------------------------REMOVE ALL OF THIS---------------------------------------------
     "poll": False, #if we are scanning a poll or not
@@ -29,16 +32,16 @@ doc_parameters = {
     "p_answer_cols": 1, ##the number of questions per column, this value is fixed
 
     #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
-    "p_up_margin": 0.10,
-    "p_down_margin": 0.05,
-    "p_left_margin": 0.85,
-    "p_right_margin": 0.00,
+    "p_up_margin": 0.13,
+    "p_down_margin": 0.15,
+    "p_left_margin": 0.2,
+    "p_right_margin": 0.2,
 
     #padding between the rectangle with the selection cells and the inner cell area (used to rectify any misalignment within the answer selection rectangle)
-    "p_cell_up_margin": 0.01,
-    "p_cell_down_margin": 0.01,
-    "p_cell_left_margin": 0.33,
-    "p_cell_right_margin": 0.33,
+    "p_cell_up_margin": 0.0,
+    "p_cell_down_margin": 0.0,
+    "p_cell_left_margin": 0.0,
+    "p_cell_right_margin": 0.0,
     #-----------------------------------------------------------------------------------------------------------
 
     #padding between the answers area rectangle and the inner answers area (used to rectify any misalignment within the answer area)
@@ -50,16 +53,22 @@ doc_parameters = {
     #padding between the rectangle with the selection cells and the inner cell area (used to rectify any misalignment within the answer selection rectangle)
     "cell_up_margin": 0.05,
     "cell_down_margin": 0.05,
-    "cell_left_margin": 0.69,
-    "cell_right_margin": 0.02,
+    "cell_left_margin": 0.72,
+    "cell_right_margin": 0.05,
 
+    "squares": False, #if it is a square or a circle
     "distance_threshold": 0.8, #threshold of the allowed distance between the selection boxes over the mean distance
     "aligned_threshold": 0.5, #threshold of the alignment allowed between the selection boxes over the mean displacement
+    "circle_ratio_threshold": 0.4, #a perfect circle is of ratio 1.0, this number the max deviation from 1.0, it is w/h
+    "circle_size_difference": 0.4, #the percent of the median size allowed
+    "circle_aligment_percent": 1.0, #the percent over the radius that is allowed as a displacement over the median x coodinate
     "selection_box_padding":0.5, #padding used to select the inner area of the selection boxes
+    "selection_circle_padding":0.35, #padding used to select the inner area of the selection circles
     "selection_threshold": 130, #threshold that is used to decide if the answer is selected based on the mean intensity range:[0,255]
     "selection_error": 30, #threshold around the selection_threshold that marks the uncertainty range:[0,255]
-    "merge_size_factor": 1.8, #Size factor to decide if a merge is needed in the scattered squares
-    "adaptative_threshold_size": 15, #size of the kernel in the adaptive threshold to highlight the square
+    "merge_size_factor": 1.2, #Size factor to decide if a merge is needed in the scattered squares
+    #this is the parameter that cretaes most of the problems with the presision of the system
+    "adaptative_threshold_size": 12, #size of the kernel in the adaptive threshold to highlight the circle, smaller makes it more sensitive
     "version": 1 #version control to reject invalid qrcodes
 }
 
@@ -68,7 +77,8 @@ class TestScanner:
         for (k,v) in kw.items():
             doc_parameters[k]=v
         doc_parameters["scanner"] = QRScanner(w,h);
-        doc_parameters["loaded_marker"] = cv2.imread(doc_parameters["marker_image"],0)
+        marker_path = os.path.join(os.environ['AUTOEXAM_FOLDER'], doc_parameters["marker_image"])
+        doc_parameters["loaded_marker"] = cv2.imread(marker_path,0)
         doc_parameters["init"] = True
         doc_parameters["tests"] = parse(testsfile)
 
@@ -83,7 +93,7 @@ class TestScanner:
             doc_parameters["cell_down_margin"] = doc_parameters["p_cell_down_margin"]
             doc_parameters["cell_left_margin"] = doc_parameters["p_cell_left_margin"]
             doc_parameters["cell_right_margin"] = doc_parameters["p_cell_right_margin"]
-            
+
             doc_parameters["answer_cols"] = doc_parameters["p_answer_cols"]
         #---------------------------------------------------------
 
@@ -98,21 +108,13 @@ class TestScanner:
         cv2.destroyAllWindows()
 
 def get_scan_report(source):
-    show = doc_parameters["show_image"]
-    if show:
-        window_name = "Input"
-        cv2.namedWindow(window_name)
-
     if not doc_parameters["init"]: return Report()
 
     global report
-
-    if not doc_parameters["double_check"]:
+    # do always a single check if it is not a camera
+    if not doc_parameters["double_check"] or not doc_parameters['is_camera']:
         report = Report()
         frame = source.get_next()
-        if show:
-            flipped = cv2.flip(frame, 1)
-            cv2.imshow(window_name,flipped)
         return get_image_report(frame)
     #if double check is enabled...
     first = None
@@ -120,18 +122,12 @@ def get_scan_report(source):
         if not first:
             report = Report()
             frame = source.get_next()
-            if show:
-                flipped = cv2.flip(frame, 1)
-                cv2.imshow(window_name,flipped)
             first = get_image_report(frame)
         if not first.success:
             return first
         else:
             report = Report()
             frame = source.get_next()
-            if show:
-                flipped = cv2.flip(frame, 1)
-                cv2.imshow(window_name,flipped)
             second = get_image_report(frame)
             if not second.success or second.test==first.test:
                 return second
@@ -163,7 +159,7 @@ def get_image_report(frame):
         show_debug_image(rotated,"After rotation.")
         show_debug_image(gray_image,"Gray after rotation")
         small_marker = cv2.resize(marker,(size,size))
-        markers =  get_marker_positions(rotated, small_marker, doc_parameters["marker_match_min_quality"])
+        markers = get_marker_positions(rotated, small_marker, doc_parameters["marker_match_min_quality"])
         if len(markers)==4 and rectangle_sort(markers,rotated):
             answer_area = perspective_transform(gray_image, markers)
             show_debug_image(answer_area,"All Answer area cropped.")
@@ -183,7 +179,7 @@ def get_image_report(frame):
                     bad_data = True
                 question+=1
             #TODO debug
-            show_debug_image(answer_area,"Answer area marked.",False)
+            show_debug_image(answer_area,"Answer area marked.", True)
 
             if not bad_data:
                 report.success = True
@@ -332,9 +328,11 @@ def fix_rotation(qr_rect, image, aux_image):
 def get_marker_positions(image, marker,threshold):
     """Finds the 4 markers that surround the answer area in the image. -> list of tuples"""
     res = cv2.matchTemplate(image,marker,cv2.TM_CCOEFF_NORMED)
+    if doc_parameters["debug"]: cv2.imshow("Template Matching",res)
     loc = np.where( res >= threshold)
     w, h = marker.shape[::-1]
     points = [ (pt[0]+w/2,pt[1]+h/2) for pt in zip(*loc[::-1]) ]
+
     if len(points)<=4: return points
     #do kmeans and separate the four corners
     # convert to np.float32
@@ -343,23 +341,42 @@ def get_marker_positions(image, marker,threshold):
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
     compactness,labels,centers=cv2.kmeans(points,4,criteria,10,cv2.KMEANS_RANDOM_CENTERS)
     if compactness/float(len(points)) > 10: return []
+    points = [(p[0],p[1]) for p in centers]
+    return points
 
-    return [(p[0],p[1]) for p in centers]
+def get_mean_point(points):
+    mean = (0,0)
+    for p in points:
+        mean = (mean[0]+p[0], mean[1]+p[1])
+    return (mean[0]/len(points), mean[1]/len(points) )
+
 
 def rectangle_sort(markers,image):
     result = [0,0,0,0]
-    w, h = image.shape[::-1]
-    mid_x = w/2.0
-    mid_y = h/2.0
+
+    mid_x, mid_y = get_mean_point(markers)
+
     for p in markers:
         if p[0]<mid_x:
-            if p[1]<mid_y: result.insert(0,p), result.pop(1)
-            else: result.insert(1,p), result.pop(2)
+            if p[1]<mid_y: result.insert(0,p), result.pop(1) #first quadrant
+            else: result.insert(1,p), result.pop(2) #third quadrant
         else:
-            if p[1]>mid_y: result.insert(2,p), result.pop(3)
-            else: result.insert(3,p), result.pop(4)
+            if p[1]>mid_y: result.insert(2,p), result.pop(3) #forth quadrant
+            else: result.insert(3,p), result.pop(4) #second quadrant
 
+    #result layout
+    # 0 | 3
+    #---|---
+    # 1 | 2
     if 0 in result: return False
+
+    #check with the dot product and the length of the sides
+    # print np.dot( np.subtract(result[1],result[0]), np.subtract(result[0],result[3]) )
+    # print np.dot( np.subtract(result[1],result[0]), np.subtract(result[1],result[2]) )
+    # print np.dot( np.subtract(result[3],result[2]), np.subtract(result[0],result[3]) )
+    # print np.dot( np.subtract(result[3],result[2]), np.subtract(result[1],result[2]) )
+
+
     #copy result to markers
     for n in range(0,4): markers.pop()
     markers.extend(result)
@@ -389,10 +406,15 @@ def get_answer_images(image, cols, rows, total):
     result = []
     w, h = image.shape[::-1]
 
-    u_margin = int(doc_parameters["up_margin"]*h)
-    d_margin = int(doc_parameters["down_margin"]*h)
-    l_margin = int(doc_parameters["left_margin"]*w)
-    r_margin = int(doc_parameters["right_margin"]*w)
+    u_margin = int(round(doc_parameters["up_margin"]*h))
+    d_margin = int(round(doc_parameters["down_margin"]*h))
+    l_margin = int(round(doc_parameters["left_margin"]*w))
+    r_margin = int(round(doc_parameters["right_margin"]*w))
+
+    # TODO: Remove this huge patch
+    if rows == 1:
+        u_margin *= 4
+        d_margin *= 4
 
     cell_w = (w-(l_margin+r_margin))/cols
     cell_h = (h-(u_margin+d_margin))/rows
@@ -430,14 +452,19 @@ def get_selections(image, question, index):
 
     master_answers = []
     local_answers = []
-    #use always the multiple choice algorithm
-    #if question.multiple:
+
+    vis = None
+    # if doc_parameters["poll"]:
+    vis = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+
     a=0
     for data in contours:
         mean = data["mean_intensity"]
+        color = (0,0,255)# to visualize the default color is red
         if mean > thresh:
             master_answers.append(question.order[a])
             local_answers.append(a+1)
+            color = (0,255,0) #to visualize select the green color
             if mean-thresh <= error:
                 w = Warning(index + 1, a + 1, WarningTypes.UNCERTANTY, selected=True)
                 report.test.warnings.append(w)
@@ -445,33 +472,24 @@ def get_selections(image, question, index):
             w = Warning(index + 1, a + 1, WarningTypes.UNCERTANTY, selected=False)
             report.test.warnings.append(w)
         a += 1
+        # if doc_parameters["poll"]: #if visualization
+        center = data["center"]
+        radius = data["radius"]
+        cv2.ellipse(vis, (int(center[0])+2*int(radius),int(center[1])), (int(radius), int(radius)), 0, 0, 360, color, -1)
 
-    #TODO: add here the warnings of multilple selection and single
-    if len(master_answers)>1 and not question.multiple:
-        w = Warning(index + 1, local_answers, WarningTypes.MULT_SELECTION, selected = False)
-        report.test.warnings.append(w)
 
-    if len(master_answers)==0 and not question.multiple:
-        w = Warning(index + 1, local_answers, WarningTypes.EMPTY_SELECTION, selected = False)
-        report.test.warnings.append(w)
-    # else:
-    #     #sort contours using mean intensity values from high to low
-    #     contours.sort(key=lambda cont: cont["mean_intensity"], reverse=True)
-    #     best_contour = contours[0]
-    #     master_answers.append(question.order[best_contour["index"]])
+    if not question.multiple:
+        if len(master_answers)>1:
+            w = Warning(index + 1, local_answers, WarningTypes.MULT_SELECTION, selected = False)
+            report.test.warnings.append(w)
 
-    #     max_mean =      contours[0]["mean_intensity"]
-    #     sec_max_mean =  contours[1]["mean_intensity"] if len(contours)>1 else thresh
+        if len(master_answers)==0:
+            w = Warning(index + 1, local_answers, WarningTypes.EMPTY_SELECTION, selected = False)
+            report.test.warnings.append(w)
 
-    #     if max_mean<thresh or abs(max_mean-sec_max_mean)<=error:
-    #         w = Warning(index, best_contour["index"], WarningTypes.UNCERTANTY, selected=True);
-    #         report.test.warnings.append(w)
-
-    #     posible_selected = [ c["index"] for c in contours if c["mean_intensity"]>thresh and c["index"]!=contours[0]["index"]]
-
-    #     if len(posible_selected)>0:
-    #         w = Warning(index, posible_selected, WarningTypes.MULT_SELECTION, selected = False)
-    #         report.test.warnings.append(w)
+    #show the image
+    # if doc_parameters["poll"]:
+    # cv2.imshow("Result", vis)
 
     return True, master_answers
 
@@ -492,33 +510,73 @@ def get_contours(image, total, question):
     contours = [c for c in contours if not c["empty"]]
     for i in range(len(contours)): contours[i]["index"]=i
 
-    if len(contours)>total:
-        while True:
-            merged = try_merge_nearby_contours(contours,image)
-            if merged == 1:
-                for i in range(len(contours)): contours[i]["index"]=i
-            if merged == 0 or len(contours)<=total: break
+    if len(contours) < total:
+        return False,[]
 
-    if len(contours)> total:
-        list.sort(contours, key = lambda x: x["size"], reverse=True)
-        contours = contours[:total]
-        list.sort(contours, key = lambda x: x["index"])
-        for i in range(len(contours)): contours[i]["index"]=i
+    #if there are more contours than expected try merge them
+    if len(contours)>total:
+        contours = merge_contours_kmeans(contours, total, image)
+
+    if len(contours)>1:
+        if not same_size(contours, image):
+            report.errors.append(QuestionError(question,"The circles don't have the same size or are too big"))
+        else:
+            mean_rad = 0
+            for c in contours:
+                mean_rad+=c["radius"]
+            mean_rad=mean_rad/float(len(contours))
+            for c in contours:
+                c["radius"] = mean_rad
+                recalculate_intensity(c,image)
 
     if len(contours)!= total:
-        report.errors.append(QuestionError(question,"The number of boxes do not match"))
-    if not are_squared(contours):
-        report.errors.append(QuestionError(question,"Not all the boxes are squared"))
+        report.errors.append(QuestionError(question,"The number of circles do not match"))
+    if not doc_parameters["squares"] and not are_circular(contours):
+        report.errors.append(QuestionError(question,"All the circles don't have the correct shape"))
+
     if len(contours)>1:
         if not same_distance(contours,doc_parameters["distance_threshold"]):
-            report.errors.append(QuestionError(question,"Not all the boxes are within the same distance"))
-        if not are_sorted(contours):
-            report.errors.append(QuestionError(question,"The boxes are not sorted"))
-        #if not are_aligned(contours,doc_parameters["aligned_threshold"]):
-        #    report.errors.append(QuestionError(question,"Not all the boxes are aligned"))
+            report.errors.append(QuestionError(question,"All the circles are not within the same distance"))
+
+        if not are_aligned(contours, doc_parameters["circle_aligment_percent"]):
+            report.errors.append(QuestionError(question,"All the boxes are not aligned"))
+
+    if doc_parameters["debug"]:
+        debug_contour_detection(contours, image)
+
+    if doc_parameters["debug"]:
+        errors = [e for e in report.errors if e.question == question]
+        if len(errors)==0: print "-----OK-----"
+        else:
+            for e in errors:
+                print e.message
+            print "------------"
+        cv2.waitKey()
 
     if len(report.errors)>0: return False,[]
     return True, contours
+
+def merge_contours_kmeans(contours, centroids, image):
+    points = np.float32([p["center"] for p in contours])
+    # define criteria and apply kmeans()
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 1.0)
+    compactness, labels, centers = cv2.kmeans(points,centroids,criteria,20,cv2.KMEANS_PP_CENTERS)
+    groups = {}
+    for c in xrange(len(points)):
+        label = int(labels[c])
+        if label in groups:
+            groups[label] = get_contour_data(merge_contours(groups[label], contours[c]),image)
+        else:
+            groups[label] = contours[c]
+
+    merged = groups.values()
+    list.sort(merged, key = lambda x: x["center"][1], reverse = False)
+    # list.sort(merged, key = lambda x: x["center"][0], reverse = True)
+
+    for i, c in enumerate(merged):
+        c["index"] = i
+
+    return merged
 
 def try_merge_nearby_contours(contours,image):
     for c1 in contours:
@@ -542,32 +600,35 @@ def merge_contours(big,small):
             result.append(p)
     return np.array([[p] for p in result],dtype=np.int32)
 
-def are_sorted(contours):
-    for i in range(0,len(contours)-1):
-        if contours[i]["center"][1]>contours[i+1]["center"][1]: return False
-    return True
-
-def get_contour_data(contour, image):
-    data = {}
-    data["empty"] = cv2.contourArea(contour)==0
-    data["convex"] = cv2.isContourConvex(contour)
-    data["rect"] = cv2.boundingRect(contour)
-    x,y,w,h = data["rect"]
-    data["size"] = max(w,h)#float(w+h)/2
-    data["points"] = [(x,y),(x,y+h),(x+w,y+h),(x+w,y)]
-    M = cv2.moments(np.array([[p] for p in data["points"]],dtype=np.int32))
-    data["center"] = (M['m10']/(M['m00']+0.00001), M['m01']/(M['m00']+0.00001))
-    b = doc_parameters["selection_box_padding"]/2.0
-    fillarea = np.array([ [[x+b*w,y+b*h]] , [[x+b*w,y+h-b*h]] , [[x+w-b*w,y+h-b*h]] , [[x+w-b*w,y+b*h]] ], dtype=np.int32 )
-    mask = np.zeros(image.shape,np.uint8)
-    cv2.drawContours(mask,[fillarea],0,255,-1)
-    data["mean_intensity"] = cv2.mean(image,mask = mask)[0]
-    return data
-
-def are_squared(contours):
+def same_size(contours, image):
+    sizes = [c["radius"]*2 for c in contours]
+    sizes.sort()
+    median_size = sizes[len(sizes)/2]
+    w, h = image.shape[::-1]
+    max_size = min(w,h)
+    for size in sizes:
+        if size >= max_size:
+            return False
+        if abs(size/float(median_size) - 1.0) > doc_parameters["circle_size_difference"]:
+            return False
     return True
 
 def are_aligned(contours, threshold):
+    centers = [c["center"][0] for c in contours]
+    centers.sort()
+    median_center = centers[len(centers)/2]
+
+    sizes = [c["radius"] for c in contours]
+    sizes.sort()
+    median_size = sizes[len(sizes)/2]
+
+    for center in centers:
+        difference = abs(median_center-center)
+        percent = difference/float(median_size)
+        if percent > threshold:
+            return False
+    return True
+
     all_points = []
     for c in contours:
         for p in c["points"]:
@@ -590,6 +651,85 @@ def same_distance(contours, threshold):
 
     return True
 
+def are_circular(contours):
+    for c in contours:
+        x,y,w,h = c["rect"]
+        ratio = float(w)/float(h)
+        if abs(1-ratio) > doc_parameters["circle_ratio_threshold"]:
+            return False
+    return True
+
+
+def debug_contour_detection(contours, image):
+    vis = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+
+    for contour in contours:
+        new_radius = int((1-doc_parameters["selection_circle_padding"])*contour["radius"])
+
+        print 'vis: ', vis
+        print 'int(contour["center"][0]) ', int(contour["center"][0])
+        print 'int(contour["center"][1]) ', int(contour["center"][1])
+        print '(int(new_radius), int(new_radius))', (int(new_radius), int(new_radius))
+
+        cv2.ellipse(vis, (int(contour["center"][0]), int(contour["center"][1])), (int(new_radius), int(new_radius)), 0, 0, 360, (0,0,255), 1)
+        cv2.ellipse(vis, (int(contour["center"][0]), int(contour["center"][1])), (int(contour["radius"]), int(contour["radius"])), 0, 0, 360, (0,255,0), 1)
+
+    cv2.imshow("Selection Area", vis)
+
+def recalculate_intensity(contour, image):
+    if not doc_parameters["squares"]:
+        radius = contour["radius"]
+        center = contour["center"]
+        new_radius = int((1-doc_parameters["selection_circle_padding"])*radius)
+        mask = np.zeros(image.shape,np.uint8)
+        cv2.ellipse(mask, (int(center[0]),int(center[1])), (new_radius, new_radius), 0, 0, 360, 255, -1)
+        contour["mean_intensity"] = cv2.mean(image,mask = mask)[0]
+
+    else:
+        x,y,w,h = contour["rect"]
+        b = doc_parameters["selection_box_padding"]/2.0
+        fillarea = np.array([ [[x+b*w,y+b*h]] , [[x+b*w,y+h-b*h]] , [[x+w-b*w,y+h-b*h]] , [[x+w-b*w,y+b*h]] ], dtype=np.int32 )
+        mask = np.zeros(image.shape,np.uint8)
+        cv2.drawContours(mask,[fillarea],0,255,-1)
+        #improve the calculation of the intensity that decides if it is selected or not.
+        contour["mean_intensity"] = cv2.mean(image,mask = mask)[0]
+
+
+def get_contour_data(contour, image):
+    data = {}
+    data["empty"] = cv2.contourArea(contour)<=3
+    data["convex"] = cv2.isContourConvex(contour)
+    data["rect"] = cv2.boundingRect(contour)
+    x,y,w,h = data["rect"]
+    data["size"] = max(w,h)#float(w+h)/2
+    data["radius"] = math.sqrt(w**2+h**2)/2.0
+    data["points"] = [(x,y),(x,y+h),(x+w,y+h),(x+w,y)]
+    M = cv2.moments(np.array([[p] for p in data["points"]],dtype=np.int32))
+    data["center"] = (M['m10']/(M['m00']+0.00001), M['m01']/(M['m00']+0.00001))
+    #if the contours are circles instead of squares
+    if not doc_parameters["squares"]:
+        center, radius = cv2.minEnclosingCircle(contour)
+        data["center"] = (int(center[0]),int(center[1]))
+        data["radius"] = int(radius)
+        new_radius = int((1-doc_parameters["selection_circle_padding"])*radius)
+
+        mask = np.zeros(image.shape,np.uint8)
+        cv2.ellipse(mask, (int(center[0]),int(center[1])), (new_radius, new_radius), 0, 0, 360, 255, -1)
+        data["mean_intensity"] = cv2.mean(image,mask = mask)[0]
+
+    else:
+        b = doc_parameters["selection_box_padding"]/2.0
+        fillarea = np.array([ [[x+b*w,y+b*h]] , [[x+b*w,y+h-b*h]] , [[x+w-b*w,y+h-b*h]] , [[x+w-b*w,y+b*h]] ], dtype=np.int32 )
+        mask = np.zeros(image.shape,np.uint8)
+        cv2.drawContours(mask,[fillarea],0,255,-1)
+        #improve the calculation of the intensity that decides if it is selected or not.
+        data["mean_intensity"] = cv2.mean(image,mask = mask)[0]
+
+    # if doc_parameters["debug"]: print data["mean_intensity"]
+
+
+    return data
+
 def dist(x,y):
     return math.sqrt( (x[0] - y[0])**2 + (x[1] - y[1])**2 )
 
@@ -601,27 +741,62 @@ def nothing(x):pass
 
 class ImageSource(object):
     """Wrapper class to abstract the fact that the camera feed may come from a single image"""
-    def __init__(self,source):
-        self.is_camera = type(source)==int
+    def __init__(self, source, time=3):
+        self.time = time
+        self.is_camera = type(source)==list
+        doc_parameters['is_camera'] = self.is_camera
         if self.is_camera:
-            self.source = cv2.VideoCapture(source)
-            # self.source.set(3,1920)
-            # self.source.set(4,1080)
+            print "Loading cameras "+str(source)
+            self.sources = [cv2.VideoCapture(cam) for cam in source]
+            for s in self.sources:
+                s.set(3,800)
+                s.set(4,600)
         else:
-            self.source = cv2.imread(source,1)
+            self.sources = self.load_file_list(source)
+
+        self.finished = False
+        self.current_index = -1
+        self.update_current()
+
+    def load_file_list(self, path):
+        capture = [os.path.join(path,f) for f in os.listdir(path)]
+        if len(capture)==0:
+            print "Could not load pictures to simulate a camera."
+        return capture
+
 
     def get_size(self):
         if self.is_camera:
-            return (int(self.source.get(3)),int(self.source.get(4)))
+            return (int(self.current_source.get(3)),int(self.current_source.get(4)))
         else:
-            return (self.source.shape[1],self.source.shape[0])
+            return (self.current_source.shape[1],self.current_source.shape[0])
+            #return (self.width, self.height)
 
     def get_next(self):
+        if time.time() - self.start_time > self.time:
+                self.update_current()
         if self.is_camera:
-            return self.source.read()[1]
+            img = self.current_source.read()[1]
+            cv2.imshow("Camera "+str(self.current_index),cv2.flip(img, 1))
+            return img
         else:
-            return self.source
+            # img = self.current_source.copy()
+            return self.current_source
+
+    def update_current(self):
+        self.current_index += 1
+        if self.current_index>=len(self.sources):
+            self.current_index = 0
+            self.finished = True
+        if self.is_camera:
+            self.current_source = self.sources[self.current_index]
+        else:
+            self.current_source = cv2.imread(self.sources[self.current_index],1)
+            # self.current_source = Image.open(self.sources[self.current_index]).convert('L')
+            # self.width, self.height = self.current_source.size
+        self.start_time = time.time()
 
     def release(self):
         if self.is_camera:
-            self.source.release()
+            for s in self.sources:
+                s.release()

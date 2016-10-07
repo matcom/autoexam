@@ -61,3 +61,8 @@ nosetests.xml
 generated/*
 bd_test_result.json
 using_json_loader.py
+Documentos/
+*.log
+
+Project*
+.gitignore

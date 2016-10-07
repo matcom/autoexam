@@ -1,0 +1,35 @@
+% ============================================================================
+% Project "{{ project.name }}" Master file
+% ============================================================================
+
+% ============================================================================
+%  HEADER
+% ============================================================================
+
+% number of questions:
+total: {{ project.total_questions_per_exam }}
+
+% tags here:
+% format:
+% @tag_name: minimum_number_of_questions (for each tag)
+
+{% for tag in project.tags %}
+{% if tag.min_questions > 0 %}
+@{{ tag.name }}: {{ tag.min_questions }}
+{% endif %}
+{% endfor %}
+
+------------------------------------------------------------------------------
+
+% ============================================================================
+%  QUESTIONS
+% ============================================================================
+
+{% for question in project.questions %}
+({{ question.id }})
+{% for tag_name in question.tag_names %}{{ '@' + tag_name }} {% endfor %}
+{{ question.text }}
+{% for answer in question.answers %}
+{{ ('_x' if answer.valid else '_') + ('*' if answer.fixed_position else '') }} {{ answer.text }}
+{% endfor %}
+{% endfor %}

@@ -1,6 +1,8 @@
-source 'http://localhost/rubygems/'
+source 'https://rubygems.org/'
+#source 'file:///home/pqr/work/rubygems/'
+#source 'file:///media/laila/MARIO_64/rubygems/'
 
-gem 'rails', '4.0.0'
+gem 'rails', '4.1.8'
 gem 'sqlite3'
 gem 'sass-rails', '~> 4.0.0'
 gem 'uglifier', '>= 1.3.0'
@@ -15,6 +17,7 @@ gem 'twitter-bootstrap-rails'
 gem 'less-rails'
 gem 'better_errors'
 gem 'binding_of_caller'
+gem 'web-console'
 
 group :doc do
   # bundle exec rake doc:rails generates the API under doc/api.

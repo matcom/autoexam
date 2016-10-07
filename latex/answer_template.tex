@@ -4,7 +4,7 @@
 \usepackage{graphicx}
 \usepackage{array}
 \usepackage{tabularx}
-\usepackage[spanish]{babel}
+\usepackage[english]{babel}
 
 \geometry{left=2cm, right=2cm, top=2cm, bottom=1cm}
 \pagestyle{empty}
@@ -23,9 +23,11 @@
      \parbox[b]{10cm}{Examen: {{ answer.number }} \vspace{1cm} }
      \hspace{1cm}
      \\
-     \includegraphics[width=0.5cm]{../../marker.png}
+     \includegraphics[width=0.5cm]{../../templates/marker.png}
+     \pdfsavepos\write-1{[UPPER-LEFT] ({{i}}-{{n}}) (\the\pdflastxpos,\the\pdflastypos)}
      \hspace{13.5cm}
-     \includegraphics[width=0.5cm]{../../marker.png}
+     \includegraphics[width=0.5cm]{../../templates/marker.png}
+     \pdfsavepos\write-1{[UPPER-RIGHT] ({{i}}-{{n}}) (\the\pdflastxpos,\the\pdflastypos)}
   %\end{figure}
 
   \hspace{0.01cm}
@@ -38,9 +40,9 @@
 
       {% for t, n in q.options_text(i+1, answer.max) %}
         {% if n %}
-        {{ t }} & {{ n }} & \fbox{} \\
+        {{ t }} & {{ n }} & \small{$\bigcirc$} \\
         {% else %}
-          & & \phantom{\fbox{}} \\
+          & & \phantom{\small{$\bigcirc$}} \\
         {% endif %}
         {% if not loop.last %}
         & & \\
@@ -58,9 +60,11 @@
   %\\ \hline
   \end{tabular}
 
-  \includegraphics[width=0.5cm]{../../marker.png}
+  \includegraphics[width=0.5cm]{../../templates/marker.png}
+  \pdfsavepos\write-1{[BOTTOM-LEFT] ({{i}}-{{n}}) (\the\pdflastxpos,\the\pdflastypos)}
   \hspace{13.5cm}
-  \includegraphics[width=0.5cm]{../../marker.png}
+  \includegraphics[width=0.5cm]{../../templates/marker.png}
+  \pdfsavepos\write-1{[BOTTOM-RIGHT] ({{i}}-{{n}}) (\the\pdflastxpos,\the\pdflastypos)}
   \vspace{2cm}
 
   {% endfor %}

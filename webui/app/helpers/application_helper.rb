@@ -5,10 +5,8 @@ module ApplicationHelper
   end
 
   def etiquetas_de(object)
-    string = ""
-    for etiqueta in object.listado_de_etiquetas
-      string += %<<span class="label">#{etiqueta}</span>  >
-    end
+    string = ''
+    object.listado_de_etiquetas.each { |etiqueta| string += %<<span class="label">#{etiqueta}</span>  > }
     string.html_safe
   end
 end

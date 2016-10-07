@@ -26,9 +26,17 @@
   </div>
 
   <div class="field control-group">
-    <%= f.label :cantidad, :class => 'control-label' %>
+    <%= f.label 'Cantidad de Preguntas', :class => 'control-label' %>
     <div class="controls">
       <%= f.number_field :cantidad %>
+    </div>
+  </div>
+
+
+  <div class="field control-group">
+    <%= f.label :variantes, :class => 'control-label' %>
+    <div class="controls">
+      <%= f.number_field :variantes %>
     </div>
   </div>
 
@@ -64,18 +72,18 @@
                   <% first = false %>
                   <% count = 0 %>
                   <% for pregunta in Preguntum.from_etiqueta(etiqueta)%>
-                    <% unless hash[pregunta.id] %>
+                    <% #unless hash[pregunta.id] %>
                       <% count += 1%>
                       <label class="checkbox">
                         <%= check_box_tag "pregunta_#{pregunta.id}", 1, @examan.pregunta.include?(pregunta) %> <%= pregunta.titulo %>
                       </label>
                     <% end %>
                     <% hash[pregunta.id] = true %>
-                  <% end %>
+                  <% #end %>
                   <% if count == 0 %>
                     <i>NO HAY PREGUNTAS DE ESTA ETIQUETA</i> <br>
                   <% end %>
-                  <%= number_field_tag "cantidad_#{etiqueta}", @examan.maximo(etiqueta), :class => :span1 %> Cantidad Maxima de preguntas a generar de esta etiqueta
+                  <%= number_field_tag "cantidad_#{etiqueta}", @examan.maximo(etiqueta), :class => :span1 %> Cantidad Mínima de preguntas a generar de esta etiqueta
                 </div>
               <% end %>
             </div>
@@ -87,7 +95,7 @@
 
   <div class="form-actions">
     <%= f.hidden_field :asignatura_id %>
-    <%= f.submit %>
+    <%= f.submit 'Crear Examen' %>
   </div>
 
 <% end %>
