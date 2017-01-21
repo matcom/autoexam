@@ -736,6 +736,25 @@ def rules(args):
         print("Changed the scan.json file")
 
 
+def print_order(args):
+    order_file = "generated/last/order.json"
+
+    if not check_project_folder():
+        return
+
+    if not os.path.exists(order_file):
+        print("(!) Error: order.json doesn't exist. Have you generated ?")
+        return
+
+    with open(order_file) as fp:
+        order_data = json.load(fp)
+
+    tests = { int(key) : [item['id'] for item in value["questions"]] for key, value in order_data.items() if isinstance(value, dict)}
+
+    for key in sorted(tests):
+        print("{0:-4}: [{2:-4}] - {1}".format(key, " ".join(str(item) for item in sorted(tests[key])), len(tests[key])))
+
+
 def main():
     if 'autoexam.py' in os.listdir('.'):
         error("Please don't run this from inside the Autoexam source folder.\nThis is an evil thing to do that will break the program.")
@@ -747,6 +766,9 @@ def main():
 
     test_parser = commands.add_parser("test", help="Runs the automatic test suite and exit.")
     test_parser.set_defaults(func=test_suite)
+
+    order_parser = commands.add_parser("order", help="Prints the current order.json in readable format")
+    order_parser.set_defaults(func=print_order)
 
     new_parser = commands.add_parser('new', help='Creates a new Autoexam project.')
     new_parser.add_argument('name', help='Name for the project.')

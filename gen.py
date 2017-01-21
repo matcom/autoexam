@@ -117,7 +117,7 @@ def parser(master_path="master.txt"):
                     raise ValueError(u"Error parsing precondition for rule {0}".format(line))
 
                 if len(post) % 2 != 0:
-                    raise ValueError(u"Error parsing precondition for rule {0}".format(line))
+                    raise ValueError(u"Error parsing postcondition for rule {0}".format(line))
 
                 rule = []
 
@@ -413,6 +413,12 @@ class Question:
     def multiple(self):
         return len([o for o in self.options if o[0]]) > 1
 
+    def __eq__(self, other):
+        return self.number == other.number
+
+    def __hash__(self):
+        return hash(self.number)
+
     def options_text(self, i, max):
         alphabet = list("abcdefghijklmnopqrstuvwxyz")
         first = True
@@ -588,7 +594,7 @@ def generate(n, args):
 
                 if matches:
                     for action in actions:
-                        print(u"Applying {0} to {1}".format(action, name))
+                        print(u"Applying {0} to {1}".format(action, name).encode("utf8"))
 
                         tag, val = action
                         possible_questions = [q for q in test if tag in q.tags]
