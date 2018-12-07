@@ -204,7 +204,7 @@ def split_the_order_file_oh_my_god():
 def manual_scan():
     import json
 
-    answers = []
+    answers = {}
     letters = 'abcdefghijklmnopqrstuvwxz'
 
     with open("generated/last/order.json") as fp:
@@ -213,6 +213,7 @@ def manual_scan():
     with open("manual.txt") as fp:
         for l in fp:
             l = l.strip().split()
+            test_id = int(l.pop(0))
             question = []
 
             for group in l:
@@ -222,7 +223,7 @@ def manual_scan():
                         options.append(letters.index(letter) + 1)
                 question.append(options)
 
-            answers.append(question)
+            answers[test_id] = question
 
     dropped_keys = []
 
@@ -237,8 +238,17 @@ def manual_scan():
         answer = answers[test["id"]]
 
         for i, q in enumerate(test["questions"]):
-            q["visual_answers"] = answer[i]
-            q["answers"] = [q["order"][a-1] for a in answer[i]]
+            try:
+                q["visual_answers"] = answer[i]
+                test_order = []
+
+                for a in answer[i]:
+                    test_order.append(q["order"][a-1])
+
+                q["answers"] = test_order
+            except Exception as e:
+                print("Error on test %s: %s" % (test["id"], str(e)))
+                raise
 
     for key in dropped_keys:
         order_content.pop(key)
