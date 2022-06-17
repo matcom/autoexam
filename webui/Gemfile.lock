@@ -45,6 +45,7 @@ GEM
       execjs
     coffee-script-source (1.9.1.1)
     commonjs (0.2.7)
+    concurrent-ruby (1.1.10)
     daemons (1.2.3)
     debug_inspector (0.0.2)
     devise (3.5.1)
@@ -58,7 +59,8 @@ GEM
     eventmachine (1.0.7)
     execjs (2.5.2)
     hike (1.2.3)
-    i18n (0.7.0)
+    i18n (0.9.5)
+      concurrent-ruby (~> 1.0)
     jbuilder (1.5.3)
       activesupport (>= 3.0.0)
       multi_json (>= 1.2.0)
